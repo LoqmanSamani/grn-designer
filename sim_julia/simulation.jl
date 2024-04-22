@@ -1,11 +1,11 @@
 #---
-# using DrWatson
-# @quickactivate 
+using DrWatson
+#@quickactivate 
 # include helper functions from src folder
 using HDF5
-include(srcdir("set_initial_condition.jl"))
-include(srcdir("diffuse2D.jl"))
-include(srcdir("reactions.jl"))
+include("set_initial_condition.jl")
+include("diffuse2D.jl")
+include("reactions.jl")
 
 """
     simulate2DMS(theta)
@@ -21,9 +21,11 @@ simultate finite differences in a compartment_length times compartment_depth 2D 
     myoptions
 
 """
+runs_expectedvalue_filename = "/home/samani/Documents/sim/simulation.h5"
+
 function simulate2DMS(theta::Dict)
 
-    saveStepInterval = myoptions["saveStepInterval"];
+    saveStepInterval = theta["saveStepInterval"];
     cellNumberInitial = theta["cellSeed"]/(theta["compartment_length"]*theta["compartment_depth"] );
     growthRate    = theta["growthRate"];
     maxCellNumber = theta["maxCellNumber"] ;
@@ -53,7 +55,7 @@ function simulate2DMS(theta::Dict)
     cells_mCherry_all   = zeros(cl,cd, Int32(ceil(num_timesteps/saveStepInterval)));    
     cells_iM_all        = zeros(cl,cd, Int32(ceil(num_timesteps/saveStepInterval)));
     # load initial cell numbers from the ic-.. file defined in myoptions
-    cells_anker, cells_GFP,cells_mCherry,cells_iM = initialcellseed(cl,cd,cellNumberInitial,cells_anker, cells_GFP,cells_mCherry,cells_iM);
+    # cells_anker, cells_GFP,cells_mCherry,cells_iM = initialcellseed(cl,cd,cellNumberInitial,cells_anker, cells_GFP,cells_mCherry,cells_iM);
 
     fM_all[:,:, 1] = fM;
     bM_all[:,:, 1] = bM;
@@ -85,8 +87,8 @@ function simulate2DMS(theta::Dict)
         for length in 1:cl
         for depth in 1:cd
             # ## production
-            fM[length,depth] = production(tmp_fM[length,depth], theta["k_fM_src"], tmp_cells_GFP[length,depth], cellNumberInitial, dt)
-            iM[length,depth] = production(tmp_iM[length,depth], theta["k_iM_src"], tmp_cells_iM[length,depth] , cellNumberInitial, dt)
+            fM[length,depth] = production(tmp_fM[length,depth], theta["k_fM_src"], cellNumberInitial, dt)
+            iM[length,depth] = production(tmp_iM[length,depth], theta["k_iM_src"], cellNumberInitial, dt)
             # ## anchor_binding
             fM[length, depth], 
             bM[length, depth] = anchor_binding(tmp_fM[length,depth],  theta["k_fM_bind"], theta["k_fM_off"], dt, tmp_cells_anker[length,depth], tmp_bM[length,depth]);
@@ -142,3 +144,5 @@ function simulate2DMS(theta::Dict)
     println("done writing to hdf5 file ", runs_expectedvalue_filename)
     return simoutput
 end
+
+
