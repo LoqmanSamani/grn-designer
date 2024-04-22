@@ -16,7 +16,7 @@ class Diffusion:
         - specie[length, depth]: calculated concentration of the cell[length, depth] in the compartment, integer
         """
 
-        if length == 1 and depth == 1:
+        if length == 0 and depth == 0:
             specie[length, depth] = self.lower_left_corner_diff(
                 specie=specie,
                 length=length,
@@ -25,7 +25,7 @@ class Diffusion:
                 dt=dt
             )
 
-        elif length == compartment_length and depth == 1:
+        elif length == compartment_length-1 and depth == 0:
             specie[length, depth] = self.lower_right_corner_diff(
                 specie=specie,
                 length=length,
@@ -34,7 +34,7 @@ class Diffusion:
                 dt=dt
             )
 
-        elif length == 1 and depth == compartment_depth:
+        elif length == 0 and depth == compartment_depth-1:
             specie[length, depth] = self.upper_left_corner_diff(
                 specie=specie,
                 length=length,
@@ -43,7 +43,7 @@ class Diffusion:
                 dt=dt
             )
 
-        elif length == compartment_length and depth == compartment_depth:
+        elif length == compartment_length-1 and depth == compartment_depth-1:
             specie[length, depth] = self.upper_right_corner_diff(
                 specie=specie,
                 length=length,
@@ -52,7 +52,7 @@ class Diffusion:
                 dt=dt
             )
 
-        elif depth == 1 and length != 1 and length != compartment_length:
+        elif depth == 0 and length != 0 and length != compartment_length-1:
             specie[length, depth] = self.lower_side_diff(
                 specie=specie,
                 length=length,
@@ -61,7 +61,7 @@ class Diffusion:
                 dt=dt
             )
 
-        elif length == 1 and depth != 1 and depth != compartment_depth:
+        elif length == 0 and depth != 0 and depth != compartment_depth-1:
             specie[length, depth] = self.left_side_diff(
                 specie=specie,
                 length=length,
@@ -70,7 +70,7 @@ class Diffusion:
                 dt=dt
             )
 
-        elif length == compartment_length and depth != 1 and depth != compartment_depth:
+        elif length == compartment_length-1 and depth != 0 and depth != compartment_depth-1:
             specie[length, depth] = self.right_side_diff(
                 specie=specie,
                 length=length,
@@ -79,7 +79,7 @@ class Diffusion:
                 dt=dt
             )
 
-        elif depth == compartment_depth and length != 1 and length != compartment_length:
+        elif depth == compartment_depth-1 and length != 0 and length != compartment_length-1:
             specie[length, depth] = self.upper_side_diff(
                 specie=specie,
                 length=length,

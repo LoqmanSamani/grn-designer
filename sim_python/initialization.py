@@ -12,24 +12,26 @@ class Initialization:
         dt = theta["dt"]
         num_time_steps = int(np.ceil(t_max / dt)) + 1
         timestep = 1
-        cellNumberInitial = theta["cellSeed"] / (theta["compartment_length"] * theta["compartment_depth"])
+
+        # cellSeed might be some sort of seed value or initial condition for cell growth
+        cellNumberInitial = theta["cellSeed"] / (theta["compartment_length"] * theta["compartment_depth"])  # the initial number of cells
         saveStepInterval = theta["saveStepInterval"]
-        fM = np.zeros((cl, cd))
-        bM = np.zeros((cl, cd))
-        iM = np.zeros((cl, cd))
-        ibM = np.zeros((cl, cd))
-        cells_anchor = np.zeros((cl, cd))
-        cells_GFP = np.zeros((cl, cd))
-        cells_mCherry = np.zeros((cl, cd))
-        cells_iM = np.zeros((cl, cd))
-        bM_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))))
-        fM_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))))
-        iM_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))))
-        ibM_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))))
-        cells_anchor_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.int32)
-        cells_GFP_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.int32)
-        cells_mCherry_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.int32)
-        cells_iM_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.int32)
+        fM = np.zeros((cl, cd), dtype=np.float32)
+        bM = np.zeros((cl, cd), dtype=np.float32)
+        iM = np.zeros((cl, cd), dtype=np.float32)
+        ibM = np.zeros((cl, cd), dtype=np.float32)
+        cells_anchor = np.zeros((cl, cd), dtype=np.float32)
+        cells_GFP = np.zeros((cl, cd), dtype=np.float32)
+        cells_mCherry = np.zeros((cl, cd), dtype=np.float32)
+        cells_iM = np.zeros((cl, cd), dtype=np.float32)
+        bM_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.float32)
+        fM_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.float32)
+        iM_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.float32)
+        ibM_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.float32)
+        cells_anchor_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.float32)
+        cells_GFP_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.float32)
+        cells_mCherry_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.float32)
+        cells_iM_all = np.zeros((cl, cd, int(np.ceil(num_time_steps / saveStepInterval))), dtype=np.float32)
 
         # Change cell numbers with initial seed
         # cells_anker, cells_GFP, cells_mCherry, cells_iM = initialcellseed(cl, cd, cellNumberInitial, cells_anker,cells_GFP, cells_mCherry, cells_iM)

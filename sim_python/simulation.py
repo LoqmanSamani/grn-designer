@@ -3,6 +3,7 @@ from diffusion import Diffusion
 from initialization import Initialization
 import h5py
 import os
+import time
 
 
 class Simulation:
@@ -15,7 +16,7 @@ class Simulation:
         self.sim_output = {}
 
     def simulate2DMS(self, theta):
-
+        tic = time.time()
         initialization = Initialization()
         reactions = Reactions()
         diffusion = Diffusion()
@@ -23,7 +24,7 @@ class Simulation:
         growthRate = theta["growthRate"]
         maxCellNumber = theta["maxCellNumber"]
 
-        # timestep = 1
+        #timestep = 1
         # load initial cell numbers from the ic-... file defined in myoptions
         # cells_anker, cells_GFP, cells_mCherry, cells_iM = initialcellseed(
         # cl, cd, cellNumberInitial, cells_anker, cells_GFP, cells_mCherry, cells_iM
@@ -63,9 +64,9 @@ class Simulation:
             tmp_iM = iM.copy()
             tmp_ibM = ibM.copy()
             tmp_cells_anchor = cells_anchor.copy()
-            tmp_cells_GFP = cells_GFP.copy()
-            tmp_cells_mCherry = cells_mCherry.copy()
-            tmp_cells_iM = cells_iM.copy()
+            # tmp_cells_GFP = cells_GFP.copy()
+            # tmp_cells_mCherry = cells_mCherry.copy()
+            # tmp_cells_iM = cells_iM.copy()
 
             for length in range(cl):
                 for depth in range(cd):
@@ -204,6 +205,38 @@ class Simulation:
         }
 
         self.sim_output = sim_output
+        toc = time.time()
+        print(toc - tic)
 
 
+infos = {
+    "growthRate": 0,
+    "maxCellNumber": 10000,
+    "compartment_length": 100,
+    "compartment_depth": 100,
+    "t_max": 10,
+    "dt": 0.01,
+    "cellSeed": 100000000,
+    "saveStepInterval": 10,
+    "k_fM_src": 0.4,
+    "k_iM_src": 0.3,
+    "k_fM_bind": 0.3,
+    "k_fM_off": 0.2,
+    "k_iM_bind": 0.013,
+    "k_iM_off": 0.01,
+    "k_fM_deg": 0.002,
+    "k_iM_deg": 0.002,
+    "k_bM_deg": 0.002,
+    "k_ibM_deg": 0.002,
+    "d_free": 0.3,
+    "d_i": 0.27
+}
 
+
+model = Simulation(
+    saveStepInterval=10,
+    directory_path="/home/samani/Documents/sim",
+    file_name="simulation"
+)
+
+model.simulate2DMS(infos)
