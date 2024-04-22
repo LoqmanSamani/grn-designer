@@ -1,7 +1,7 @@
 """
     production(M productionrate, cellNumber, dt)    
 """
-function production(M, productionrate, cellNumber,cellNumberInitial, dt)
+function production(M, productionrate, cellNumber, dt)
     # M = (M + productionrate * cellNumber/(cellNumberInitial/2) * dt) 
     M = (M + productionrate * cellNumber * dt) 
     return M
@@ -32,9 +32,7 @@ free_anker_cells(cells_anker, bM )
     max(0,cells_anker - bM)
 """
 function anchor_binding(fM, k_bind, k_off, dt, cells_anker, bM)
-    fM = (fM 
-        # - k_bind*fM*max(0.0,(bindingsites-bM))*dt # what is binding
-        - k_bind*fM*free_anker_cells(cells_anker,bM)*dt # what is binding
+    fM = (fM - k_bind*fM*free_anker_cells(cells_anker,bM)*dt # what is binding
         + k_off*bM*dt # what is unbinding
         )
     bM = (bM 
