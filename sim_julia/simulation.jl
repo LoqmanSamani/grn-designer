@@ -21,7 +21,7 @@ simultate finite differences in a compartment_length times compartment_depth 2D 
     myoptions
 
 """
-runs_expectedvalue_filename = "/home/samani/Documents/sim/simulation.h5"
+runs_expectedvalue_filename = "/home/samani/Documents/sim/sim6.h5"
 
 function simulate2DMS(theta::Dict)
 
@@ -145,4 +145,31 @@ function simulate2DMS(theta::Dict)
     return simoutput
 end
 
+theta = Dict(
 
+"growthRate" => 0,
+"maxCellNumber" => 10000,
+"compartment_length" => 1000,
+"compartment_depth" => 1000,
+"tmax" => 20,
+"dt" => 0.01,
+"cellSeed" => 100000000,
+"saveStepInterval" => 50,
+"k_fM_src" => 0.4,
+"k_iM_src" => 0.3,
+"k_fM_bind" => 0.17,
+"k_fM_off" => 0.12,
+"k_iM_bind" => 0.09,
+"k_iM_off" => 0.01,
+"k_fM_deg" => 0.004,
+"k_iM_deg" => 0.004,
+"k_bM_deg" => 0.004,
+"k_ibM_deg" => 0.042,
+"d_free" => 0.2,
+"d_i" => 0.15
+
+)
+print("start")
+
+simulate2DMS(theta)
+print("it is done")
