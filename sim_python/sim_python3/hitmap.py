@@ -15,29 +15,30 @@ from matplotlib.animation import FuncAnimation
 
 infos = {
 
-"growth rate": 1,
-"max cell number": 1000000,
-"compartment length": 100,
-"compartment width": 100,
-"start": 1,
-"stop": 200,
-"dt": 0.05,
-"cell seed": 1000000,
-"save step interval": 10,
-"k_fm_sec": 0.6,
-"k_im_sec": 0.7,
-"k_fm_bind": 0.8,
-"k_fm_off": 0.5,
-"k_im_bind": 0.7,
-"k_im_off": 0.5,
-"k_fm_deg": 0.3,
-"k_im_deg": 0.3,
-"k_bm_deg": 0.3,
-"k_ibm_deg": 0.3,
-"d_free": 4,
-"d_i": 4
+    "growth rate": 1,
+    "max cell number": 1000000,
+    "compartment length": 200,
+    "compartment width": 200,
+    "start": 1,
+    "stop": 200,
+    "dt": 0.05,
+    "cell seed": 100000,
+    "save step interval": 100,
+    "k_fm_sec": 0.9,
+    "k_im_sec": 0.9,
+    "k_fm_bind": 0.2,
+    "k_fm_off": 0.3,
+    "k_im_bind": 0.2,
+    "k_im_off": 0.23,
+    "k_fm_deg": 0.001,
+    "k_im_deg": 0.001,
+    "k_bm_deg": 0.001,
+    "k_ibm_deg": 0.001,
+    "d_free": 1.4,
+    "d_i": 1.4
 
 }
+
 
 
 
@@ -52,7 +53,7 @@ full_path = "/home/samani/Documents/sim"
 if not os.path.exists(full_path):
     os.makedirs(full_path)
 
-full_file_path = os.path.join(full_path, "sim5.h5")
+full_file_path = os.path.join(full_path, "sim11.h5")
 
 with h5py.File(full_file_path, "w") as file:
     file.create_dataset("expected_fM", data=result[0])
