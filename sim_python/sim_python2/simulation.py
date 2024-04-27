@@ -8,9 +8,7 @@ import os
 
 
 @jit
-def simulation(init_params, directory_path, file_name):
-
-    #tic = time.time()
+def simulation(init_params):
 
     (
         growth_rate,
@@ -59,29 +57,22 @@ def simulation(init_params, directory_path, file_name):
     time_ = start
 
     while time_ <= stop:
-        #tmp_fM = fM.copy()
-        #tmp_bM = bM.copy()
-        #tmp_iM = iM.copy()
-        #tmp_ibM = ibM.copy()
-        #tmp_cells_anchor = cells_anchor.copy()
-        # tmp_cells_GFP = cells_GFP.copy()
-        # tmp_cells_mCherry = cells_mCherry.copy()
-        # tmp_cells_iM = cells_iM.copy()
 
         for length in range(com_len):
             for depth in range(com_wid):
+
                 # production
                 fM[length, depth] = production(
                     concentration=fM[length, depth],
                     production_rate=k_fm_sec,
-                    num_cell_init=num_cell_init,
+                    num_cell=cells_GFP[length, depth],
                     dt=dt
                 )
 
                 iM[length, depth] = production(
                     concentration=iM[length, depth],
                     production_rate=k_im_sec,
-                    num_cell_init=num_cell_init,
+                    num_cell=cells_iM[length, depth],
                     dt=dt
                 )
 
@@ -186,42 +177,7 @@ def simulation(init_params, directory_path, file_name):
         time_ += dt
         epoch += 1
 
-    """
-    full_path = os.path.join(directory_path, file_name)
-    if not os.path.exists(directory_path):
-        os.makedirs(directory_path)
-
-    with h5py.File(full_path, "w") as file:
-
-        file.create_dataset("expected_fM", data=fM_all)
-        file.create_dataset("expected_bM", data=bM_all)
-        file.create_dataset("expected_iM", data=iM_all)
-        file.create_dataset("expected_ibM", data=ibM_all)
-        file.create_dataset("expected_cells_anker_all", data=cells_anchor_all)
-        file.create_dataset("expected_cells_GFP_all", data=cells_GFP_all)
-        file.create_dataset("expected_cells_mCherry_all", data=cells_mCherry_all)
-        file.create_dataset("expected_cells_iM_all", data=cells_iM_all)
-
-    print("Simulation results saved to:", full_path)
-    """
-    #toc = time.time()
-    #print(toc - tic)
-    return (fM_all, bM_all, iM_all, iM_all, ibM_all, cells_anchor_all, cells_GFP_all, cells_mCherry_all, cells_iM_all)
+    return (fM_all, bM_all, iM_all, ibM_all, cells_anchor_all, cells_GFP_all, cells_mCherry_all, cells_iM_all)
 
 
 
-full_path = "/home/samani/Documents/sim"
-if not os.path.exists(full_path):
-    os.makedirs(full_path)
-
-full_file_path = os.path.join(full_path, "sims.h5")
-
-with h5py.File(full_file_path, "w") as file:
-    file.create_dataset("expected_fM", data=result[0])
-    file.create_dataset("expected_bM", data=result[1])
-    file.create_dataset("expected_iM", data=result[2])
-    file.create_dataset("expected_ibM", data=result[3])
-    file.create_dataset("expected_cells_anker_all", data=result[4])
-    file.create_dataset("expected_cells_GFP_all", data=result[5])
-    file.create_dataset("expected_cells_mCherry_all", data=result[6])
-    file.create_dataset("expected_cells_iM_all", data=result[7])

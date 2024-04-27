@@ -3,9 +3,9 @@ from numba import jit
 
 
 @jit
-def production(concentration, production_rate, num_cell_init, dt):
+def production(concentration, production_rate, num_cell, dt):
 
-    concentration = concentration + production_rate * num_cell_init * dt
+    concentration = concentration + (production_rate * num_cell * dt)
 
     return concentration
 
@@ -13,7 +13,7 @@ def production(concentration, production_rate, num_cell_init, dt):
 @jit
 def degradation(concentration, degradation_rate, dt):
 
-    concentration = concentration - degradation_rate * concentration * dt
+    concentration = concentration - (degradation_rate * concentration * dt)
 
     return concentration
 
@@ -34,8 +34,8 @@ def anchor_binding(fm, k_bind, k_off, dt, cells_anchor, bm):
         bm=bm
     )
 
-    fm_new = fm - k_bind * fm * cells_anchor_free * dt + k_off * bm * dt
-    bm_new = bm + k_bind * fm * cells_anchor_free * dt - k_off * bm * dt
+    fm_new = fm - (k_bind * fm * cells_anchor_free * dt) + (k_off * bm * dt)
+    bm_new = bm + (k_bind * fm * cells_anchor_free * dt) - (k_off * bm * dt)
 
     return fm_new, bm_new
 
@@ -43,9 +43,9 @@ def anchor_binding(fm, k_bind, k_off, dt, cells_anchor, bm):
 @jit
 def inhibitor_binding(fm, k_bind, k_off, dt, im, ibm):
 
-    im_new = im - k_bind * fm * im * dt + k_off * ibm * dt
-    fm_new = fm - k_bind * fm * im * dt + k_off * ibm * dt
-    ibm_new = ibm + k_bind * fm * im * dt - k_off * ibm * dt
+    im_new = im - (k_bind * fm * im * dt) + (k_off * ibm * dt)
+    fm_new = fm - (k_bind * fm * im * dt) + (k_off * ibm * dt)
+    ibm_new = ibm + (k_bind * fm * im * dt) - (k_off * ibm * dt)
 
     return im_new, fm_new, ibm_new
 
@@ -53,6 +53,6 @@ def inhibitor_binding(fm, k_bind, k_off, dt, im, ibm):
 @jit
 def logistic_growth(cells, bm, growth_rate, num_max_cell, dt):
 
-    growth = cells + growth_rate * bm * (1 - cells / num_max_cell) * dt
+    growth = cells + (growth_rate * bm * ((1 - cells) / num_max_cell) * dt)
 
     return growth

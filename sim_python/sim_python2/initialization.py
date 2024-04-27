@@ -34,8 +34,10 @@ def initialization(params):
     ibM = np.zeros((com_len, com_wid), dtype=np.float32)  # inhibitor & bound morphogen
     cells_anchor = np.zeros((com_len, com_wid), dtype=np.float32)
     cells_GFP = np.zeros((com_len, com_wid), dtype=np.float32)
+    
     cells_mCherry = np.zeros((com_len, com_wid), dtype=np.float32)
     cells_iM = np.zeros((com_len, com_wid), dtype=np.float32)
+
     bM_all = np.zeros((com_len, com_wid, int(np.ceil(num_time_steps / interval_save))), dtype=np.float32)
     fM_all = np.zeros((com_len, com_wid, int(np.ceil(num_time_steps / interval_save))), dtype=np.float32)
     iM_all = np.zeros((com_len, com_wid, int(np.ceil(num_time_steps / interval_save))), dtype=np.float32)

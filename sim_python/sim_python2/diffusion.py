@@ -26,7 +26,7 @@ def diffusion2d(specie, length, depth, k_diff, dt, compartment_length, compartme
             dt=dt
         )
 
-    elif length == compartment_length - 1 and depth == 0:
+    elif length == compartment_length-1 and depth == 0:
         specie[length, depth] = lower_right_corner_diff(
             specie=specie,
             length=length,
@@ -35,7 +35,7 @@ def diffusion2d(specie, length, depth, k_diff, dt, compartment_length, compartme
             dt=dt
         )
 
-    elif length == 0 and depth == compartment_depth - 1:
+    elif length == 0 and depth == compartment_depth-1:
         specie[length, depth] = upper_left_corner_diff(
             specie=specie,
             length=length,
@@ -44,7 +44,7 @@ def diffusion2d(specie, length, depth, k_diff, dt, compartment_length, compartme
             dt=dt
         )
 
-    elif length == compartment_length - 1 and depth == compartment_depth - 1:
+    elif length == compartment_length-1 and depth == compartment_depth-1:
         specie[length, depth] = upper_right_corner_diff(
             specie=specie,
             length=length,
@@ -53,7 +53,7 @@ def diffusion2d(specie, length, depth, k_diff, dt, compartment_length, compartme
             dt=dt
         )
 
-    elif depth == 0 and length != 0 and length != compartment_length - 1:
+    elif depth == 0 and length != 0 and length != compartment_length-1:
         specie[length, depth] = lower_side_diff(
             specie=specie,
             length=length,
@@ -62,7 +62,7 @@ def diffusion2d(specie, length, depth, k_diff, dt, compartment_length, compartme
             dt=dt
         )
 
-    elif length == 0 and depth != 0 and depth != compartment_depth - 1:
+    elif length == 0 and depth != 0 and depth != compartment_depth-1:
         specie[length, depth] = left_side_diff(
             specie=specie,
             length=length,
@@ -71,7 +71,7 @@ def diffusion2d(specie, length, depth, k_diff, dt, compartment_length, compartme
             dt=dt
         )
 
-    elif length == compartment_length - 1 and depth != 0 and depth != compartment_depth - 1:
+    elif length == compartment_length-1 and depth != 0 and depth != compartment_depth-1:
         specie[length, depth] = right_side_diff(
             specie=specie,
             length=length,
@@ -80,7 +80,7 @@ def diffusion2d(specie, length, depth, k_diff, dt, compartment_length, compartme
             dt=dt
         )
 
-    elif depth == compartment_depth - 1 and length != 0 and length != compartment_length - 1:
+    elif depth == compartment_depth-1 and length != 0 and length != compartment_length-1:
         specie[length, depth] = upper_side_diff(
             specie=specie,
             length=length,
@@ -104,14 +104,8 @@ def diffusion2d(specie, length, depth, k_diff, dt, compartment_length, compartme
 @jit
 def lower_side_diff(specie, length, depth, k_diff, dt):
 
-    specie[length, depth] = (
-            specie[length, depth] +
-            dt * k_diff *
-            (specie[length + 1, depth] +
-            specie[length - 1, depth] +
-            specie[length, depth + 1] -
-            specie[length, depth] * 3)
-    )
+    specie[length, depth] = (specie[length, depth]+
+                             (dt*k_diff*(specie[length+1, depth]+specie[length-1, depth]+specie[length, depth+1]-(specie[length, depth]*3))))
 
     return specie[length, depth]
 
@@ -119,14 +113,8 @@ def lower_side_diff(specie, length, depth, k_diff, dt):
 @jit
 def upper_side_diff(specie, length, depth, k_diff, dt):
 
-    specie[length, depth] = (
-        specie[length, depth] +
-        dt * k_diff *
-        (specie[length + 1, depth] +
-        specie[length - 1, depth] +
-        specie[length, depth - 1] -
-        specie[length, depth] * 3)
-    )
+    specie[length, depth] = (specie[length, depth]+
+                             (dt*k_diff*(specie[length+1, depth]+specie[length-1, depth]+specie[length, depth-1]-(specie[length, depth]*3))))
 
     return specie[length, depth]
 
@@ -134,14 +122,8 @@ def upper_side_diff(specie, length, depth, k_diff, dt):
 @jit
 def left_side_diff(specie, length, depth, k_diff, dt):
 
-    specie[length, depth] = (
-        specie[length, depth] +
-        dt * k_diff *
-        (specie[length + 1, depth] +
-        specie[length, depth + 1] +
-        specie[length, depth - 1] -
-        specie[length, depth] * 3)
-    )
+    specie[length, depth] = (specie[length, depth]+
+                             (dt*k_diff*(specie[length+1, depth]+specie[length, depth+1]+specie[length, depth-1]-(specie[length, depth]*3))))
 
     return specie[length, depth]
 
@@ -149,14 +131,8 @@ def left_side_diff(specie, length, depth, k_diff, dt):
 @jit
 def right_side_diff(specie, length, depth, k_diff, dt):
 
-    specie[length, depth] = (
-        specie[length, depth] +
-        dt * k_diff *
-        (specie[length - 1, depth] +
-        specie[length, depth + 1] +
-        specie[length, depth - 1] -
-        specie[length, depth] * 3)
-    )
+    specie[length, depth] = (specie[length, depth]+
+                             (dt*k_diff*(specie[length-1, depth]+specie[length, depth+1] +specie[length, depth-1]-(specie[length, depth] * 3))))
 
     return specie[length, depth]
 
@@ -164,15 +140,8 @@ def right_side_diff(specie, length, depth, k_diff, dt):
 @jit
 def central_diffusion(specie, length, depth, k_diff, dt):
 
-    specie[length, depth] = (
-        specie[length, depth] +
-        dt * k_diff *
-        (specie[length + 1, depth] +
-        specie[length - 1, depth] +
-        specie[length, depth + 1] +
-        specie[length, depth - 1] -
-        specie[length, depth] * 4)
-    )
+    specie[length, depth] = (specie[length, depth]+
+                             (dt*k_diff*(specie[length+1, depth]+specie[length-1, depth]+specie[length, depth+1]+specie[length, depth-1]-(specie[length, depth]*4))))
 
     return specie[length, depth]
 
@@ -180,13 +149,8 @@ def central_diffusion(specie, length, depth, k_diff, dt):
 @jit
 def lower_left_corner_diff(specie, length, depth, k_diff, dt):
 
-    specie[length, depth] = (
-        specie[length, depth] +
-        dt * k_diff *
-        (specie[length + 1, depth] +
-        specie[length, depth + 1] -
-        specie[length, depth] * 2)
-    )
+    specie[length, depth] = (specie[length, depth] +
+                             (dt*k_diff*(specie[length+1, depth]+specie[length, depth+1]-(specie[length, depth]*2))))
 
     return specie[length, depth]
 
@@ -194,13 +158,8 @@ def lower_left_corner_diff(specie, length, depth, k_diff, dt):
 @jit
 def lower_right_corner_diff(specie, length, depth, k_diff, dt):
 
-    specie[length, depth] = (
-        specie[length, depth] +
-        dt * k_diff *
-        (specie[length - 1, depth] +
-        specie[length, depth + 1] -
-        specie[length, depth] * 2)
-    )
+    specie[length, depth] = (specie[length, depth] +
+                             (dt*k_diff*(specie[length-1, depth]+specie[length, depth+1]-(specie[length, depth]*2))))
 
     return specie[length, depth]
 
@@ -208,13 +167,8 @@ def lower_right_corner_diff(specie, length, depth, k_diff, dt):
 @jit
 def upper_left_corner_diff(specie, length, depth, k_diff, dt):
 
-    specie[length, depth] = (
-        specie[length, depth] +
-        dt * k_diff *
-        (specie[length + 1, depth] +
-        specie[length, depth - 1] -
-        specie[length, depth] * 2)
-    )
+    specie[length, depth] = (specie[length, depth] +
+                             (dt*k_diff*(specie[length+1, depth]+specie[length, depth-1]-(specie[length, depth]*2))))
 
     return specie[length, depth]
 
@@ -222,13 +176,8 @@ def upper_left_corner_diff(specie, length, depth, k_diff, dt):
 @jit
 def upper_right_corner_diff(specie, length, depth, k_diff, dt):
 
-    specie[length, depth] = (
-        specie[length, depth] +
-        dt * k_diff *
-        (specie[length - 1, depth] +
-        specie[length, depth - 1] -
-        specie[length, depth] * 2)
-    )
+    specie[length, depth] = (specie[length, depth] +
+                             (dt*k_diff*(specie[length-1, depth]+specie[length, depth-1]-(specie[length, depth]*2))))
 
     return specie[length, depth]
 
