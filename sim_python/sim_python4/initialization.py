@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def initialization(params):
+def initialization(params, anchor=False, num_col=10, ratio=2):
     """
     Initializes the parameters needed to simulate the model.
 
@@ -26,6 +26,9 @@ def initialization(params):
             - stop (float or integer): Stop time of the simulation.
             - dt (float): Time step.
             - interval_save (integer): Interval used to save concentration matrices.
+        - anchor (boolean): if True, anchor cells will be initialized.
+        num_col (int): number of the matrix columns, which are able to produce the product.
+        ratio (int or float): use to define the concentration ratio.
 
     Returns:
         - init_params (tuple): Contains necessary parameters and initialized ndarray concentration matrices.
@@ -50,31 +53,48 @@ def initialization(params):
     stop = params["stop"]
     dt = params["dt"]
     interval_save = params["save step interval"]
+    init_num_cell = params["initial cell number"]
 
     # Calculating number of time steps and intermediate matrices
     num_time_steps = int(np.ceil(stop / dt)) + 1
     idx = int(np.ceil(num_time_steps / interval_save))
     epoch = 1
 
-    fM = np.zeros((com_len, com_wid), dtype=np.float32)  # Free morphogen 2D matrix
-    fM[:, 0] = 1
-    fI = np.zeros((com_len, com_wid), dtype=np.float32)  # Free inhibitor 2D matrix
-    fI[:, -1] = 1
-    A = np.ones((com_len, com_wid), dtype=np.float32)  # Anchor 2D matrix (cells which have anchor)
-    IM = np.zeros((com_len, com_wid), dtype=np.float32)  # Inhibitor-morphogen 2D matrix
-    AM = np.zeros((com_len, com_wid), dtype=np.float32)  # Anchor-morphogen 2D matrix
+    fM = np.zeros((com_len, com_wid), dtype=np.float32)  # Free morphogen, 2D matrix
+    fI = np.zeros((com_len, com_wid), dtype=np.float32)  # Free inhibitor, 2D matrix
+    IM = np.zeros((com_len, com_wid), dtype=np.float32)  # Inhibitor-morphogen, 2D matrix
+    AM = np.zeros((com_len, com_wid), dtype=np.float32)  # Anchor-morphogen, 2D matrix
+
+    M_cells = np.zeros((com_len, com_wid), dtype=np.float32)  # cells, which produce morphogen, 2D matrix
+    I_cells = np.zeros((com_len, com_wid), dtype=np.float32)  # cells, which produce inhibitor, 2D matrix
+    A_cells = np.zeros((com_len, com_wid), dtype=np.float32)  # cells, which have anchor, 2D matrix
+
+    #  initialize cells
+    M_cells, I_cells, A_cells = initial_cell_seed1(
+        num_col=num_col,
+        ratio=ratio,
+        init_num_cell=init_num_cell,
+        M_cells=M_cells,
+        I_cells=I_cells,
+        A_cells=A_cells,
+        anchor=anchor
+    )
 
     # Initializing concentration matrices
-    fM_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # Free morphogen 3D matrix
+    fM_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # Free morphogen, 3D matrix
     fM_all[:, :, 0] = fM
-    fI_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # Free inhibitor 3D matrix
+    fI_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # Free inhibitor, 3D matrix
     fI_all[:, :, 0] = fI
-    A_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # Anchor 3D matrix (cells which have anchor)
-    A_all[:, :, 0] = A
-    IM_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # Inhibitor-morphogen 3D matrix
+    IM_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # Inhibitor-morphogen, 3D matrix
     IM_all[:, :, 0] = IM
-    AM_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # Anchor-morphogen 3D matrix
+    AM_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # Anchor-morphogen, 3D matrix
     AM_all[:, :, 0] = AM
+    M_cells_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # cells which have anchor, 3D matrix
+    M_cells_all[:, :, 0] = M_cells
+    I_cells_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # cells which have anchor, 3D matrix
+    I_cells_all[:, :, 0] = I_cells
+    A_cells_all = np.zeros((com_len, com_wid, idx), dtype=np.float32)  # cells which have anchor, 3D matrix
+    A_cells_all[:, :, 0] = A_cells
 
     # Packaging initialized parameters into a tuple
     init_params = (
@@ -99,16 +119,43 @@ def initialization(params):
         num_time_steps,
         epoch,
         interval_save,
-        fM,
-        fI,
-        A,
-        IM,
-        AM,
+        init_num_cell,
         fM_all,
         fI_all,
-        A_all,
         IM_all,
-        AM_all
+        AM_all,
+        M_cells_all,
+        I_cells_all,
+        A_cells_all
     )
 
     return init_params
+
+
+def initial_cell_seed1(num_col, ratio, init_num_cell, M_cells, I_cells, A_cells, anchor):
+    """
+    Sets initial cell configurations based on given parameters.
+
+    Arguments:
+        num_col (int): number of the matrix columns, which are able to produce the product.
+        ratio (int or float): use to define the concentration ratio
+        init_num_cell (float): Initial cell number (I think it is the initial concentration of product in corresponding cells !!!).
+        A_cells (ndarray): Array for anchor cells.
+        M_cells (ndarray): Array for Morphogen (GFP) cells.
+        I_cells (ndarray): Array for inhibitor cells.
+        anchor (boolean) : if True, anchor cells will be initialized.
+
+    Returns:
+        tuple: Arrays for anchor, morphogen (GFP), and inhibitor cells with updated configurations.
+    """
+    if anchor:
+        M_cells[:, 0:num_col] = init_num_cell
+        I_cells[:, - num_col:] = init_num_cell
+        A_cells[:] = init_num_cell / ratio
+    else:
+        M_cells[:, 0:num_col] = init_num_cell
+        I_cells[:, - num_col:] = init_num_cell
+
+    return M_cells, I_cells, A_cells
+
+

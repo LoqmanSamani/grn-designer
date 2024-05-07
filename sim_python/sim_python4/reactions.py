@@ -3,18 +3,19 @@ from numba import jit
 
 
 @jit
-def production(pre_con, pk, dt):
+def production(pre_con, num_cell, pk, dt):
     """
     morphogen/ inhibitor production process
     Updates the concentration of the morphogen/inhibitor from pre_con (previous concentration) to con (concentration).
     Arguments:
         - pre_con (float number): previous concentration of the morphogen/inhibitor in a cell.
+        - num_cell (int or float): cell number (I think it is the initial concentration of product in corresponding cells !!!).
         - pk (float number): production rate constant of the morphogen/inhibitor.
         - dt (float number): time interval.
     Returns:
         - con (float number): updated concentration of free morpgogen/inhibitor.
     """
-    con = pk * pre_con * dt
+    con = pre_con + (pk * num_cell * dt)
 
     return con
 
@@ -32,7 +33,7 @@ def degradation(pre_con, dk, dt):
         - con (float number): updated concentration of free morpgogen/inhibitor.
     """
 
-    con = dk * pre_con * dt
+    con = pre_con - (dk * pre_con * dt)
 
     return con
 
@@ -61,13 +62,13 @@ def bound_inhibitor(fm_pre_con, fi_pre_con, im_pre_con, k_on, k_off, dt):
 
 
 @jit
-def bound_anchor(fm_pre_con, am_pre_con, k_on, k_off, a_pre_con, dt):
+def bound_anchor(fm_pre_con, am_pre_con, k_on, k_off, a_cells, dt):
     """
     anchor-morphogen binding process
     Arguments:
         - fm_pre_con (float number): previous concentration of the free morphogen in a cell.
         - am_pre_con (float number): previous concentration of the anchor-morphogen in a cell.
-        - a_pre_con (float number): previous concentration of the anchor in a cell.
+        - a_cells (float number): concentration of the anchor in a cell.
         - k_on (float number): binding rate constant for the reaction m + a -> am.
         - k_off (float number): unbinding rate constant for the reaction m + a <- am.
         - dt (float number): time interval.
@@ -76,7 +77,7 @@ def bound_anchor(fm_pre_con, am_pre_con, k_on, k_off, a_pre_con, dt):
         - fi_con (float number): updated concentration of free inhibitor.
         - im_con (float number): updated concentration of inhibitor-morphogen.
     """
-    free_cells = np.maximum(0, a_pre_con - am_pre_con)
+    free_cells = np.maximum(0, a_cells - am_pre_con)
     am_con = am_pre_con + (k_on * fm_pre_con * free_cells * dt) - (k_off * am_pre_con * dt)
     fm_con = fm_pre_con - (k_on * fm_pre_con * free_cells * dt) + (k_off * am_pre_con * dt)
 

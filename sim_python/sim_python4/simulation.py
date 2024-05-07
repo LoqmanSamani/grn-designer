@@ -68,21 +68,28 @@ def simulation(init_params, one_cell=True):
         num_time_steps,
         epoch,
         interval_save,
-        fM,
-        fI,
-        A,
-        IM,
-        AM,
+        init_num_cell,
         fM_all,
         fI_all,
-        A_all,
         IM_all,
-        AM_all
+        AM_all,
+        M_cells_all,
+        I_cells_all,
+        A_cells_all
     ) = init_params
 
     time_ = start
+    max_epoch = AM_all.shape[2] * interval_save
 
-    while time_ <= stop:
+    fM = fM_all[:, :, 0]
+    fI = fI_all[:, :, 0]
+    IM = IM_all[:, :, 0]
+    AM = AM_all[:, :, 0]
+    M_cells = M_cells_all[:, :, 0]
+    I_cells = I_cells_all[:, :, 0]
+    A_cells = A_cells_all[:, :, 0]
+
+    while time_ <= stop or epoch <= max_epoch:
 
         for length in range(com_len):
             for width in range(com_wid):
@@ -90,6 +97,7 @@ def simulation(init_params, one_cell=True):
                 # morphogen production
                 fM[length, width] = production(
                     pre_con=fM[length, width],
+                    num_cell=M_cells[length, width],
                     pk=k_fm_sec,
                     dt=dt
                 )
@@ -97,6 +105,7 @@ def simulation(init_params, one_cell=True):
                 # inhibitor production
                 fI[length, width] = production(
                     pre_con=fI[length, width],
+                    num_cell=I_cells[length, width],
                     pk=k_fi_sec,
                     dt=dt
                 )
@@ -107,7 +116,7 @@ def simulation(init_params, one_cell=True):
                     am_pre_con=AM[length, width],
                     k_on=k_am_on,
                     k_off=k_am_off,
-                    a_pre_con=A[length, width],
+                    a_cells=A_cells[length, width],
                     dt=dt
                 )
 
@@ -128,17 +137,17 @@ def simulation(init_params, one_cell=True):
                     dt=dt
                 )
                 AM[length, width] = degradation(
-                    pre_con=fM[length, width],
+                    pre_con=AM[length, width],
                     dk=k_am_deg,
                     dt=dt
                 )
                 IM[length, width] = degradation(
-                    pre_con=fM[length, width],
+                    pre_con=IM[length, width],
                     dk=k_im_deg,
                     dt=dt
                 )
                 fI[length, width] = degradation(
-                    pre_con=fM[length, width],
+                    pre_con=fI[length, width],
                     dk=k_fi_deg,
                     dt=dt
                 )
@@ -165,7 +174,7 @@ def simulation(init_params, one_cell=True):
                         compartment_width=com_wid
                     )
                     IM[length, width] = diffusion1(
-                        specie=fM,
+                        specie=IM,
                         length=length,
                         width=width,
                         k_diff=k_im_diff,
@@ -194,7 +203,7 @@ def simulation(init_params, one_cell=True):
                         compartment_width=com_wid
                     )
                     IM[length, width] = diffusion2(
-                        specie=fM,
+                        specie=IM,
                         length=length,
                         width=width,
                         k_diff=k_im_diff,
@@ -205,16 +214,19 @@ def simulation(init_params, one_cell=True):
 
         # save every saveStepInterval
         if epoch % interval_save == 0:
+
             idx = int(epoch / interval_save)
             fM_all[:, :, idx] = fM
             fI_all[:, :, idx] = fI
             IM_all[:, :, idx] = IM
             AM_all[:, :, idx] = AM
-            A_all[:, :, idx] = A
+            M_cells_all[:, :, idx] = M_cells
+            I_cells_all[:, :, idx] = I_cells
+            A_cells_all[:, :, idx] = A_cells
 
         # update time
         time_ += dt
         epoch += 1
     print("It's Done!")
 
-    return (fM_all, fI_all, IM_all, AM_all, A_all)
+    return (fM_all, fI_all, IM_all, AM_all, M_cells_all, I_cells_all, A_cells_all)
