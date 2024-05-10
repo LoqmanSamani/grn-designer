@@ -3,7 +3,7 @@ from heatmap_plots import *
 from scatter_plot import *
 from surface_plot import *
 
-"""
+
 model1 = HeatMap(
     data_path="/home/samani/Documents/sim/sim15.h5",
     video_directory="/home/samani/Documents/sim/",
@@ -133,7 +133,9 @@ surface_animation(
     colorbar=False,
     c_map="YellowBlack"
 )
-"""
+
+
+
 scatter_animation(
     data_path="/home/samani/Documents/sim/sim15.h5",
     key="fM",
