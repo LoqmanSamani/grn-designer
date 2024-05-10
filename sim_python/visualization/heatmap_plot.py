@@ -41,6 +41,9 @@ class HeatMap:
         yellow_ = [(0, 0, 0), (1, 1, 0)]  # yellow
         purple_ = [(0, 0, 0), (1, 0, 1)]  # purple
         blue_green_ = [(0, 0, 0), (0, 1, 1)]  # blue-green
+        red_purple_ = [(0, 0, 0), ((red_[1][0] + purple_[1][0]) / 2,
+                                   (red_[1][1] + purple_[1][1]) / 2,
+                                   (red_[1][2] + purple_[1][2]) / 2)]
 
         if self.c_map == "RedBlack":
             cmap = LinearSegmentedColormap.from_list("RedBlack", red_)
@@ -54,6 +57,8 @@ class HeatMap:
             cmap = LinearSegmentedColormap.from_list("PurpleBlack", purple_)
         elif self.c_map == "BlueGreenBlack":
             cmap = LinearSegmentedColormap.from_list("PurpleBlack", blue_green_)
+        elif self.c_map == "RedPurpleBlack":
+            cmap = LinearSegmentedColormap.from_list("PurpleBlack", red_purple_)
 
         else:
             cmap = LinearSegmentedColormap.from_list("RedBlack", red_)
