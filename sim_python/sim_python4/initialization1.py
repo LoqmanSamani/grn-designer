@@ -169,12 +169,12 @@ def initial_cell_seed1(num_col, ratio, init_num_cell, M_cells, MC_cells, I_cells
     """
     if anchor:
         M_cells[:, 0:num_col] = init_num_cell
-        MC_cells[:, 50:50+num_col] = init_num_cell/ratio
+        MC_cells[:, 30:30+num_col] = init_num_cell/ratio
         I_cells[:, - num_col:] = init_num_cell
         A_cells[:] = init_num_cell / ratio
     else:
         M_cells[:, 0:num_col] = init_num_cell
-        MC_cells[:, 50:50+num_col] = init_num_cell/ratio
+        MC_cells[:, 30:30+num_col] = init_num_cell/ratio
         I_cells[:, - num_col:] = init_num_cell
 
     return M_cells, MC_cells, I_cells, A_cells

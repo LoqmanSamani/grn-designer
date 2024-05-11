@@ -96,11 +96,6 @@ def simulation(init_params, one_cell=True):
     AMC = AMC_all[:, :, 0]
     M_cells = M_cells_all[:, :, 0]
     MC_cells = MC_cells_all[:, :, 0]
-    print(MC_cells[0, :])
-    print(MC_cells[1, :])
-    print(MC_cells[2, :])
-    print(MC_cells[3, :])
-    print(MC_cells[4, :])
     I_cells = I_cells_all[:, :, 0]
     A_cells = A_cells_all[:, :, 0]
 
@@ -135,7 +130,7 @@ def simulation(init_params, one_cell=True):
 
                 # anchor_binding
                 AMC[length, width], MC[length, width] = bound_anchor(
-                    fm_pre_con=fM[length, width],
+                    fm_pre_con=MC[length, width],
                     am_pre_con=AMC[length, width],
                     k_on=k_amc_on,
                     k_off=k_amc_off,

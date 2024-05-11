@@ -9,13 +9,13 @@ import h5py
 infos = {
     "compartment length": 100,
     "compartment width": 100,
-    "initial cell number": 5,
+    "initial cell number": 2,
     "start": 1,
-    "stop": 4,
+    "stop": 50,
     "dt": 0.02,
-    "save step interval": 2,
+    "save step interval": 10,
     "k_fm_sec": 0.5,
-    "k_mc_sec": 0.2,
+    "k_mc_sec": 0.5,
     "k_fi_sec": 0.5,
     "k_amc_on": 0.04,
     "k_amc_off": 2e-6,
@@ -27,12 +27,12 @@ infos = {
     "k_imc_deg": 0.02,
     "k_amc_deg": 0.02,
     "k_m_diff": 4,
-    "k_mc_diff": 2,
+    "k_mc_diff": 3,
     "k_i_diff": 4,
-    "k_imc_diff": 3
+    "k_imc_diff": 2.8
 }
 
-params = initialization(infos, anchor=False, num_col=5, ratio=5)
+params = initialization(infos, anchor=False, num_col=10, ratio=5)
 
 
 result = simulation(init_params=params, one_cell=True)
