@@ -76,7 +76,6 @@ model4 = HeatMap(
 )
 
 model4.heatmap_animation(key="IMC")
-"""
 
 
 surface_animation(
@@ -107,22 +106,26 @@ surface_animation(
     c_map="PurpleBlack"
 )
 
+
+
 surface_animation(
     data_path="/home/samani/Documents/sim/sim.h5",
     key="IMC",
     video_directory="/home/samani/Documents/sim/",
-    video_name="inhibitor_morphogen",
+    video_name="inhibitor_mcherry",
     title="Inhibitor-mCherry",
     x_label="Number of Cells",
     y_label="Number of Cells",
     z_label="Concentration",
     colorbar=False,
-    c_map="RddPurpleBlack"
+    c_map="RedPurpleBlack"
 )
+
+
 
 surface_animation(
     data_path="/home/samani/Documents/sim/sim.h5",
-    key="fM",
+    key="GFP",
     video_directory="/home/samani/Documents/sim/",
     video_name="free_gfp",
     title="Free GFP",
@@ -132,9 +135,10 @@ surface_animation(
     colorbar=False,
     c_map="GreenBlack"
 )
-
-
 """
+
+
+
 scatter_animation(
     data_path="/home/samani/Documents/sim/sim.h5",
     key="MC",
@@ -173,12 +177,12 @@ scatter_animation(
     y_label="Number of Cells",
     z_label="Concentration",
     colorbar=False,
-    c_map="RddPurpleBlack"
+    c_map="RedPurpleBlack"
 )
 
 scatter_animation(
     data_path="/home/samani/Documents/sim/sim.h5",
-    key="fM",
+    key="GFP",
     video_directory="/home/samani/Documents/sim/",
     video_name="free_gfp",
     title="Free GFP",
@@ -188,7 +192,7 @@ scatter_animation(
     colorbar=False,
     c_map="GreenBlack"
 )
-"""
+
 
 
 
