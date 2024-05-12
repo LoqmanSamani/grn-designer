@@ -8,6 +8,16 @@ import h5py
 
 
 
+"""
+The following code runs a simulation based on the fifth system (/home/samani/Documents/projects/master_project/sim_python/sim_python5). 
+It simulates a biological system (100 * 100 cells) in which on one side the first ten columns (from the left) of the compartment are 
+capable of producing and releasing green fluorescent protein (GFP), and on the other side the first ten columns (from the right) are 
+cells capable of producing and releasing anti-mCherry (mCherry inhibitor). The cells in columns 30-40 are capable of producing mCherry 
+molecules, which must be activated by GFP molecules. very cell in the system can produce anchors to capture GFP molecules (anchor=True).
+"""
+
+
+
 
 infos = {
     "compartment length": 100,
