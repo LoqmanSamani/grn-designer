@@ -5,6 +5,15 @@ import h5py
 
 
 
+"""
+The following code runs a simulation based on the fourth system (/home/samani/Documents/projects/master_project/sim_python/sim_python4). 
+It simulates a biological system (100 * 100 cells) in which, on one side, the first ten columns (from the left) of the compartment are
+capable of producing and releasing green fluorescent protein (GFP), and on the other side, the first ten columns (from the right) 
+cells are capable of producing and releasing anti-GFP (GFP inhibitor). There is no potential to produce anchors (anchor=False).
+"""
+
+
+
 # parameter dictionary
 infos = {
     "compartment length": 100,
@@ -30,7 +39,7 @@ infos = {
 }
 
 # initializes conditions
-params = initialization(infos, anchor=True, num_col=10, ratio=10)
+params = initialization(infos, anchor=False, num_col=10, ratio=10)
 
 # simulates the system
 result = simulation(init_params=params, one_cell=True)

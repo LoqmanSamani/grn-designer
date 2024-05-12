@@ -1,5 +1,5 @@
 from diffusion import *
-from reactions1 import *
+from reactions import *
 from numba import jit
 
 

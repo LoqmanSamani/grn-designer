@@ -1,8 +1,7 @@
-from initialization1 import *
-from simulation1 import *
+from initialization import *
+from simulation import *
 import os
 import h5py
-
 
 
 
@@ -17,7 +16,7 @@ infos = {
     "k_fm_sec": 0.5,
     "k_mc_sec": 0.5,
     "k_fi_sec": 0.5,
-    "k_amc_on": 0.04,
+    "k_amc_on": 0.3,
     "k_amc_off": 2e-6,
     "k_imc_on": 0.2,
     "k_imc_off": 2e-4,
@@ -32,7 +31,7 @@ infos = {
     "k_imc_diff": 2.8
 }
 
-params = initialization(infos, anchor=False, num_col=10, ratio=5)
+params = initialization(infos, anchor=True, num_col=10, ratio=5)
 
 
 result = simulation(init_params=params, one_cell=True)
@@ -42,7 +41,7 @@ full_path = "/home/samani/Documents/sim"
 if not os.path.exists(full_path):
     os.makedirs(full_path)
 
-full_file_path = os.path.join(full_path, "sim.h5")
+full_file_path = os.path.join(full_path, "sim12.h5")
 
 with h5py.File(full_file_path, "w") as file:
     file.create_dataset("GFP", data=result[0])
