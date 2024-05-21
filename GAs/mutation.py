@@ -1,31 +1,43 @@
 import random
 
 
-def mutate(chromosome, mutation_rate):
+
+
+
+def mutate(chromosome, mutation_rates):
+
     """
-    Mutate a binary chromosome based on the mutation rate.
+    Mutate a chromosome with sub-chromosomes (each sub-chromosome is a binary string) based on the mutation rates.
 
     Args:
-        - chromosome (str): The binary string representing the chromosome.
-        - mutation_rate (float): The probability of mutating each bit.
+        - chromosome (list of str): The list contains binary strings representing the chromosome,
+                                    where each binary string is a sub-chromosome.
+        - mutation_rates (list of float): The probabilities of mutating each bit in each sub-chromosome.
 
     Returns:
-        - str: The mutated binary string.
+        - mutated_chromosome (list of str): The mutated chromosome, with each sub-chromosome mutated based on the corresponding mutation rate.
+
+    Example:
+        chromosome = ['11001', '10110']
+        mutation_rates = [0.1, 0.2]
+        mutated_chromosome = mutate(chromosome, mutation_rates)
     """
 
     mutated_chromosome = []
 
-    for bit in chromosome:
+    for sub_chromosome, mutation_rate in zip(chromosome, mutation_rates):
 
-        if random.random() <= mutation_rate:
+        mutated_sub_chromosome = ''.join(
+            '1' if bit == '0' and random.random() <= mutation_rate else
+            '0' if bit == '1' and random.random() <= mutation_rate else
+            bit
+            for bit in sub_chromosome
+        )
 
-            mutated_chromosome.append('1' if bit == '0' else '0')
+        mutated_chromosome.append(mutated_sub_chromosome)
 
-        else:
+    return mutated_chromosome
 
-            mutated_chromosome.append(bit)
-
-    return "".join(mutated_chromosome)
 
 
 

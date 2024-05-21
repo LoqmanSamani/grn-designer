@@ -1,44 +1,57 @@
 import random
 
 
-def crossover(parent1, parent2, crossover_rate=0.8, num_crossover_points=1):
+
+
+def crossover(parents1, parents2, crossover_rates, num_crossover_points):
+
     """
-    Perform multi-point crossover between two parents to generate two offspring.
+    Perform multi-points crossover between two parents to generate two offspring.
 
     Args:
-        parent1 (str): The binary string representing the first parent.
-        parent2 (str): The binary string representing the second parent.
-        crossover_rate (float, optional): The probability of performing a crossover. Defaults to 0.7.
-        num_crossover_points (int, optional): The number of crossover points between the two parents. Defaults to 1.
+        parents1 (list of str): A list of binary strings representing the first parent.
+        parents2 (list of str): A list of binary strings representing the second parent.
+        crossover_rates (list of float): A list of probabilities of performing crossover for each sub-chromosome.
+        num_crossover_points (list of int): A list containing the number of crossover points for each sub-chromosome.
 
     Returns:
-        tuple of str: Two binary strings representing the offspring.
+        tuple of list: Two lists of binary strings representing the offspring.
 
-    Example:
-        offspring1, offspring2 = crossover('11001', '10110', crossover_rate=0.7, num_crossover_points=2)
     """
-    if random.random() < crossover_rate:
 
-        crossover_points = sorted(random.sample(range(1, len(parent1)), num_crossover_points))
-        offspring1 = []
-        offspring2 = []
+    offspring1 = []
+    offspring2 = []
 
-        for i in range(len(crossover_points) + 1):
+    for parent1, parent2, crossover_rate, num_points in zip(parents1, parents2, crossover_rates, num_crossover_points):
 
-            start = 0 if i == 0 else crossover_points[i - 1]
-            end = len(parent1) if i == len(crossover_points) else crossover_points[i]
+        if random.random() < crossover_rate:
 
-            if i % 2 == 0:
+            crossover_points = sorted(random.sample(range(1, len(parent1)), num_points))
+            child1, child2 = [], []
+            start = 0
 
-                offspring1.extend(parent1[start:end])
-                offspring2.extend(parent2[start:end])
+            for i, point in enumerate(crossover_points + [len(parent1)]):
 
-            else:
+                if i % 2 == 0:
 
-                offspring1.extend(parent2[start:end])
-                offspring2.extend(parent1[start:end])
-        return "".join(offspring1), "".join(offspring2)
+                    child1.extend(parent1[start:point])
+                    child2.extend(parent2[start:point])
 
-    return parent1, parent2
+                else:
+
+                    child1.extend(parent2[start:point])
+                    child2.extend(parent1[start:point])
+
+                start = point
+
+            offspring1.append(''.join(child1))
+            offspring2.append(''.join(child2))
+
+        else:
+
+            offspring1.append(parent1)
+            offspring2.append(parent2)
+
+    return offspring1, offspring2
 
 

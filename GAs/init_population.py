@@ -1,6 +1,8 @@
 import random
 
 
+
+
 def initialize_population(pop_size, bit_length):
 
     """
@@ -21,12 +23,41 @@ def initialize_population(pop_size, bit_length):
 
 
 
+def create_population(sp1, sp2, sp1_cells, sp2_cells, params):
+
+    """
+    Create a population of chromosomes from species concentrations, cell distributions, and parameters.
+
+    Args:
+        sp1 (list): List of initialized concentration matrices for species 1.
+        sp2 (list): List of initialized concentration matrices for species 2.
+        sp1_cells (list): nested List of cell distributions for species 1.
+        sp2_cells (list): nested List of cell distributions for species 2.
+        params (list): nested List of parameter sets.
+
+    Returns:
+        population (nested list): Population of chromosomes, where each chromosome is a list containing
+                      [species 1 concentration matrix, species 2 concentration matrix, species 1 cell distribution matrix,
+                      species 2 cell distribution matrix , parameters].
+    """
+    population = [[sp1[i], sp2[i], sp1_cells[i], sp2_cells[i], params[i]] for i in range(len(sp1))]
+
+    return population
 
 
 
-pop_binary = initialize_population(20, 40)
 
-pop_decimal = [binary_to_decimal(pop_binary[i], [(0, 1, 8) for _ in range(5)]) for i in range(len(pop_binary))]
-print(pop_decimal)
-print(len(pop_decimal))
-print(len(pop_decimal[0]))
+def extract_based_on_max_index(list1, list2):
+    """
+    Extract an object from list1 based on the index of the maximum value in list2.
+
+    Args:
+        list1 (list): The list from which to extract the object.
+        list2 (list): The list used to determine the index of the maximum value.
+
+    Returns:
+        object: The object from list1 corresponding to the index of the maximum value in list2.
+    """
+    max_index = list2.index(max(list2))
+
+    return (max_index, list1[max_index])
