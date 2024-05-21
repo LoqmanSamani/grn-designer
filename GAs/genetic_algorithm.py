@@ -63,11 +63,11 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
     best_fitness = []  # a list to store the best fitness of each generation
     simulation_duration = []
 
-    print("----------------------------------------------------------")
+    print("-----------------------------------------------------------------------------------------------------------")
     print()
-    print("                 *** Genetic Algorithm ***                ")
+    print("                                      *** Genetic Algorithm ***                                            ")
     print()
-    print("----------------------------------------------------------")
+    print("-----------------------------------------------------------------------------------------------------------")
 
     sp1 = initialize_population(
         pop_size=population_size,
@@ -93,6 +93,7 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
 
     population = create_population(sp1=sp1, sp2=sp2, sp1_cells=sp1_cells, sp2_cells=sp2_cells, params=params)
     binary_target = decimal_to_binary(array_list=[target], precision_bits_list=[target_precision_bits])
+    max_fitness = sum([len(sub_target) for sub_target in binary_target])
 
     for generation in range(1, generations + 1):
 
@@ -162,8 +163,8 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
 
             toc = time.time()
             simulation_duration.append(toc - tic)
-        print(
-            f"Generation {generation}; Best Fitness: {max(generation_fitness)}; Generation Duration: {simulation_duration[-1]}")
+
+        print(f"Generation {generation}; Best/Max Fitness: {max(generation_fitness)}/{max_fitness}; Generation Duration: {simulation_duration[-1]}")
 
         population = new_population
 
