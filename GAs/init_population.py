@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 
 
@@ -60,4 +61,13 @@ def extract_based_on_max_index(list1, list2):
     """
     max_index = list2.index(max(list2))
 
-    return (max_index, list1[max_index])
+    return list1[max_index]
+
+
+def check_nan(sim_result):
+
+    nan_indices = np.isnan(sim_result)
+    num_nan = np.sum(nan_indices)
+
+    return num_nan
+

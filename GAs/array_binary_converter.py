@@ -4,7 +4,6 @@ import numpy as np
 
 
 def decimal_to_binary(array_list, precision_bits_list):
-
     """
     Convert a list of 2D NumPy arrays to a list of binary strings.
 
@@ -25,14 +24,27 @@ def decimal_to_binary(array_list, precision_bits_list):
 
         min_val, max_val, bits = precision_bits
 
-        binary_string = ''.join(
-            f"{int((val - min_val) / (max_val - min_val) * ((1 << bits) - 1)):0{bits}b}"
-            for sub_array in array for val in sub_array
-        )
+        if max_val == min_val:
+            # All values will be the same in this case, handle gracefully by converting to '0' * bits
+            binary_string = ''.join(
+                '0' * bits
+                for sub_array in array for val in sub_array
+            )
+        else:
+            binary_string = ''.join(
+                f"{int((val - min_val) / (max_val - min_val) * ((1 << bits) - 1)):0{bits}b}"
+                if not np.isnan(val) else '0' * bits  # Handle NaN by converting to '0' * bits
+                for sub_array in array for val in sub_array
+            )
 
         binary_strings.append(binary_string)
 
     return binary_strings
+
+
+
+
+
 
 
 

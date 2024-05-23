@@ -7,12 +7,12 @@ from selection import *
 from recombination import crossover
 from mutation import *
 import time
-import numpy as np
 
 
 def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_params, generations, mutation_rates,
                       crossover_rates, num_crossover_points, target, target_precision_bits, result_path,
-                      file_name="sim_result", dt=0.1, sim_start=0, sim_stop=5, epochs=500):
+                      selection_method="roulette", tournament_size=5, file_name="sim_result", dt=0.01, sim_start=0,
+                      sim_stop=5, epochs=500, fitness_trigger=None):
 
     """
     Execute a genetic algorithm to optimize a population of binary-encoded chromosomes.
@@ -42,6 +42,7 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         sim_start (float or integer): Start time of the simulation.
         sim_stop (float or integer): Stop time of the simulation.
         epochs (int): maximum number of simulation iteration
+        fitness_trigger (int or float): fitness threshold to break the algorithm
 
     Returns:
         population (list of list): Final population of binary-encoded chromosomes.
@@ -68,13 +69,13 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         )
     """
 
-    elite_chromosomes = {}  # a dictionary to store the best chromosome of each generation
-    best_fitness = []  # a list to store the best fitness of each generation
-    simulation_duration = []
-
-    print("-------------------------------------------------------------------------------------")
+    elite_chromosome = []  # list to store the best chromosome
+    best_fitness = []  # list to store the best fitness of each generation
+    simulation_duration = []  # list to store the duration of each generation in seconds
+    best_results = []  # list to store the best result of each generation
+    print(f"{'=' * 85}")
     print("                             *** Genetic Algorithm ***                               ")
-    print("-------------------------------------------------------------------------------------")
+    print(f"{'=' * 85}")
 
     sp1 = initialize_population(
         pop_size=population_size,
@@ -97,10 +98,16 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         pop_size=population_size,
         bit_length=num_params * precision_bits["params"][-1]
     )
+
     precision_bits_list = [precision_bits["sp1"], precision_bits["sp2"], precision_bits["sp1_cells"], precision_bits["sp2_cells"], precision_bits["sp2_cells"]]
     population = create_population(sp1=sp1, sp2=sp2, sp1_cells=sp1_cells, sp2_cells=sp2_cells, params=params)
     binary_target = decimal_to_binary(array_list=[target], precision_bits_list=[target_precision_bits])
-    max_fitness = sum([len(sub_target) for sub_target in binary_target])
+
+    if fitness_trigger:
+        max_fitness = fitness_trigger
+    else:
+        max_fitness = sum([len(sub_target) for sub_target in binary_target])
+
     target_shape = target.shape
 
     for generation in range(1, generations + 1):
@@ -117,7 +124,10 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         # simulate the system with each chromosome in the population
         binary_simulation_results = []
         simulation_results = []
+        count = 0
+        pop = []
         for chromosome in decoded_population:
+
             simulation_result = simulation(
                 sp1=chromosome[0],
                 sp2=chromosome[1],
@@ -130,34 +140,67 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
                 epochs=epochs,
                 target_shape=target_shape
             )
-            simulation_results.append(simulation_result)
-            binary_simulation_results.append(
-                decimal_to_binary(
-                    array_list=[simulation_result],
-                    precision_bits_list=[target_precision_bits]
+            num_nan = check_nan(sim_result=simulation_result)
+            if num_nan == 0:
+                simulation_results.append(simulation_result)
+                pop.append(population[count])
+                binary_simulation_results.append(
+                    decimal_to_binary(
+                        array_list=[simulation_result],
+                        precision_bits_list=[target_precision_bits]
+                    )
                 )
-            )
+
+        population = pop
         generation_fitness = compute_fitness(
             population=binary_simulation_results,
-            target=binary_target
+            target=binary_target[0]
         )
+        elite_chromosome = extract_based_on_max_index(list1=decoded_population, list2=generation_fitness)
+        best_result = extract_based_on_max_index(list1=simulation_results, list2=generation_fitness)
+        best_results.append(best_result)
+        max_generation_fitness = max(generation_fitness)
+        best_fitness.append(max_generation_fitness)
+        if max_generation_fitness == max_fitness:
+            print()
+            print("The Algorithm Found The Best Solution (max fitness == max generation fitness)")
+            species = list(precision_bits.keys())
+            save_results(
+                result_path=result_path,
+                file_name=file_name,
+                elite_chromosome=elite_chromosome,
+                species=species,
+                best_fitness=best_fitness,
+                simulation_duration=simulation_duration,
+                population=best_results,
 
-        best_fitness.append(max(generation_fitness))
-        elite_chromosomes[f"Generation {generation}"] = extract_based_on_max_index(
-            list1=simulation_results,
-            list2=generation_fitness
-        )
+            )
+            break
 
         new_population = []
-        print(binary_simulation_results[0])
-        parents = select_parents(
-            population=binary_simulation_results,
-            fitness_scores=generation_fitness
-        )
-        print(parents[0])
+        parents = []
+        if selection_method == "roulette":
+
+            parents = select_parents_roulette(
+                population=population,
+                fitness_scores=generation_fitness,
+                population_size=population_size
+            )
+        elif selection_method == "tournament":
+
+            parents = select_parents_tournament(
+                population=population,
+                fitness_scores=generation_fitness,
+                population_size=population_size,
+                tournament_size=tournament_size
+            )
+
         for _ in range(len(parents) // 2):
+
             parent1 = random.choice(parents)
             parent2 = random.choice(parents)
+            parents.remove(parent1)
+            parents.remove(parent2)
 
             offspring1, offspring2 = crossover(
                 parents1=parent1,
@@ -176,28 +219,33 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
                 )
             ])
 
-            toc = time.time()
-            simulation_duration.append(toc - tic)
+        toc = time.time()
+        simulation_duration.append(toc - tic)
 
         print(f"Generation {generation}; Best/Max Fitness: {max(generation_fitness)}/{max_fitness}; Generation Duration: {simulation_duration[-1]}")
-        print(type(new_population))
-        print(len(new_population))
-        print(type(new_population[0]))
-        print(len(new_population[0]))
-        print(type(population))
-        print(len(population))
-        print(type(population[0]))
-        print(len(population[0]))
         population = new_population
 
+    average_fitness = sum(best_fitness) / len(best_fitness)
+    total_duration = sum(simulation_duration)
+
+    print(f"{'                   -----------------------------------------------'}")
+    print(f"                     Simulation Complete!")
+    print(f"                     The best found fitness: {max(best_fitness)}")
+    print(f"                     Total Generations: {len(best_fitness)}")
+    print(f"                     Average Fitness: {average_fitness:.2f}")
+    print(f"                     Total Simulation Duration: {int(total_duration)} seconds")
+    print(f"{'                   -----------------------------------------------'}")
+
+    species = list(precision_bits.keys())
 
     save_results(
         result_path=result_path,
         file_name=file_name,
-        elite_chromosomes=elite_chromosomes,
+        elite_chromosome=elite_chromosome,
+        species=species,
         best_fitness=best_fitness,
         simulation_duration=simulation_duration,
-        population=population
+        population=best_results
     )
 
     return population
