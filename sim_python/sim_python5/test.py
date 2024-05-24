@@ -6,12 +6,12 @@ import h5py
 
 
 infos = {
-    "compartment length": 100,
-    "compartment width": 100,
+    "compartment length": 50,
+    "compartment width": 50,
     "initial cell number": 2,
     "start": 1,
-    "stop": 50,
-    "dt": 0.02,
+    "stop": 10,
+    "dt": 0.08,
     "save step interval": 10,
     "k_fm_sec": 0.5,
     "k_mc_sec": 0.5,
@@ -41,7 +41,7 @@ full_path = "/home/samani/Documents/sim"
 if not os.path.exists(full_path):
     os.makedirs(full_path)
 
-full_file_path = os.path.join(full_path, "sim12.h5")
+full_file_path = os.path.join(full_path, "sim_new.h5")
 
 with h5py.File(full_file_path, "w") as file:
     file.create_dataset("GFP", data=result[0])

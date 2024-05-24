@@ -101,8 +101,8 @@ def simulation(init_params, one_cell=True):
 
     while time_ <= stop or epoch <= max_epoch:
 
-        for length in range(com_len):
-            for width in range(com_wid):
+        for width in range(com_len):
+            for length in range(com_wid):
 
                 # GFP production
                 fM[length, width] = production(

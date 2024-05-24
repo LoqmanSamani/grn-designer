@@ -20,6 +20,9 @@ target_shape = (20, 20)
 result = simulation(sp1, sp2, sp1_cells, sp2_cells, params, dt, sim_start, sim_stop, epochs, target_shape)
 
 
+
+
+
 full_file_path = os.path.join(full_path, "sim.h5")
 
 with h5py.File(full_file_path, "w") as file:

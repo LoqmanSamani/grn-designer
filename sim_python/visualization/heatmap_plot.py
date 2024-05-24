@@ -1,4 +1,8 @@
 import matplotlib.pyplot as plt
+import cv2
+import os
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.colors import LinearSegmentedColormap
