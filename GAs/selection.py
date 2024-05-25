@@ -38,7 +38,7 @@ def select_parents_tournament(population, fitness_scores, population_size, tourn
     using the Tournament Selection method.
 
     Args:
-        population (list of list of str): The current population of individuals, each represented as a binary string.
+        population (list of list of str): The current population of individuals, each represented as a list of binary strings.
         fitness_scores (list of float): The fitness scores of the individuals in the population.
         population_size (int): Number of chromosomes in the original population.
         tournament_size (int): The number of individuals to participate in each tournament.
@@ -57,4 +57,6 @@ def select_parents_tournament(population, fitness_scores, population_size, tourn
         selected.append(population[best_index])
 
     return selected
+
+
 
