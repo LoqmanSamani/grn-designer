@@ -8,10 +8,10 @@ def simulation(sp1, sp2, sp1_cells, sp2_cells, params, dt, sim_start, sim_stop, 
 
     sp1_sec = params[0, 0]
     sp2_sec = params[0, 1]
-    sp1_diff = params[0, 4]
-    sp2_diff = params[0, 5]
-    sp1_deg = params[0, 6]
-    sp2_deg = params[0, 7]
+    sp1_diff = params[0, 2]
+    sp2_diff = params[0, 3]
+    sp1_deg = params[0, 4]
+    sp2_deg = params[0, -1]
 
     time_ = sim_start
     epoch = 1

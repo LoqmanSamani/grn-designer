@@ -65,9 +65,33 @@ def extract_based_on_max_index(list1, list2):
 
 
 def check_nan(sim_result):
+    """
+    Check if there are any NaN (Not a Number) values in the simulation result.
 
+    Args:
+        sim_result (numpy.ndarray): Array containing simulation results.
+
+    Returns:
+        num_nan (int): Number of NaN values in the simulation result.
+    """
     nan_indices = np.isnan(sim_result)
     num_nan = np.sum(nan_indices)
 
     return num_nan
 
+
+
+def check_inf(sim_result):
+    """
+    Check if there are any infinite values in the simulation result.
+
+    Args:
+        sim_result (numpy.ndarray): Array containing simulation results.
+
+    Returns:
+        num_inf (int): Number of infinite values in the simulation result.
+    """
+    inf_indices = np.isinf(sim_result)
+    num_inf = np.sum(inf_indices)
+
+    return num_inf

@@ -9,10 +9,10 @@ from mutation import *
 import time
 
 
-def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_params, generations, mutation_rates,
+def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_params, mutation_rates,
                       crossover_rates, num_crossover_points, target, target_precision_bits, result_path,
-                      selection_method="roulette", tournament_size=5, file_name="sim_result", dt=0.01, sim_start=0,
-                      sim_stop=5, epochs=500, fitness_trigger=None):
+                      max_generation=1000, selection_method="roulette", tournament_size=5, file_name="sim_result",
+                      dt=0.01, sim_start=0, sim_stop=5, epochs=500, fitness_trigger=None):
 
     """
     Execute a genetic algorithm to optimize a population of binary-encoded chromosomes.
@@ -69,10 +69,10 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         )
     """
 
-    elite_chromosome = []  # list to store the best chromosome
+    elite_chromosome = []  # list to store the best binary chromosome
     best_fitness = []  # list to store the best fitness of each generation
     simulation_duration = []  # list to store the duration of each generation in seconds
-    best_results = []  # list to store the best result of each generation
+    best_results = []  # list to store the best result of each generation (ndarray)
     print(f"{'=' * 85}")
     print("                             *** Genetic Algorithm ***                               ")
     print(f"{'=' * 85}")
@@ -109,8 +109,10 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         max_fitness = sum([len(sub_target) for sub_target in binary_target])
 
     target_shape = target.shape
+    max_generation_fitness = 0
+    generation = 1
 
-    for generation in range(1, generations + 1):
+    while generation <= max_generation and max_generation_fitness < max_fitness:
 
         tic = time.time()
 
@@ -141,7 +143,9 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
                 target_shape=target_shape
             )
             num_nan = check_nan(sim_result=simulation_result)
-            if num_nan == 0:
+            num_inf = check_inf(sim_result=simulation_result)
+
+            if num_nan == 0 and num_inf == 0:
                 simulation_results.append(simulation_result)
                 pop.append(population[count])
                 binary_simulation_results.append(
@@ -150,13 +154,15 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
                         precision_bits_list=[target_precision_bits]
                     )
                 )
+            count += 1
 
         population = pop
         generation_fitness = compute_fitness(
             population=binary_simulation_results,
             target=binary_target[0]
         )
-        elite_chromosome = extract_based_on_max_index(list1=decoded_population, list2=generation_fitness)
+
+        elite_chromosome = extract_based_on_max_index(list1=population, list2=generation_fitness)
         best_result = extract_based_on_max_index(list1=simulation_results, list2=generation_fitness)
         best_results.append(best_result)
         max_generation_fitness = max(generation_fitness)
@@ -197,10 +203,15 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
 
         for _ in range(len(parents) // 2):
 
-            parent1 = random.choice(parents)
-            parent2 = random.choice(parents)
-            parents.remove(parent1)
-            parents.remove(parent2)
+            while len(parents) >= 2:
+                parent1 = random.choice(parents)
+                parents.remove(parent1)
+
+                if len(parents) > 0:
+                    parent2 = random.choice(parents)
+                    parents.remove(parent2)
+                else:
+                    parent2 = parent1
 
             offspring1, offspring2 = crossover(
                 parents1=parent1,
@@ -222,8 +233,10 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         toc = time.time()
         simulation_duration.append(toc - tic)
 
-        print(f"Generation {generation}; Best/Max Fitness: {max(generation_fitness)}/{max_fitness}; Generation Duration: {simulation_duration[-1]}")
+        print(f"Generation {generation}; Best/Max Fitness: {max_generation_fitness}/{max_fitness}; Generation Duration: {simulation_duration[-1]}")
         population = new_population
+        generation += 1
+
 
     average_fitness = sum(best_fitness) / len(best_fitness)
     total_duration = sum(simulation_duration)
