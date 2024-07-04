@@ -1,16 +1,13 @@
-from heatmap_plot import *
-from heatmap_plots import *
-from scatter_plot import *
-from surface_plot import *
+from heatmap import *
+from multi_heatmap import *
+from scatter import *
+from surface import *
 import h5py
 
 
 
-
-
-
 model1 = HeatMap(
-    data_path="/home/samani/Documents/sim/sim_new.h5",
+    data_path="/home/samani/Documents/sim/sim2.h5",
     video_directory="/home/samani/Documents/sim/",
     video_name="free_gfp",
     title="Free GFP",
@@ -24,7 +21,7 @@ model1 = HeatMap(
     norm=False
 )
 
-model1.heatmap_animation(key="GFP")
+model1.heatmap_animation(key="fM")
 
 
 
@@ -106,7 +103,7 @@ model5.heatmap_animation(key="AMC")
 
 
 surface_animation(
-    data_path="/home/samani/Documents/sim/sim15.h5",
+    data_path="/home/samani/Documents/sim/sim2.h5",
     key="fM",
     video_directory="/home/samani/Documents/sim/",
     video_name="free_morphogen",
@@ -117,6 +114,8 @@ surface_animation(
     colorbar=False,
     c_map="GreenBlack"
 )
+
+
 
 surface_animation(
     data_path="/home/samani/Documents/sim/sim15.h5",
@@ -160,7 +159,7 @@ surface_animation(
 
 
 scatter_animation(
-    data_path="/home/samani/Documents/sim/sim15.h5",
+    data_path="/home/samani/Documents/sim/sim2.h5",
     key="fM",
     video_directory="/home/samani/Documents/sim/",
     video_name="free_morphogen",
@@ -171,6 +170,8 @@ scatter_animation(
     colorbar=False,
     c_map="GreenBlack"
 )
+
+
 
 scatter_animation(
     data_path="/home/samani/Documents/sim/sim15.h5",
@@ -218,7 +219,7 @@ scatter_animation(
 keys = ["fM", "IM", "fI"]
 
 model = HeatMaps(
-    data_path="/home/samani/Documents/sim/sim/sim15.h5",
+    data_path="/home/samani/Documents/sim/sim2.h5",
     video_directory="/home/samani/Documents/sim",
     video_name="heatmaps",
     title="Heat Maps",
@@ -249,3 +250,73 @@ model = HeatMaps(
 model.heatmap_animation(keys)
 
 
+subplot_titles = ["Free GFP", "Inhibitor-GFP", "Free Inhibitor"]  # Titles for each subplot
+
+scatter_animation = ScatterAnimation(
+    data_path="/home/samani/Documents/sim/sim/sim15.h5",
+    keys=["fM", "IM", "fI"],
+    video_directory='videos',
+    video_name='multi_scatter',
+    subplot_titles=subplot_titles,
+    x_label="Number of Cells",
+    y_label="Number of Cells",
+    z_label="Concentration",
+    subplots=(1, 3),
+    cmaps=["GreenBlack", "BlueGreenBlack", "BlueBlack"],
+    title_size=18,
+    label_size=10,
+    fps=20,
+    interval=50,
+    writer='ffmpeg',
+    fig_size=(30, 10),  # Adjusted figure size
+    colorbar=False,
+    pad=0.1,
+    grid=False,  # Enable grids
+    subplot_size=(7, 6),  # Adjusted subplot size
+    plot_margins=(0.1, 0.9, 0.9, 0.1),
+    hide_axis=False,
+    background_color='white',
+    title_color='black',
+    xlabel_color='black',
+    ylabel_color='black',
+    colorbar_axis=False,
+    sub_dir="/home/samani/Documents/sim/"
+)
+
+scatter_animation.create_video()
+
+
+subplot_titles = ["Free GFP", "Inhibitor-GFP", "Free Inhibitor"]
+
+surface_animation = SurfaceAnimation(
+    data_path="/home/samani/Documents/sim/sim/sim15.h5",
+    keys=["fM", "IM", "fI"],
+    video_directory='videos',
+    video_name='multi_surface',
+    subplot_titles=subplot_titles,
+    x_label="Number of Cells",
+    y_label="Number of Cells",
+    z_label="Concentration",
+    subplots=(1, 3),
+    cmaps=["GreenBlack", "BlueGreenBlack", "BlueBlack"],
+    title_size=18,
+    label_size=10,
+    fps=20,
+    interval=50,
+    writer='ffmpeg',
+    fig_size=(30, 10),   # Adjusted figure size
+    colorbar=False,
+    pad=0.1,
+    grid=True,  # Enable grids
+    subplot_size=(7, 7),  # Adjusted subplot size
+    plot_margins=(0.1, 0.9, 0.9, 0.1),
+    hide_axis=False,
+    background_color='white',
+    title_color='black',
+    xlabel_color='black',
+    ylabel_color='black',
+    colorbar_axis=False,
+    sub_dir="/home/samani/Documents/sim/"
+)
+
+surface_animation.create_video()

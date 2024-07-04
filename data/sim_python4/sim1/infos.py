@@ -258,3 +258,73 @@ scatter_animation(
 
 
 
+subplot_titles = ["Free GFP", "Inhibitor-GFP", "Free Inhibitor"]  # Titles for each subplot
+
+scatter_animation = ScatterAnimation(
+    data_path="/home/samani/Documents/sim/sim/sim15.h5",
+    keys=["fM", "IM", "fI"],
+    video_directory='videos',
+    video_name='multi_scatter',
+    subplot_titles=subplot_titles,
+    x_label="Number of Cells",
+    y_label="Number of Cells",
+    z_label="Concentration",
+    subplots=(1, 3),
+    cmaps=["GreenBlack", "BlueGreenBlack", "BlueBlack"],
+    title_size=18,
+    label_size=10,
+    fps=20,
+    interval=50,
+    writer='ffmpeg',
+    fig_size=(30, 10),  # Adjusted figure size
+    colorbar=False,
+    pad=0.1,
+    grid=False,  # Enable grids
+    subplot_size=(7, 6),  # Adjusted subplot size
+    plot_margins=(0.1, 0.9, 0.9, 0.1),
+    hide_axis=False,
+    background_color='white',
+    title_color='black',
+    xlabel_color='black',
+    ylabel_color='black',
+    colorbar_axis=False,
+    sub_dir="/home/samani/Documents/sim/"
+)
+
+scatter_animation.create_video()
+
+
+subplot_titles = ["Free GFP", "Inhibitor-GFP", "Free Inhibitor"]
+
+surface_animation = SurfaceAnimation(
+    data_path="/home/samani/Documents/sim/sim/sim15.h5",
+    keys=["fM", "IM", "fI"],
+    video_directory='videos',
+    video_name='multi_surface',
+    subplot_titles=subplot_titles,
+    x_label="Number of Cells",
+    y_label="Number of Cells",
+    z_label="Concentration",
+    subplots=(1, 3),
+    cmaps=["GreenBlack", "BlueGreenBlack", "BlueBlack"],
+    title_size=18,
+    label_size=10,
+    fps=20,
+    interval=50,
+    writer='ffmpeg',
+    fig_size=(30, 10),   # Adjusted figure size
+    colorbar=False,
+    pad=0.1,
+    grid=True,  # Enable grids
+    subplot_size=(7, 7),  # Adjusted subplot size
+    plot_margins=(0.1, 0.9, 0.9, 0.1),
+    hide_axis=False,
+    background_color='white',
+    title_color='black',
+    xlabel_color='black',
+    ylabel_color='black',
+    colorbar_axis=False,
+    sub_dir="/home/samani/Documents/sim/"
+)
+
+surface_animation.create_video()
