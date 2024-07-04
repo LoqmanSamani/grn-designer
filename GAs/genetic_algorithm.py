@@ -213,6 +213,8 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
                 else:
                     parent2 = parent1
 
+                break  # Exit the while loop after selecting parent1 and parent2
+
             offspring1, offspring2 = crossover(
                 parents1=parent1,
                 parents2=parent2,
