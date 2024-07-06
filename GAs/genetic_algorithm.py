@@ -125,7 +125,7 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
             shapes=[specie_matrix_shape, specie_matrix_shape, specie_matrix_shape, specie_matrix_shape,
                     (1, num_params)]) for chromosome in population
         ]
-
+        print(decoded_population[0][1])
         # simulate the system with each chromosome in the population
         binary_simulation_results = []
         simulation_results = []
