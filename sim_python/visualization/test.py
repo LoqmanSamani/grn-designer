@@ -6,6 +6,8 @@ import h5py
 
 
 
+
+
 model1 = HeatMap(
     data_path="/home/samani/Documents/sim/sim2.h5",
     video_directory="/home/samani/Documents/sim/",
@@ -320,3 +322,38 @@ surface_animation = SurfaceAnimation(
 )
 
 surface_animation.create_video()
+
+
+
+keys = ["GFP", "MC", "IMC", "fI", "AMC"]
+
+model = HeatMaps(
+    data_path="/home/samani/Documents/sim/sim/sim12.h5",
+    video_directory="/home/samani/Documents/sim",
+    video_name="h55",
+    title="Heat Maps",
+    x_label="Number of Cells",
+    y_label="Number of Cells",
+    z_labels=["Free GFP", 'Free mCherry', "mCherry-Inhibitor", "Free Inhibitor", "Anchor-mCherry"],
+    subplots=(1, 5),
+    cmaps=["GreenBlack", "RedBlack", "RedPurpleBlack", "PurpleBlack", "YellowBlack"],
+    title_size=14,
+    label_size=12,
+    fps=20,
+    interval=50,
+    writer='ffmpeg',
+    fig_size=(50, 10),
+    colorbar=True,
+    grid=None,
+    subplot_size=(8, 8),
+    plot_margins=(0.2, 0.1),
+    hide_axis=True,
+    colorbar_axis=False,
+    background_color='white',
+    title_color='black',
+    xlabel_color='black',
+    ylabel_color='black'
+)
+
+
+model.heatmap_animation(keys)
