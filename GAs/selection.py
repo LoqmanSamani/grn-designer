@@ -48,9 +48,10 @@ def select_parents_tournament(population, fitness_scores, population_size, tourn
     """
     selected = []
 
-    for _ in range(population_size):
+    actual_tournament_size = min(tournament_size, len(population))
 
-        tournament_indices = np.random.choice(len(population), size=tournament_size, replace=False)
+    for _ in range(population_size):
+        tournament_indices = np.random.choice(len(population), size=actual_tournament_size, replace=False)
         tournament_fitness = [fitness_scores[i] for i in tournament_indices]
 
         best_index = tournament_indices[np.argmax(tournament_fitness)]

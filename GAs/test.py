@@ -25,6 +25,8 @@ target_shape = (30, 30)
 result = simulation(sp1, sp2, sp1_cells, sp2_cells, params, dt, sim_start, sim_stop, epochs, target_shape)
 full_file_path = os.path.join(full_path, "sim.h5")
 
+
+
 with h5py.File(full_file_path, "w") as file:
     file.create_dataset("sp2", data=result)
 
@@ -202,4 +204,240 @@ Generation 10000; Best/Max Fitness: 186/200; Generation Duration: 0.211143732070
                      Average Fitness: 181.33
                      Total Simulation Duration: 2101 seconds
                    -----------------------------------------------
+"""
+
+
+
+
+
+
+
+
+# presentation 09.07.2024
+"""
+
+from genetic_algorithm import genetic_algorithm
+import h5py
+import numpy as np
+from simulation import *
+import os
+import matplotlib.pyplot as plt
+
+
+
+full_path = "/home/samani/Documents/sim"
+
+
+sp1 = np.zeros((5, 5))
+sp2 = np.zeros((5, 5))
+sp1_cells = np.zeros((5, 5))
+sp1_cells[:, 0] = 5
+sp2_cells = np.zeros((5, 5))
+sp2_cells[:, 3] = 2
+params = np.array([[3, 3, 2, 2, 0.1, 0.1]])
+dt = 0.01
+sim_start = 1
+sim_stop = 20
+epochs = 500
+target_shape = (5, 5)
+result = simulation(sp1, sp2, sp1_cells, sp2_cells, params, dt, sim_start, sim_stop, epochs, target_shape)
+full_file_path = os.path.join(full_path, "sim.h5")
+
+with h5py.File(full_file_path, "w") as file:
+    file.create_dataset("sp2", data=result)
+
+file = h5py.File("/home/samani/Documents/sim/sim.h5", "r")
+sp2 = file["sp2"]
+
+
+plt.figure(figsize=(10, 10))
+plt.imshow(sp2, cmap="hot", interpolation="nearest")
+plt.title("Target", fontsize=20)
+plt.colorbar(shrink=0.9)
+plt.axis("off")
+plt.show()
+
+
+file = h5py.File("/home/samani/Documents/sim/sim.h5", "r")
+sp2 = file["sp2"][:]
+
+
+
+
+precision_bits = {"sp1": (0, 200, 8), "sp2": (0, 200, 8), "sp1_cells": (0, 200, 8), "sp2_cells": (0, 200, 8), "params": (0, 200, 8)}
+
+
+
+genetic_algorithm(
+    population_size=200,
+    specie_matrix_shape=(30, 30),
+    precision_bits=precision_bits,
+    num_params=6,
+    max_generation=500,
+    mutation_rates=[.02, .02, .02, .02, .01],
+    crossover_rates=[.85, .85, .85, .85, .85],
+    num_crossover_points=[2, 2, 2, 2, 1],
+    target=sp2,
+    target_precision_bits=(0, 200, 8),
+    result_path="/home/samani/Documents/sim",
+    selection_method="tournament",
+    tournament_size=10,
+    file_name="gar",
+    dt=0.01,
+    sim_start=1,
+    sim_stop=20,
+    epochs=500,
+    fitness_trigger=False
+)
+
+
+
+file = h5py.File("/home/samani/Documents/sim/gar.h5", "r")
+print(file.keys())
+
+plt.plot(file["best_fitness"][:])
+plt.show()
+
+
+
+file = h5py.File("/home/samani/Documents/sim/sim.h5", "r")
+sp2 = file["sp2"][:]
+
+precision_bits = {"sp1": (0, 200, 8), "sp2": (0, 200, 8), "sp1_cells": (0, 200, 8), "sp2_cells": (0, 200, 8), "params": (0, 200, 8)}
+
+
+
+
+for i in range(10):
+
+    genetic_algorithm(
+        population_size=200,
+        specie_matrix_shape=(30, 30),
+        precision_bits=precision_bits,
+        num_params=6,
+        max_generation=100,
+        mutation_rates=[.02, .02, .02, .02, .01],
+        crossover_rates=[.85, .85, .85, .85, .85],
+        num_crossover_points=[2, 2, 2, 2, 1],
+        target=sp2,
+        target_precision_bits=(0, 200, 8),
+        result_path="/home/samani/Documents/sim",
+        selection_method="tournament",
+        tournament_size=10,
+        file_name=f"g{i}",
+        dt=0.01,
+        sim_start=1,
+        sim_stop=20,
+        epochs=500,
+        fitness_trigger=False
+    )
+
+
+
+
+file = h5py.File("/home/samani/Documents/sim/sim.h5", "r")
+sp2 = file["sp2"][:]
+precision_bits = {"sp1": (0, 200, 8), "sp2": (0, 200, 8), "sp1_cells": (0, 200, 8), "sp2_cells": (0, 200, 8), "params": (0, 200, 8)}
+
+genetic_algorithm(
+        population_size=300,
+        specie_matrix_shape=(5, 5),
+        precision_bits=precision_bits,
+        num_params=6,
+        max_generation=1000,
+        mutation_rates=[.02, .02, .02, .02, .01],
+        crossover_rates=[.85, .85, .85, .85, .85],
+        num_crossover_points=[2, 2, 2, 2, 1],
+        target=sp2,
+        target_precision_bits=(0, 200, 8),
+        result_path="/home/samani/Documents/sim",
+        selection_method="tournament",
+        tournament_size=20,
+        file_name="new",
+        dt=0.01,
+        sim_start=1,
+        sim_stop=20,
+        epochs=500,
+        fitness_trigger=False
+    )
+
+
+from heatmap import *
+
+
+model1 = HeatMap(
+    data_path="/home/samani/Documents/sim/new.h5",
+    video_directory="/home/samani/Documents/sim/",
+    video_name="GA-result",
+    title="GA-result",
+    x_label="X",
+    y_label="Y",
+    c_map="RedBlack",
+    fps=10,
+    interval=50,
+    writer='ffmpeg',
+    color_bar=True,
+    norm=False
+)
+
+model1.heatmap_animation(key="best_results")
+
+
+
+file = h5py.File("/home/samani/Documents/sim/sim.h5", "r")
+sp2 = file["sp2"][:]
+precision_bits = {"sp1": (0, 5, 8), "sp2": (0, 200, 8), "sp1_cells": (0, 5, 8), "sp2_cells": (0, 5, 8), "params": (0, 4, 8)}
+
+
+genetic_algorithm(
+        population_size=300,
+        specie_matrix_shape=(5, 5),
+        precision_bits=precision_bits,
+        num_params=6,
+        max_generation=200,
+        mutation_rates=[.02, .02, .02, .02, .01],
+        crossover_rates=[.85, .85, .85, .85, .85],
+        num_crossover_points=[2, 2, 2, 2, 1],
+        target=sp2,
+        target_precision_bits=(0, 200, 8),
+        result_path="/home/samani/Documents/sim",
+        selection_method="tournament",
+        tournament_size=20,
+        file_name="new",
+        dt=0.01,
+        sim_start=1,
+        sim_stop=20,
+        epochs=500,
+        fitness_trigger=False
+    )
+
+
+from heatmap import *
+
+model1 = HeatMap(
+    data_path="/home/samani/Documents/sim/new.h5",
+    video_directory="/home/samani/Documents/sim/",
+    video_name="GA",
+    title="GA",
+    x_label="X",
+    y_label="Y",
+    c_map="RedBlack",
+    fps=10,
+    interval=50,
+    writer='ffmpeg',
+    color_bar=True,
+    norm=False
+)
+
+model1.heatmap_animation(key="best_results")
+
+
+file = h5py.File("/home/samani/Documents/sim/new.h5", "r")
+
+print(file["best_results"][:, :, 171])
+
+file = h5py.File("/home/samani/Documents/sim/sim.h5", "r")
+sp2 = file["sp2"]
+
+print(sp2[:])
 """

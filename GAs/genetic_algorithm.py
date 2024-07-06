@@ -81,10 +81,12 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         pop_size=population_size,
         bit_length=specie_matrix_shape[0] * specie_matrix_shape[1] * precision_bits["sp1"][-1]
     )
+
     sp2 = initialize_population(
         pop_size=population_size,
         bit_length=specie_matrix_shape[0] * specie_matrix_shape[1] * precision_bits["sp2"][-1]
     )
+
 
     sp1_cells = initialize_population(
         pop_size=population_size,
@@ -98,6 +100,7 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         pop_size=population_size,
         bit_length=num_params * precision_bits["params"][-1]
     )
+
 
     precision_bits_list = [precision_bits["sp1"], precision_bits["sp2"], precision_bits["sp1_cells"], precision_bits["sp2_cells"], precision_bits["sp2_cells"]]
     population = create_population(sp1=sp1, sp2=sp2, sp1_cells=sp1_cells, sp2_cells=sp2_cells, params=params)
@@ -252,7 +255,7 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
     print(f"{'                   -----------------------------------------------'}")
 
     species = list(precision_bits.keys())
-
+    best_results_nd = np.dstack(best_results)
     save_results(
         result_path=result_path,
         file_name=file_name,
@@ -260,7 +263,7 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         species=species,
         best_fitness=best_fitness,
         simulation_duration=simulation_duration,
-        population=best_results
+        population=best_results_nd
     )
 
     return population
