@@ -480,8 +480,10 @@ plt.title("Converted Target", fontsize=20)
 plt.colorbar(shrink=0.9)
 plt.axis("off")
 plt.show()
+
+
+params = np.array([[3, 3, 2, 2, 0.1, 0.1]])
+params = [[3.56078431, 1.20784314, 0.94117647, 4.0, 0.37647059, 0.62745098]]
 """
-
-
 
 
