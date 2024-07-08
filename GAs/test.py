@@ -211,11 +211,8 @@ Generation 10000; Best/Max Fitness: 186/200; Generation Duration: 0.211143732070
 
 
 
-
-"""
 # presentation 09.07.2024
-
-
+"""
 from genetic_algorithm import genetic_algorithm
 import h5py
 import numpy as np
@@ -265,8 +262,6 @@ sp2 = file["sp2"][:]
 
 
 precision_bits = {"sp1": (0, 200, 8), "sp2": (0, 200, 8), "sp1_cells": (0, 200, 8), "sp2_cells": (0, 200, 8), "params": (0, 200, 8)}
-
-
 
 genetic_algorithm(
     population_size=200,
