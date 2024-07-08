@@ -212,9 +212,9 @@ Generation 10000; Best/Max Fitness: 186/200; Generation Duration: 0.211143732070
 
 
 
-
-# presentation 09.07.2024
 """
+# presentation 09.07.2024
+
 
 from genetic_algorithm import genetic_algorithm
 import h5py
@@ -440,6 +440,51 @@ file = h5py.File("/home/samani/Documents/sim/sim.h5", "r")
 sp2 = file["sp2"]
 
 print(sp2[:])
+
+
+
+
+file = h5py.File("/home/samani/Documents/sim/new.h5", "r")
+
+print(file["best_results"][:, :, 171])
+
+file1 = h5py.File("/home/samani/Documents/sim/sim.h5", "r")
+print(file1.keys())
+sp2 = file1["sp2"]
+
+sp211 = decimal_to_binary(array_list=[sp2], precision_bits_list=[(0, 200, 8)])
+
+sp21 = binary_to_decimal(binary_string_list=sp211, precision_bits_list=[(0, 200, 8)], shapes=[(5, 5)])
+
+
+
+
+
+
+plt.figure(figsize=(10, 10))
+plt.imshow(sp2, cmap="hot", interpolation="nearest")
+plt.title("Target", fontsize=20)
+plt.colorbar(shrink=0.9)
+plt.axis("off")
+plt.show()
+
+
+
+
+plt.figure(figsize=(10, 10))
+plt.imshow(file["best_results"][:, :, 171], cmap="hot", interpolation="nearest")
+plt.title("GA-Result (f: 165; mf: 200)", fontsize=20)
+plt.colorbar(shrink=0.9)
+plt.axis("off")
+plt.show()
+
+
+plt.figure(figsize=(10, 10))
+plt.imshow(sp21[0], cmap="hot", interpolation="nearest")
+plt.title("Converted Target", fontsize=20)
+plt.colorbar(shrink=0.9)
+plt.axis("off")
+plt.show()
 """
 
 

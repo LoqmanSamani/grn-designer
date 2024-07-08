@@ -9,7 +9,7 @@ from mutation import *
 import time
 
 
-def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_params, mutation_rates,
+def genetic_algorithm(params, population_size, specie_matrix_shape, precision_bits, num_params, mutation_rates,
                       crossover_rates, num_crossover_points, target, target_precision_bits, result_path,
                       max_generation=1000, selection_method="roulette", tournament_size=5, file_name="sim_result",
                       dt=0.01, sim_start=0, sim_stop=5, epochs=500, fitness_trigger=None):
@@ -96,13 +96,9 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
         pop_size=population_size,
         bit_length=specie_matrix_shape[0] * specie_matrix_shape[1] * precision_bits["sp2_cells"][-1]
     )
-    params = initialize_population(
-        pop_size=population_size,
-        bit_length=num_params * precision_bits["params"][-1]
-    )
+    params = [params for _ in range(population_size)]
 
-
-    precision_bits_list = [precision_bits["sp1"], precision_bits["sp2"], precision_bits["sp1_cells"], precision_bits["sp2_cells"], precision_bits["params"]]
+    precision_bits_list = [precision_bits["sp1"], precision_bits["sp2"], precision_bits["sp1_cells"], precision_bits["sp2_cells"]]
     population = create_population(sp1=sp1, sp2=sp2, sp1_cells=sp1_cells, sp2_cells=sp2_cells, params=params)
     binary_target = decimal_to_binary(array_list=[target], precision_bits_list=[target_precision_bits])
 
@@ -125,7 +121,7 @@ def genetic_algorithm(population_size, specie_matrix_shape, precision_bits, num_
             shapes=[specie_matrix_shape, specie_matrix_shape, specie_matrix_shape, specie_matrix_shape,
                     (1, num_params)]) for chromosome in population
         ]
-
+        print(decoded_population[0][1])
         # simulate the system with each chromosome in the population
         binary_simulation_results = []
         simulation_results = []
