@@ -1,8 +1,8 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
+import torch_test
+import torch_test.nn as nn
+import torch_test.optim as optim
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader
+from torch_test.utils.data import DataLoader
 
 
 
