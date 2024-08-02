@@ -1,5 +1,6 @@
 import numpy as np
 from numba import jit
+import copy
 
 
 @jit(nopython=True)
@@ -18,11 +19,12 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
     - 2d array: updated current_concentration array.
     """
     compartment_size = compartment.shape[1]
+    temporary_concentration = copy.deepcopy(current_concentration)
 
     if column_position == 0:
 
         # Update concentration for the upper-left corner cell
-        current_concentration[:, 0] = update_upper_left_corner_concentration(
+        temporary_concentration[:, 0] = update_upper_left_corner_concentration(
             cell_concentration=current_concentration[:, 0],
             lower_cell_concentration=compartment[:, 1, 0],
             right_cell_concentration=compartment[:, 0, 1],
@@ -31,7 +33,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
         )
 
         # Update concentration for the lower-left corner cell
-        current_concentration[:, -1] = update_lower_left_corner_concentration(
+        temporary_concentration[:, -1] = update_lower_left_corner_concentration(
             cell_concentration=current_concentration[:, -1],
             upper_cell_concentration=compartment[:, -2, 0],
             right_cell_concentration=compartment[:, -1, 1],
@@ -40,7 +42,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
         )
 
         # Update concentrations for the left-side cells (excluding corners)
-        current_concentration[:, 1:-1] = update_left_side_concentration(
+        temporary_concentration[:, 1:-1] = update_left_side_concentration(
             cell_concentration=current_concentration[:, 1:-1],
             upper_cell_concentration=compartment[:, :-2, 0],
             lower_cell_concentration=compartment[:, 2:, 0],
@@ -52,7 +54,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
     elif column_position == compartment_size - 1:
 
         # Update concentration for the upper-right corner cell
-        current_concentration[:, 0] = update_upper_right_corner_concentration(
+        temporary_concentration[:, 0] = update_upper_right_corner_concentration(
             cell_concentration=current_concentration[:, 0],
             lower_cell_concentration=compartment[:, 1, -1],
             left_cell_concentration=compartment[:, 0, -2],
@@ -61,7 +63,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
         )
 
         # Update concentration for the lower-right corner cell
-        current_concentration[:, -1] = update_lower_right_corner_concentration(
+        temporary_concentration[:, -1] = update_lower_right_corner_concentration(
             cell_concentration=current_concentration[:, -1],
             upper_cell_concentration=compartment[:, -2, -1],
             left_cell_concentration=compartment[:, -1, -2],
@@ -70,7 +72,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
         )
 
         # Update concentrations for the left-side cells (excluding corners)
-        current_concentration[:, 1:-1] = update_right_side_concentration(
+        temporary_concentration[:, 1:-1] = update_right_side_concentration(
             cell_concentration=current_concentration[:, 1:-1],
             upper_cell_concentration=compartment[:, 0:-2, -1],
             lower_cell_concentration=compartment[:, 2:, -1],
@@ -82,7 +84,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
 
     else:
 
-        current_concentration[:, 0] = update_central_concentration_upper(
+        temporary_concentration[:, 0] = update_central_concentration_upper(
             cell_concentration=current_concentration[:, 0],
             lower_cell_concentration=compartment[:, 1, column_position],
             right_cell_concentration=compartment[:, 0, column_position + 1],
@@ -91,7 +93,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
             time_step=time_step
         )
 
-        current_concentration[:, -1] = update_central_concentration_lower(
+        temporary_concentration[:, -1] = update_central_concentration_lower(
             cell_concentration=current_concentration[:, -1],
             upper_cell_concentration=compartment[:, -2, column_position],
             right_cell_concentration=compartment[:, -1, column_position + 1],
@@ -100,7 +102,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
             time_step=time_step
         )
 
-        current_concentration[:, 1:-1] = update_central_concentration_middle(
+        temporary_concentration[:, 1:-1] = update_central_concentration_middle(
             cell_concentration=current_concentration[:, 1:-1],
             upper_cell_concentration=compartment[:, 0:-2, column_position],
             lower_cell_concentration=compartment[:, 2:, column_position],
@@ -110,7 +112,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
             time_step=time_step
         )
 
-    updated_concentration = np.maximum(current_concentration, 0)
+    updated_concentration = np.maximum(temporary_concentration, 0)
 
     return updated_concentration
 
