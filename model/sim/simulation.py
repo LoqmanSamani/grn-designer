@@ -28,7 +28,6 @@ def population_simulation(individual):
     - np.ndarray: The final concentrations of the first species in the compartment,
       with shape (y, x) where y and x are the compartment dimensions.
     """
-
     z, y, x = individual.shape  # z: species (including complexes), (y, x): compartment shape
     num_iters = int(x)  # Number of iterations in each epoch (equal to x)
     num_species = int(individual[-1, -1, 0])  # Number of species present in the system
@@ -117,5 +116,3 @@ def population_simulation(individual):
         epoch += 1
 
     return individual[0, :, :]
-
-
