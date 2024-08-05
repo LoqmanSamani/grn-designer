@@ -54,7 +54,7 @@ The simulation process begins by extracting the necessary information from the i
 
 ![simulation information](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/sim_info.png)
 
-*Extracted Simulation Information from Individual Matrix*
+*Figure4: Extracted Simulation Information from Individual Matrix*
 
 During each epoch of the simulation, the matrices for species and complexes are updated using a for loop that iterates through the compartments (for i in range(x):):
 
@@ -91,7 +91,7 @@ The benchmarking results, displayed in ***Figure 5***, provide insights into how
 
 ![bench_ma](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench_ma.png)
 
-***The benchmarking results***
+***Figure5: The benchmarking results***
 
 
 #### Compartment Size
