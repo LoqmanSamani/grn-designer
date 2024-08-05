@@ -3,7 +3,7 @@ from diffusion import *
 
 
 @jit(nopython=True)
-def population_simulation(individual):
+def individual_simulation(individual):
     """
     Simulate the dynamics of a single individual within a specified compartmental system.
 

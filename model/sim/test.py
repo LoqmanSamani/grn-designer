@@ -24,7 +24,7 @@ def run_simulation_with_timing():
             pop[-2, 0, 0:2] = [0, 2]
             pop[-2, 1, 0:4] = [6, .01, 0.001, 1.3]
 
-            result = population_simulation(pop)
+            result = individual_simulation(pop)
             toc = time.time()
             d = toc - tic
             com_time.append(d)
@@ -44,7 +44,7 @@ def run_simulation_with_timing():
             pop[-2, 0, 0:2] = [0, 2]
             pop[-2, 1, 0:4] = [6, .01, 0.001, 1.3]
 
-            result = population_simulation(pop)
+            result = individual_simulation(pop)
             toc = time.time()
             d = toc - tic
             sim_time.append(d)
@@ -73,7 +73,7 @@ for i in range(500):
     pop[-1, -1, :5] = [2, 1, 500, 5, .01]
     pop[-2, 0, 0:2] = [0, 2]
     pop[-2, 1, 0:4] = [6, .01, 0.001, 1.3]
-    result = population_simulation(pop)
+    result = individual_simulation(pop)
 
 toc = time.time()
 d = toc - tic
@@ -93,7 +93,7 @@ pop[-1, 2, :3] = [0.09, 0.006, 1.2]
 pop[-1, -1, :5] = [2, 1, 1000, 5, .01]
 pop[-2, 0, 0:2] = [0, 2]
 pop[-2, 1, 0:4] = [6, .01, 0.001, 1.3]
-result, s1, s2, s3 = population_simulation(pop)
+result, s1, s2, s3 = individual_simulation(pop)
 
 full_path = "/home/samani/Documents/sim"
 
