@@ -30,7 +30,7 @@ Figure 2 shows that the first two cells in this matrix (index[0, 0:2]) correspon
 The second row provides parameters for simulating the complex, including collision rate, dissociation rate, degradation rate, and diffusion rate.
 
 
-![complex matrix](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/com_matrix.png)
+![complex matrix](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/com_matrix.jpg)
 
 *Figure2: Complex Information Matrix*
 
@@ -40,7 +40,7 @@ For each species (but not complexes) in the system, there is a specific row in t
 These parameters include the production rate, degradation rate, and diffusion rate.
 
 
-![complex matrix](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/sim_infos.png)
+![complex matrix](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/sim_infos.jpg)
 
 *Figure3: Simulation and Species Information Matrix*
 
@@ -91,6 +91,7 @@ The benchmarking results, displayed in ***Figure 5***, provide insights into how
 
 ![bench_ma](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench_ma.png)
 
+***The benchmarking results***
 
 
 #### Compartment Size
