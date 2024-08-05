@@ -113,7 +113,7 @@ In summary, Numba optimization proves to be highly beneficial, especially when d
 
 --------------------------------------------------------------------------------------------------------------
 
-### Population simulation
+### [Population simulation](https://github.com/LoqmanSamani/master_project/blob/systembiology/sim_python/sim_python6/simulation.py)
 
 An alternative and more efficient way to simulate the individuals of a population in parallel!
 
