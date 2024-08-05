@@ -48,6 +48,30 @@ These parameters include the production rate, degradation rate, and diffusion ra
 All these matrices are combined into the individual matrix (Z represents the total number of matrices, related to the number of species). 
 The system is then simulated using this individual matrix, and the output is the target matrix, which is the first 2D matrix ([0, :, :]) of the individual matrix after simulation.
 
+-------------------------------------------------------------------------------------------------------------------------
+
+The simulation process begins by extracting the necessary information from the individual matrix (see Figure 4). A while loop is then used to run the simulation, continuing until either the maximum number of epochs (max_epoch) or a specified number of epochs (num_epochs) is reached:
+
+![simulation information](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/sim_infos.png)
+
+
+During each epoch of the simulation, the matrices for species and complexes are updated using a for loop that iterates through the compartments (for i in range(x):):
+
+This loop updates each column of the species and complex compartments in each step. The updating process follows these steps:
+
+       
+   1)  ***Update Species Production:*** This step applies the production rates to the species matrices using the [`apply_component_production(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) function.
+   2)  ***Update species collision:*** This step updates species interactions and collisions with the [`apply_species_collision(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) function.
+   3)  ***Update species degradation:*** This step applies degradation rates to the species matrices using the [`apply_component_degradation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) function.
+   4)  ***Update complex degradation:*** This step updates the degradation of complexes using the [`apply_component_degradation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) function.
+   5)  ***Update complex dissociation:*** This step applies dissociation rates to complexes with the [`apply_component_degradation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) function.
+   6)  ***Update species diffusion:*** This step applies diffusion rates to the species matrices using the [`apply_diffusion(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/diffusion.py) function.
+   7)  ***Update complex diffusion:***  This step applies diffusion rates to the complex matrices using the [`apply_diffusion(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/diffusion.py) function.
+
+
+Each of these steps updates the system based on the input information, including the reaction rates (production, dissociation, degradation, diffusion) and any additional required details, such as the array pattern for production or the entire compartment for diffusion.
+
+After completing the allowed number of epochs, the first matrix of the individual matrix (individual[0, :, :]) is returned for further processing in the algorithm (the specific version of the genetic algorithm that is still under development!).
 
 
 
