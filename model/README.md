@@ -74,7 +74,15 @@ Each of these steps updates the system based on the input information, including
 
 After completing the allowed number of epochs, the first matrix of the individual matrix (individual[0, :, :]) is returned for further processing in the algorithm (the specific version of the genetic algorithm that is still under development!).
 
+### Diffusion System
 
+    ....
+
+
+### Reactions
+    ....
+
+----------------------------------------------------------------------------------------------------------------------------------
 
 ### Benchmarking Results
 
@@ -103,9 +111,13 @@ The right-side plot compares the performance based on population size. Similar t
 
 In summary, Numba optimization proves to be highly beneficial, especially when dealing with larger datasets. It consistently reduces the time required for simulations as compartment size, number of epochs, and population size increase. The most noticeable improvements are seen with larger and more complex simulations, making Numba a valuable tool for efficient computation in these scenarios.
 
+--------------------------------------------------------------------------------------------------------------
 
+### Population simulation
 
+An alternative and more efficient way to simulate the individuals of a population in parallel!
 
+    ***To be continued ...***
 
 
 
