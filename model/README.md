@@ -52,7 +52,7 @@ The system is then simulated using this individual matrix, and the output is the
 
 The simulation process begins by extracting the necessary information from the individual matrix (see Figure 4). A while loop is then used to run the simulation, continuing until either the maximum number of epochs (max_epoch) or a specified number of epochs (num_epochs) is reached:
 
-![simulation information](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/sim_infos.png)
+![simulation information](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/sim_info.png)
 
 
 During each epoch of the simulation, the matrices for species and complexes are updated using a for loop that iterates through the compartments (for i in range(x):):
@@ -72,6 +72,7 @@ This loop updates each column of the species and complex compartments in each st
 Each of these steps updates the system based on the input information, including the reaction rates (production, dissociation, degradation, diffusion) and any additional required details, such as the array pattern for production or the entire compartment for diffusion.
 
 After completing the allowed number of epochs, the first matrix of the individual matrix (individual[0, :, :]) is returned for further processing in the algorithm (the specific version of the genetic algorithm that is still under development!).
+
 
 
 

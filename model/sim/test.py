@@ -3,8 +3,9 @@ import numpy as np
 import time
 import os
 import h5py
-from heatmap import *
-from multi_heatmap import *
+# from heatmap import *
+# from multi_heatmap import *
+import matplotlib.pyplot as plt
 
 
 
@@ -194,3 +195,111 @@ model = HeatMaps(
 
 model.heatmap_animation(keys)
 
+
+
+
+
+
+
+# Benchmarking data
+benchmarking_data = {
+    "numba_com_size": {
+        10: 10.832071781158447,
+        50: 0.11558675765991211,
+        100: 0.36243414878845215,
+        200: 2.0385539531707764,
+        500: 16.384703159332275,
+        1000: 107.51107883453369,
+    },
+    "numba_sim_epochs": {
+        100: 0.0251920223236084,
+        500: 0.11624932289123535,
+        1000: 0.2307727336883545,
+        10000: 2.3095428943634033,
+        50000: 11.656088590621948,
+        100000: 23.539443016052246,
+    },
+    "numba_pop_size": {
+        20: 18.735677242279053,
+        50: 18.983787536621094,
+        100: 38.32541823387146,
+        200: 76.57288527488708,
+        500: 191.06534576416016,
+    },
+    "com_size": {
+        10: 0.7420475482940674,
+        50: 3.518643617630005,
+        100: 7.3738672733306885,
+        200: 18.19509768486023,
+        500: 64.69217228889465,
+        1000: 231.44163966178894,
+    },
+    "sim_epochs": {
+        100: 0.6864268779754639,
+        500: 3.468745470046997,
+        1000: 6.919107675552368,
+        10000: 69.68381881713867,
+        50000: 351.5794668197632,
+        100000: 711.421303987503,
+    },
+    "pop_size": {
+        20: 150.99141120910645,
+        50: 378.38582491874695,
+        100: 752.4636449813843,
+        200: 1492.9554994106293,
+        500: 3762.6383543014526
+    }
+}
+
+# Extract data for plotting
+x_com_size = sorted(benchmarking_data['com_size'].values())
+y_com_size = [key for key in sorted(benchmarking_data['com_size'].keys())]
+
+x_sim_epochs = sorted(benchmarking_data['sim_epochs'].values())
+y_sim_epochs = [key for key in sorted(benchmarking_data['sim_epochs'].keys())]
+
+x_pop_size = sorted(benchmarking_data['pop_size'].values())
+y_pop_size = [key for key in sorted(benchmarking_data['pop_size'].keys())]
+
+x_numba_com_size = sorted(benchmarking_data['numba_com_size'].values())
+y_numba_com_size = [key for key in sorted(benchmarking_data['numba_com_size'].keys())]
+
+x_numba_sim_epochs = sorted(benchmarking_data['numba_sim_epochs'].values())
+y_numba_sim_epochs = [key for key in sorted(benchmarking_data['numba_sim_epochs'].keys())]
+
+x_numba_pop_size = sorted(benchmarking_data['numba_pop_size'].values())
+y_numba_pop_size = [key for key in sorted(benchmarking_data['numba_pop_size'].keys())]
+
+# Create subplots
+fig, axs = plt.subplots(1, 3, figsize=(18, 6), sharey=True)
+
+# Plot Com Size
+axs[0].plot(y_com_size, x_com_size, label='Without Numba', marker='o', color='b')
+axs[0].plot(y_numba_com_size, x_numba_com_size, label='With Numba', marker='o', color='r')
+axs[0].set_title('Performance vs. Compartment Size')
+axs[0].set_xlabel('Compartment Size')
+axs[0].set_ylabel('Time (seconds)')
+axs[0].legend()
+axs[0].grid(True)
+
+# Plot Sim Epochs
+axs[1].plot(y_sim_epochs, x_sim_epochs, label='Without Numba', marker='o', color='b')
+axs[1].plot(y_numba_sim_epochs, x_numba_sim_epochs, label='With Numba', marker='o', color='r')
+axs[1].set_title('Performance vs. Maximum Number of Simulation Epoch')
+axs[1].set_xlabel('Simulation Epochs')
+axs[1].set_ylabel('Time (seconds)')
+axs[1].legend()
+axs[1].grid(True)
+
+# Plot Pop Size
+axs[2].plot(y_pop_size, x_pop_size, label='Without Numba', marker='o', color='b')
+axs[2].plot(y_numba_pop_size, x_numba_pop_size, label='With Numba', marker='o', color='r')
+axs[2].set_title('Performance vs. Population Size')
+axs[2].set_xlabel('Population Size')
+axs[2].set_ylabel('Time (seconds)')
+axs[2].legend()
+axs[2].grid(True)
+
+# Show the plot
+plt.tight_layout()
+plt.show()
