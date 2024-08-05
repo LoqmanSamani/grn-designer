@@ -54,6 +54,7 @@ The simulation process begins by extracting the necessary information from the i
 
 ![simulation information](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/sim_info.png)
 
+*Extracted Simulation Information from Individual Matrix*
 
 During each epoch of the simulation, the matrices for species and complexes are updated using a for loop that iterates through the compartments (for i in range(x):):
 
