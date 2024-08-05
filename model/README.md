@@ -81,21 +81,25 @@ After completing the allowed number of epochs, the first matrix of the individua
 The benchmarking results, displayed in ***Figure 5***, provide insights into how Numba optimization affects the performance of the simulation algorithm. The results are categorized based on three key factors: compartment size, simulation epochs, and population size.
 
 
+![bench_ma](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench_ma.png)
+
+
+
 #### Compartment Size
 
 The left-side plot in Figure 5 shows the performance based on compartment size. As the compartment size increases, the time required to complete simulations without Numba grows quickly. In contrast, Numba optimization significantly reduces this time, especially for larger compartments. For small compartments, the time difference between using Numba and not using it is less noticeable, but as the compartment size gets larger, Numba's advantage becomes much clearer.
 
 
-### Simulation Epochs
+#### Simulation Epochs
 
 The middle plot illustrates how the number of simulation epochs affects performance. Without Numba, increasing the number of epochs leads to a sharp rise in simulation time. With Numba, the increase in time is much less steep. This means that Numba is particularly effective in speeding up simulations that run for many epochs, providing substantial time savings for longer simulations.
 
 
-### Population Size
+#### Population Size
 
 The right-side plot compares the performance based on population size. Similar to the previous cases, simulations with larger populations take much longer without Numba. Numba optimization reduces the simulation time significantly, particularly for larger populations. For smaller populations, the time difference is smaller, but Numba still offers improvements.
 
-### Summary
+#### Summary
 
 In summary, Numba optimization proves to be highly beneficial, especially when dealing with larger datasets. It consistently reduces the time required for simulations as compartment size, number of epochs, and population size increase. The most noticeable improvements are seen with larger and more complex simulations, making Numba a valuable tool for efficient computation in these scenarios.
 
