@@ -133,7 +133,7 @@ By manipulating these reaction rates, we can model a variety of biological syste
 
 ![signal-sys](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/signal-sys.png)
 
-*An Individual*
+*Figure5: An Individual*
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -144,9 +144,7 @@ The benchmarking results, displayed in ***Figure 6***, provide insights into how
 
 ![bench_ma](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench_ma.png)
 
-***Figure5: 
-
-The benchmarking results***
+*Figure6: The benchmarking results**
 
 
 #### Compartment Size
