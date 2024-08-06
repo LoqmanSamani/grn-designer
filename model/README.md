@@ -79,19 +79,74 @@ After completing the allowed number of epochs, the first matrix of the individua
     ....
 
 
+
 ### Reactions
-    ....
+
+The [reactions](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) currently available for simulating a biological system are:
+
+1. **Component Production**: This reaction type is responsible for producing components (such as species or proteins) in the system. These components are created by cells that have a specific production rate for each component.
+
+
+2. **Component Degradation**: This is the opposite of component production. In this reaction, produced components are broken down or disappear at specific rates. This reaction is also used to degrade formed complexes in the system. The balance between production and degradation determines the quantity of each component in the system.
+
+
+3. **Component Collision**: When there are multiple components in the system, interactions between them need to be considered. Two specific species (components) can collide at a defined rate, forming a new complex with its own properties. This new complex can move (diffusion) or be degraded like other components in the system.
+
+
+4. **Component Dissociation**: This reaction type applies only to complexes. It is the opposite of component collision. When a complex is formed, it can also dissociate back into its simple components (A-B <=> A + B). The rate of this reaction can be very small or even zero, meaning no dissociation occurs.
+
+
+
+
+***So, can a biological system be accurately simulated with just these four reaction types?***
+
+The answer is yes! These four reaction types—component production, component degradation, component collision, and component dissociation—provide a solid foundation for modeling a wide range of biological systems. By carefully defining the rates for these reactions, we can simulate complex biological interactions and phenomena.
+
+#### Examples and Further Details:
+
+1. **Component Production and Degradation**:
+
+   - **Example**: Imagine a system where a cell produces a protein that acts as a signaling molecule. We can simulate this by setting a production rate for the protein and a degradation rate to control its lifespan. If we want to simulate a situation where the signaling molecule gradually breaks down, we adjust the degradation rate accordingly.
+   
+   - **Complexity**: By adjusting these rates, we can explore how the concentration of signaling molecules changes over time and how this impacts other components or processes in the system.
+
+2. **Component Collision**:
+
+   - **Example**: In a cell signaling system, two different proteins might interact to form a complex that triggers a response. For example, Protein A and Protein B might collide to form a Protein A-B complex. By setting a collision rate between Protein A and Protein B, we can simulate how often they interact and how this complex behaves (e.g., it might move within the cell or be degraded).
+   
+   - **Complexity**: We can also define specific interactions, such as how Protein A interacts with Protein B but not with Protein C. This helps in understanding selective interactions and their effects on cellular processes.
+
+3. **Component Dissociation**:
+
+   - **Example**: Consider a situation where a complex formed by proteins A and B dissociates into its individual components. This process can be simulated by setting a dissociation rate for the A-B complex. If the rate is very low, the complex will remain stable for longer periods; if high, it will break apart quickly.
+   
+   - **Complexity**: This can be particularly useful in studying processes like receptor-ligand interactions where the ligand binding can be reversible.
+
+4. **Special Cases**:
+
+   - **Anchor Components**: Suppose we want to simulate a protein that acts as an anchor on the cell membrane, meaning it doesn’t move around much. We can achieve this by setting its diffusion rate to nearly zero, ensuring it remains fixed in place. Additionally, if we want this anchor to interact only with a specific ligand, we set the collision rate to zero with all other components, ensuring specificity.
+   
+   - **Signal Molecules**: For signal molecules that diffuse through the system, we can adjust their diffusion rates to study how quickly they spread and influence other components. For example, a morphogen that diffuses to form a gradient can be simulated by setting a specific diffusion rate and observing how its gradient affects cell behavior.
+
+By manipulating these reaction rates, we can model a variety of biological systems with different types of components and interactions. The flexibility of defining these rates allows us to capture a wide range of biological behaviors and dynamics. ***Figure 5*** provides a schematic representation of an input system for the algorithm, showing how different rates define various types of relationships between species.
+
+
+![signal-sys](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/signal-sys.png)
+
+*An Individual*
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
 ### Benchmarking Results
 
-The benchmarking results, displayed in ***Figure 5***, provide insights into how Numba optimization affects the performance of the simulation algorithm. The results are categorized based on three key factors: compartment size, simulation epochs, and population size.
+The benchmarking results, displayed in ***Figure 6***, provide insights into how Numba optimization affects the performance of the simulation algorithm. The results are categorized based on three key factors: compartment size, simulation epochs, and population size.
 
 
 ![bench_ma](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench_ma.png)
 
-***Figure5: The benchmarking results***
+***Figure5: 
+
+The benchmarking results***
 
 
 #### Compartment Size
