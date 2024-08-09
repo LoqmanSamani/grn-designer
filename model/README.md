@@ -74,6 +74,27 @@ Each of these steps updates the system based on the input information, including
 
 After completing the allowed number of epochs, the first matrix of the individual matrix (individual[0, :, :]) is returned for further processing in the algorithm (the specific version of the genetic algorithm that is still under development!).
 
+
+### Population simulation
+
+An alternative approach to simulating a population is to perform the simulation for the entire population in parallel, rather than sequentially. This method leverages the power of vectorization to simulate multiple individuals simultaneously.
+
+In the population simulation approach, the [`population_simulation()`]() function processes an entire population as a four-dimensional tensor (or array). The tensor is structured as `(m, z, y, x)`.
+Each individual in this tensor is essentially a three-dimensional matrix `(z, y, x)` similar to the one used in the [`individual_simulation()`]() function. 
+The simulation in this case proceeds in a manner similar to the individual simulation, with a small difference:
+In each epoch, the simulation processes the compartments column-wise. Instead of updating a specific column in a single individual, the function updates the same column across all individuals simultaneously. As illustrated in Figure 5, each column from every individual is selected and updated concurrently. To facilitate this, all individuals must have the same number of species (z) and the same number of epochs, allowing them to be organized into a 4D tensor for parallel processing.
+
+
+
+![pop-sim](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/pop-sim.png)
+
+
+*Figure 5: Population Simulation*
+
+
+After completing the allowed number of epochs, the first matrix of each individual of population matrix (`population[:, 0, :, :]`) is returned for further processing in the algorithm.
+
+
 ### Diffusion System
 
     ....
@@ -166,13 +187,6 @@ The right-side plot compares the performance based on population size. Similar t
 In summary, Numba optimization proves to be highly beneficial, especially when dealing with larger datasets. It consistently reduces the time required for simulations as compartment size, number of epochs, and population size increase. The most noticeable improvements are seen with larger and more complex simulations, making Numba a valuable tool for efficient computation in these scenarios.
 
 --------------------------------------------------------------------------------------------------------------
-
-### [Population simulation](https://github.com/LoqmanSamani/master_project/blob/systembiology/sim_python/sim_python6/simulation.py)
-
-An alternative and more efficient way to simulate the individuals of a population in parallel!
-
-    ***To be continued ...***
-
 
 
 
