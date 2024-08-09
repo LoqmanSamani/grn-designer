@@ -1,4 +1,4 @@
-# Developing The Algorithm
+# Development of the algorithm
 
 --------------------
 --------------------
