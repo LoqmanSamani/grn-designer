@@ -5,7 +5,7 @@
 
 ### Individual simulation
 
-In a genetic algorithm, one approach to simulating a population is to run each individual simulation one by one. This means using a for loop to process one individual in an iteration in the population for every generation. I developed a system to handle this using the [`individual_simulation(individual)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/simulation.py) function. This function takes one individual at a time and returns the target or predicted species compartment after running the simulation based on the individual matrix.
+In a genetic algorithm, one approach to simulating a population is to run each individual simulation one by one. This means using a for loop to process one individual in an iteration in the population for every generation. I developed a system to handle this using the [`individual_simulation(individual)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/simulation.py) function. This function takes one individual at a time and returns the target or predicted species compartment after running the simulation based on the individual matrix.
 
 
 #### individual matrix:
@@ -61,13 +61,13 @@ During each epoch of the simulation, the matrices for species and complexes are 
 This loop updates each column of the species and complex compartments in each step. The updating process follows these steps:
 
        
-   1)  ***Update Species Production:*** This step applies the production rates to the species matrices using the [`apply_component_production(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) function.
-   2)  ***Update species collision:*** This step updates species interactions and collisions with the [`apply_species_collision(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) function.
-   3)  ***Update species degradation:*** This step applies degradation rates to the species matrices using the [`apply_component_degradation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) function.
-   4)  ***Update complex degradation:*** This step updates the degradation of complexes using the [`apply_component_degradation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) function.
-   5)  ***Update complex dissociation:*** This step applies dissociation rates to complexes with the [`apply_component_degradation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) function.
-   6)  ***Update species diffusion:*** This step applies diffusion rates to the species matrices using the [`apply_diffusion(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/diffusion.py) function.
-   7)  ***Update complex diffusion:***  This step applies diffusion rates to the complex matrices using the [`apply_diffusion(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/diffusion.py) function.
+   1)  ***Update Species Production:*** This step applies the production rates to the species matrices using the [`apply_component_production(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/reactions.py) function.
+   2)  ***Update species collision:*** This step updates species interactions and collisions with the [`apply_species_collision(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/reactions.py) function.
+   3)  ***Update species degradation:*** This step applies degradation rates to the species matrices using the [`apply_component_degradation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/reactions.py) function.
+   4)  ***Update complex degradation:*** This step updates the degradation of complexes using the [`apply_component_degradation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/reactions.py) function.
+   5)  ***Update complex dissociation:*** This step applies dissociation rates to complexes with the [`apply_component_degradation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/reactions.py) function.
+   6)  ***Update species diffusion:*** This step applies diffusion rates to the species matrices using the [`apply_diffusion(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/diffusion.py) function.
+   7)  ***Update complex diffusion:***  This step applies diffusion rates to the complex matrices using the [`apply_diffusion(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/diffusion.py) function.
 
 
 Each of these steps updates the system based on the input information, including the reaction rates (production, dissociation, degradation, diffusion) and any additional required details, such as the array pattern for production or the entire compartment for diffusion.
@@ -81,8 +81,8 @@ After completing the allowed number of epochs, the first matrix of the individua
 
 An alternative approach to simulating a population is to perform the simulation for the entire population in parallel, rather than sequentially. This method leverages the power of vectorization to simulate multiple individuals simultaneously.
 
-In the population simulation approach, the [`population_simulation()`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_pop/simulation.py) function processes an entire population as a four-dimensional tensor (or array). The tensor is structured as `(m, z, y, x)`.
-Each individual in this tensor is essentially a three-dimensional matrix `(z, y, x)` similar to the one used in the [`individual_simulation()`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/simulation.py) function. 
+In the population simulation approach, the [`population_simulation(population)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_pop/simulation.py) function processes an entire population as a four-dimensional tensor (or array). The tensor is structured as `(m, z, y, x)`.
+Each individual in this tensor is essentially a three-dimensional matrix `(z, y, x)` similar to the one used in the [`individual_simulation(individual)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/simulation.py) function. 
 The simulation in this case proceeds in a manner similar to the individual simulation, with a small difference:
 In each epoch, the simulation processes the compartments column-wise. Instead of updating a specific column in a single individual, the function updates the same column across all individuals simultaneously. As illustrated in ***Figure 5***, each column from every individual is selected and updated concurrently. To facilitate this, all individuals must have the same number of species (z) and the same number of epochs, allowing them to be organized into a 4D tensor for parallel processing.
 
@@ -105,7 +105,7 @@ After completing the allowed number of epochs, the first matrix of each individu
 
 ### Reactions
 
-The [reactions](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/reactions.py) currently available for simulating a biological system are:
+The [reactions](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim_ind/reactions.py) currently available for simulating a biological system are:
 
 1. **Component Production**: This reaction type is responsible for producing components (such as species or proteins) in the system. These components are created by cells that have a specific production rate for each component.
 
