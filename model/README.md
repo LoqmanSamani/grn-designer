@@ -1,5 +1,9 @@
 # Developing The Algorithm
 
+--------------------
+--------------------
+
+
 ## Simulation Algorithm
 
 
@@ -151,23 +155,23 @@ The answer is yes! These four reaction types—component production, component d
    
    - **Signal Molecules**: For signal molecules that diffuse through the system, we can adjust their diffusion rates to study how quickly they spread and influence other components. For example, a morphogen that diffuses to form a gradient can be simulated by setting a specific diffusion rate and observing how its gradient affects cell behavior.
 
-By manipulating these reaction rates, we can model a variety of biological systems with different types of components and interactions. The flexibility of defining these rates allows us to capture a wide range of biological behaviors and dynamics. ***Figure 5*** provides a schematic representation of an input system for the algorithm, showing how different rates define various types of relationships between species.
+By manipulating these reaction rates, we can model a variety of biological systems with different types of components and interactions. The flexibility of defining these rates allows us to capture a wide range of biological behaviors and dynamics. ***Figure 6*** provides a schematic representation of an input system for the algorithm, showing how different rates define various types of relationships between species.
 
 
 ![signal-sys](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/signal-sys.png)
 
-*Figure5: An Individual*
+*Figure 6: An Individual*
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
 ### Benchmarking Results
 
-The benchmarking results, displayed in ***Figure 6***, provide insights into how Numba optimization affects the performance of the simulation algorithm. The results are categorized based on three key factors: compartment size, simulation epochs, and population size.
+The benchmarking results, displayed in ***Figure 7***, provide insights into how Numba optimization affects the performance of the simulation algorithm. The results are categorized based on three key factors: compartment size, simulation epochs, and population size.
 
 
-![bench_ma](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench_ma.png)
+![bench_m](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench_m.png)
 
-*Figure6: The benchmarking results**
+*Figure 7: The benchmarking results**
 
 
 #### Compartment Size
@@ -191,6 +195,8 @@ In summary, Numba optimization proves to be highly beneficial, especially when d
 --------------------------------------------------------------------------------------------------------------
 
 
+
+## Genetic Algorithm Based on Natural Selection Theory (GABONST):
 
 
 

@@ -108,7 +108,7 @@ result = population_simulation(pop)
 toc = time.time()
 
 print(toc - tic)
-"""
+
 
 
 def run_simulation_with_timing():
@@ -160,3 +160,27 @@ def run_simulation_with_timing():
 
 
 run_simulation_with_timing()
+"""
+
+
+pop_size = [1000, 5000]
+
+t = []
+
+for p in pop_size:
+    tic = time.time()
+    pop = np.zeros((p, 7, 30, 30))
+    pop[:, 1, :, 0] = 1
+    pop[:, 3, :, -1] = 1
+
+    pop[:, -1, 0, :3] = [.09, .007, 1.1]
+    pop[:, -1, 2, :3] = [0.09, 0.006, 1.2]
+    pop[:, -1, -1, :5] = [2, 1, 500, 5, .01]
+    pop[:, -2, 0, 0:2] = [0, 2]
+    pop[:, -2, 1, 0:4] = [6, .01, 0.001, 1.3]
+
+    result = population_simulation(pop)
+    toc = time.time()
+    t.append(toc-tic)
+
+print(t)

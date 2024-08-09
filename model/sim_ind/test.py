@@ -206,6 +206,8 @@ model.heatmap_animation(keys)
 # Data Lists
 com_size_x = [10, 50, 100, 200, 500, 1000]
 com_size_y = [0.742, 3.519, 7.374, 18.195, 64.692, 231.442]
+com_size_x1 = [10, 50, 100, 200, 500, 1000]
+com_size_y1 = [0.939, 4.635, 10.665, 24.520, 78.512, 237.527]
 numba_com_size_x = [10, 50, 100, 200, 500, 1000]
 numba_com_size_y = [10.832, 0.116, 0.362, 2.039, 16.385, 107.511]
 numba1_com_size_x = [10, 50, 100, 200, 500, 1000]
@@ -214,6 +216,8 @@ numba1_com_size_y = [26.764, 0.353, 1.379, 5.353, 35.197, 159.298]
 
 sim_epochs_x = [100, 500, 1000, 10000, 50000, 100000]
 sim_epochs_y = [0.686, 3.469, 6.919, 69.684, 351.579, 711.421]
+sim_epochs_x1 = [100, 500, 1000, 10000, 50000, 100000]
+sim_epochs_y1 = [0.929, 5.341, 10.591, 107.302, 532.303, 1083.512]
 numba_sim_epochs_x = [100, 500, 1000, 10000, 50000, 100000]
 numba_sim_epochs_y = [0.025, 0.116, 0.231, 2.310, 11.656, 23.539]
 numba1_sim_epochs_x = [100, 500, 1000, 10000, 50000, 100000]
@@ -222,15 +226,18 @@ numba1_sim_epochs_y = [0.114, 0.403, 0.678, 7.273, 37.852, 75.112]
 
 pop_size_x = [20, 50, 100, 200, 500]
 pop_size_y = [150.991, 378.386, 752.464, 1492.955, 3762.638]
+pop_size_x1 = [20, 50, 100, 200, 500]
+pop_size_y1 = [4.407, 6.576, 10.641, 19.971, 64.743]
 numba_pop_size_x = [20, 50, 100, 200, 500]
 numba_pop_size_y = [18.736, 18.984, 38.325, 76.573, 191.065]
 numba1_pop_size_x = [20, 50, 100, 200, 500]
 numba1_pop_size_y = [35.294, 32.226, 79.221, 222.690, 1065.238]
 
 
-plt.figure(figsize=(24, 6))
+plt.figure(figsize=(30, 6))
 plt.subplot(1, 3, 1)
 plt.plot(com_size_x, com_size_y, label='Without Numba (individual_simulation())', marker='o')
+plt.plot(com_size_x1, com_size_y1, label='Without Numba (population_simulation())', marker='o')
 plt.plot(numba_com_size_x, numba_com_size_y, label='With Numba (individual_simulation())', marker='o')
 plt.plot(numba1_com_size_x, numba1_com_size_y, label='With Numba (population_simulation())', marker='o')
 
@@ -243,6 +250,7 @@ plt.grid(True)
 
 plt.subplot(1, 3, 2)
 plt.plot(sim_epochs_x, sim_epochs_y, label='Without Numba (individual_simulation())', marker='o')
+plt.plot(sim_epochs_x1, sim_epochs_y1, label='Without Numba (population_simulation())', marker='o')
 plt.plot(numba_sim_epochs_x, numba_sim_epochs_y, label='With Numba (individual_simulation())', marker='o')
 plt.plot(numba1_sim_epochs_x, numba1_sim_epochs_y, label='With Numba (population_simulation())', marker='o')
 plt.title('Performance vs. Simulation Epochs')
@@ -254,6 +262,7 @@ plt.grid(True)
 
 plt.subplot(1, 3, 3)
 plt.plot(pop_size_x, pop_size_y, label='Without Numba (individual_simulation())', marker='o')
+plt.plot(pop_size_x1, pop_size_y1, label='Without Numba (population_simulation())', marker='o')
 plt.plot(numba_pop_size_x, numba_pop_size_y, label='With Numba (individual_simulation())', marker='o')
 plt.plot(numba1_pop_size_x, numba1_pop_size_y, label='With Numba (population_simulation())', marker='o')
 plt.title('Performance vs. Population Size')
