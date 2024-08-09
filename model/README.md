@@ -175,7 +175,7 @@ By manipulating these reaction rates, we can model a variety of biological syste
 The benchmarking results, displayed in ***Figure 7***, provide insights into how Numba optimization affects the performance of the simulation algorithm. The results are categorized based on three key factors: compartment size, simulation epochs, and population size.
 
 
-![bench_m](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench_m.png)
+![bench_m](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench-m.png)
 
 *Figure 7: The benchmarking results**
 
