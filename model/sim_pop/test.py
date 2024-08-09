@@ -163,13 +163,13 @@ run_simulation_with_timing()
 """
 
 
-pop_size = [1000, 5000]
+pop_size = [20, 50, 100, 200, 500]
 
 t = []
 
 for p in pop_size:
     tic = time.time()
-    pop = np.zeros((p, 7, 30, 30))
+    pop = np.zeros((p, 7, 100, 100))
     pop[:, 1, :, 0] = 1
     pop[:, 3, :, -1] = 1
 
@@ -184,3 +184,5 @@ for p in pop_size:
     t.append(toc-tic)
 
 print(t)
+
+
