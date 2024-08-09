@@ -101,6 +101,12 @@ In each epoch, the simulation processes the compartments column-wise. Instead of
 After completing the allowed number of epochs, the first matrix of each individual of population matrix (`population[:, 0, :, :]`) is returned for further processing in the algorithm.
 
 
+
+***[Here](https://github.com/LoqmanSamani/master_project/tree/systembiology/data/sim-model/sim-videos) you can view videos generated from simulations using both the individual and population algorithms.***
+
+
+
+
 ### Diffusion System
 
     ....
