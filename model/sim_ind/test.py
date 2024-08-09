@@ -8,7 +8,7 @@ import h5py
 import matplotlib.pyplot as plt
 
 
-"""
+
 def run_simulation_with_timing():
     try:
         com_size = [10, 50, 100, 200, 500, 1000]
@@ -195,7 +195,7 @@ model = HeatMaps(
 
 model.heatmap_animation(keys)
 
-"""
+
 
 
 
