@@ -27,6 +27,7 @@ def individual_simulation(individual):
     Returns:
     - np.ndarray: The final concentrations of the first species in the compartment,
       with shape (y, x) where y and x are the compartment dimensions.
+    - delta_D: Maximum concentration change across all time steps.
     """
     z, y, x = individual.shape  # z: species (including complexes), (y, x): compartment shape
     num_iters = int(x)  # Number of iterations in each epoch (equal to x)
@@ -39,8 +40,10 @@ def individual_simulation(individual):
     pair_start = int(num_species * 2)  # Starting index for species pairs
     pair_stop = int(pair_start + (num_pairs * 2))  # Ending index for species pairs
 
+    prev_pattern = np.zeros((y, x))
+    delta_D = 0
     epoch = 0
-    while epoch < max_epoch or epoch < num_epochs:
+    while epoch <= max_epoch or epoch <= num_epochs:
 
         for i in range(num_iters):
 
@@ -113,6 +116,14 @@ def individual_simulation(individual):
                     time_step=time_step
                 )
 
+        # Compute maximum concentration change
+        if epoch > 0:
+            concentration_change = np.max(np.abs(individual[0, :, :] - prev_pattern))
+            delta_D = max(delta_D, concentration_change)
+
+            # Update prev_pattern for the next iteration
+            prev_pattern = individual[0, :, :]
+
         epoch += 1
 
-    return individual[0, :, :]
+    return individual[0, :, :], delta_D

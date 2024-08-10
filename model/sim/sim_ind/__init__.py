@@ -1,0 +1,7 @@
+from sim_ind.reactions import apply_component_production, apply_component_degradation, apply_species_collision, apply_complex_dissociation, 
+from sim_ind.simulation import individual_simulation
+from sim_ind.diffusion import apply_diffusion, update_upper_left_corner_concentration, update_lower_left_corner_concentration, update_left_side_concentration, update_upper_right_corner_concentration, update_lower_right_corner_concentration, update_right_side_concentration, update_central_concentration_upper, update_central_concentration_lower, update_central_concentration_middle
+
+
+
+
