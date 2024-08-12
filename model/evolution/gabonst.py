@@ -1,7 +1,9 @@
 import numpy as np
 from numba import jit
 from master_project.model.sim.sim_ind.simulation import *
+from initialization import *
 from cost import *
+
 
 def evolutionary_optimization(population, target, cost_alpha, cost_beta, cost_kernel_size, cost_method):
 
