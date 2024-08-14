@@ -2,10 +2,66 @@ import numpy as np
 from initialization import *
 import itertools
 
+
+def apply_mutation(
+        individual, sim_mutation_rates, compartment_mutation_rate, parameter_mutation_rate,
+        insertion_mutation_rate, deletion_mutation_rate, sim_min_vals, sim_max_vals, sim_dtypes,
+        compartment_mean, compartment_std, compartment_min_val, compartment_max_val, compartment_distribution,
+        param_means, param_stds, param_min_vals, param_max_vals, param_distribution, sim_mutation,
+        compartment_mutation, param_mutation, species_insertion_mutation, species_deletion_mutation
+):
+
+    if sim_mutation:
+        individual = apply_simulation_variable_mutation(
+            individual=individual,
+            mutation_rates=sim_mutation_rates,
+            min_vals=sim_min_vals,
+            max_vals=sim_max_vals,
+            dtypes=sim_dtypes
+        )
+    if compartment_mutation:
+        individual = apply_compartment_mutation(
+            individual=individual,
+            mutation_rate=compartment_mutation_rate,
+            mean=compartment_mean,
+            std_dev=compartment_std,
+            min_val=compartment_min_val,
+            max_val=compartment_max_val,
+            distribution=compartment_distribution
+        )
+    if param_mutation:
+        individual = apply_parameter_mutation(
+            individual=individual,
+            mutation_rate=parameter_mutation_rate,
+            means=param_means,
+            std_devs=param_stds,
+            min_vals=param_min_vals,
+            max_vals=param_max_vals,
+            distribution=param_distribution
+        )
+    if species_insertion_mutation:
+        individual = apply_species_insertion_mutation(
+            individual=individual,
+            mutation_rate=insertion_mutation_rate
+        )
+    if species_deletion_mutation:
+        individual = apply_species_deletion_mutation(
+            individual=individual,
+            mutation_rate=deletion_mutation_rate
+        )
+
+    return individual
+
+
+
+
+
+
+
 def apply_simulation_variable_mutation(individual, mutation_rates, min_vals, max_vals, dtypes):
     """
     Apply "Range-Bounded Mutations" to simulation variables based on mutation rates, value ranges, and data types.
-    This function is designed to allpy mutation on "stop time of simulation (individual[-1, -1, 3])"
+    This function is designed to apply mutation on "stop time of simulation (individual[-1, -1, 3])"
     and "time step (individual[-1, -1, 4])"
 
     Parameters:
@@ -123,19 +179,41 @@ def apply_species_insertion_mutation(individual, mutation_rate):
 
     if np.random.rand() < mutation_rate:
         pairs = pair_finding(num_species=num_species)
-        init_matrix = species_initialization(compartment_size=compartment_size, num_species=len(pairs) + 1)
+        init_matrix = species_initialization(compartment_size=compartment_size, pairs=pairs)
         individual = species_combine(individual=individual, init_matrix=init_matrix, num_species=num_species, num_pairs=num_pairs)
 
     return individual
 
 
+def apply_species_deletion_mutation(individual, mutation_rate):
+
+    num_species = int(individual[-1, -1, 0])
+    if np.random.rand() < mutation_rate:
+        deleted_species = int(np.random.choice(np.arange(1, num_species)))
+        individual = species_deletion(individual=individual, deleted_species=deleted_species)
+
+        return individual
 
 
 
 
 
 
+def species_deletion(individual, deleted_species):
 
+    num_species = int(individual[-1, -1, 0])
+    num_pairs = int(individual[-1, -1, 1])
+    pair_start = int(num_species * 2) + 1
+    pair_stop = int(pair_start + (num_pairs * 2))
+    count = [deleted_species*2, deleted_species*2+1]
+
+    for i in range(pair_start, pair_stop, 2):
+        if individual[i, 0, 0] == deleted_species or individual[i, 0, 1] == deleted_species:
+            count.append(i-1)
+            count.append(i)
+    updated_individual = np.delete(individual, count, axis=0)
+
+    return updated_individual
 
 
 
@@ -153,15 +231,29 @@ def pair_finding(num_species):
 
 def species_combine(individual, init_matrix, num_species, num_pairs):
 
-    z1 = individual.shape[0] + init_matrix.shape[0]
     z, y, x = individual.shape
+    z1 = z + init_matrix.shape[0]
 
     updated_individual = np.zeros((z1, y, x))
     updated_individual[:num_species*2, :, :] = individual[:num_species*2, :, :]
-    updated_individual[num_species*2: num_species*2+2, :, :] = init_matrix[:2, :, :]
-    updated_individual[num_species*2+2: num_species*2+num_pairs*2+2, :, :] = individual[num_species*2:-1, :, :]
-    updated_individual[num_species*2+num_pairs*2+2: num_species*2+num_pairs*2+init_matrix.shape[0], :, :] = init_matrix[2:, :, :]
-    updated_individual[-1] = individual[-1]
+    updated_individual[num_species*2:num_species*2+init_matrix.shape[0], :, :] = init_matrix
+    updated_individual[num_species*2+init_matrix.shape[0]:, :, :] = individual[num_species*2:, :, :]
+    updated_individual[-1, 0, 0] = int(num_species+1)
+    updated_individual[-1, 0, 1] = int(num_pairs+((init_matrix.shape[0]-2)/2))
 
     return updated_individual
 
+
+def species_initialization(compartment_size, pairs):
+
+    num_species = len(pairs) + 1
+    num_matrices = num_species * 2
+    init_matrix = np.zeros((num_matrices, compartment_size[0], compartment_size[1]))
+
+    for i in range(len(pairs)):
+        m = np.random.rand(2, compartment_size[0], compartment_size[1])
+        m[-1, 0, 0] = int(pairs[i][0])
+        m[-1, 0, 1] = int(pairs[i][1])
+        init_matrix[i*2+2:i*2+4, :, :] = m
+
+    return init_matrix
