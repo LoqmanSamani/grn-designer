@@ -3,21 +3,64 @@ from initialization import *
 import itertools
 
 
-def apply_mutation(
-        individual, sim_mutation_rates, compartment_mutation_rate, parameter_mutation_rate,
-        insertion_mutation_rate, deletion_mutation_rate, sim_min_vals, sim_max_vals, sim_dtypes,
-        compartment_mean, compartment_std, compartment_min_val, compartment_max_val, compartment_distribution,
-        param_means, param_stds, param_min_vals, param_max_vals, param_distribution, sim_mutation,
-        compartment_mutation, param_mutation, species_insertion_mutation, species_deletion_mutation
-):
+def apply_mutation(individual, sim_mutation_rate, compartment_mutation_rate, parameter_mutation_rate,
+                   insertion_mutation_rate, deletion_mutation_rate, sim_means, sim_std_devs, sim_min_vals, sim_max_vals,
+                   compartment_mean, compartment_std, compartment_min_val, compartment_max_val, sim_distribution,
+                   compartment_distribution, species_param_means, species_param_stds, species_param_min_vals,
+                   species_param_max_vals, complex_param_means, complex_param_stds, complex_param_min_vals,
+                   complex_param_max_vals, param_distribution, sim_mutation, compartment_mutation, param_mutation,
+                   species_insertion_mutation, species_deletion_mutation):
+    """
+        Applies various types of mutations to an individual matrix based on provided mutation rates and parameters.
+
+        This function orchestrates the mutation process, allowing different aspects of the individual's configuration
+        (such as simulation parameters, compartment properties, species parameters, and species presence) to be mutated.
+
+        Parameters:
+        - individual (numpy.ndarray): The multi-dimensional array representing the individual to be mutated.
+        - sim_mutation_rate (float): The mutation rate for the simulation parameters.
+        - compartment_mutation_rate (float): The mutation rate for the compartment properties.
+        - parameter_mutation_rate (float): The mutation rate for species and complex parameters.
+        - insertion_mutation_rate (float): The mutation rate for species insertion.
+        - deletion_mutation_rate (float): The mutation rate for species deletion.
+        - sim_means (list of float): Mean values for simulation parameter mutation (used if sim_distribution is "normal").
+        - sim_std_devs (list of float): Standard deviations for simulation parameter mutation (used if sim_distribution is "normal").
+        - sim_min_vals (list of float): Minimum values for simulation parameter mutation (used if sim_distribution is "uniform").
+        - sim_max_vals (list of float): Maximum values for simulation parameter mutation (used if sim_distribution is "uniform").
+        - compartment_mean (float): Mean value for compartment mutation (used if compartment_distribution is "normal").
+        - compartment_std (float): Standard deviation for compartment mutation (used if compartment_distribution is "normal").
+        - compartment_min_val (float): Minimum value for compartment mutation (used if compartment_distribution is "uniform").
+        - compartment_max_val (float): Maximum value for compartment mutation (used if compartment_distribution is "uniform").
+        - sim_distribution (str): The distribution type ("normal" or "uniform") for simulation parameter mutation.
+        - compartment_distribution (str): The distribution type ("normal" or "uniform") for compartment mutation.
+        - species_param_means (list of float): Mean values for species parameter mutation (used if param_distribution is "normal").
+        - species_param_stds (list of float): Standard deviations for species parameter mutation (used if param_distribution is "normal").
+        - species_param_min_vals (list of float): Minimum values for species parameter mutation (used if param_distribution is "uniform").
+        - species_param_max_vals (list of float): Maximum values for species parameter mutation (used if param_distribution is "uniform").
+        - complex_param_means (list of float): Mean values for complex parameter mutation (used if param_distribution is "normal").
+        - complex_param_stds (list of float): Standard deviations for complex parameter mutation (used if param_distribution is "normal").
+        - complex_param_min_vals (list of float): Minimum values for complex parameter mutation (used if param_distribution is "uniform").
+        - complex_param_max_vals (list of float): Maximum values for complex parameter mutation (used if param_distribution is "uniform").
+        - param_distribution (str): The distribution type ("normal" or "uniform") for species and complex parameter mutation.
+        - sim_mutation (bool): Flag indicating whether to apply simulation parameter mutation.
+        - compartment_mutation (bool): Flag indicating whether to apply compartment mutation.
+        - param_mutation (bool): Flag indicating whether to apply species and complex parameter mutation.
+        - species_insertion_mutation (bool): Flag indicating whether to apply species insertion mutation.
+        - species_deletion_mutation (bool): Flag indicating whether to apply species deletion mutation.
+
+        Returns:
+        - numpy.ndarray: The mutated individual matrix after all applicable mutations have been applied.
+        """
 
     if sim_mutation:
-        individual = apply_simulation_variable_mutation(
+        individual = apply_simulation_parameters_mutation(
             individual=individual,
-            mutation_rates=sim_mutation_rates,
+            mutation_rate=sim_mutation_rate,
+            means=sim_means,
+            std_devs=sim_std_devs,
             min_vals=sim_min_vals,
             max_vals=sim_max_vals,
-            dtypes=sim_dtypes
+            distribution=sim_distribution
         )
     if compartment_mutation:
         individual = apply_compartment_mutation(
@@ -30,13 +73,17 @@ def apply_mutation(
             distribution=compartment_distribution
         )
     if param_mutation:
-        individual = apply_parameter_mutation(
+        individual = apply_parameters_mutation(
             individual=individual,
             mutation_rate=parameter_mutation_rate,
-            means=param_means,
-            std_devs=param_stds,
-            min_vals=param_min_vals,
-            max_vals=param_max_vals,
+            species_means=species_param_means,
+            species_std_devs=species_param_stds,
+            species_min_vals=species_param_min_vals,
+            species_max_vals=species_param_max_vals,
+            complex_means=complex_param_means,
+            complex_std_devs=complex_param_stds,
+            complex_min_vals=complex_param_min_vals,
+            complex_max_vals=complex_param_max_vals,
             distribution=param_distribution
         )
     if species_insertion_mutation:
@@ -53,95 +100,131 @@ def apply_mutation(
     return individual
 
 
-
-
-
-
-
-def apply_simulation_variable_mutation(individual, mutation_rates, min_vals, max_vals, dtypes):
+def apply_simulation_parameters_mutation(individual, mutation_rate, means, std_devs, min_vals, max_vals, distribution):
     """
-    Apply "Range-Bounded Mutations" to simulation variables based on mutation rates, value ranges, and data types.
-    This function is designed to apply mutation on "stop time of simulation (individual[-1, -1, 3])"
-    and "time step (individual[-1, -1, 4])"
+    Applies mutation to the stop time and time step parameters of a simulation individual.
 
     Parameters:
-    - individual (np.ndarray): an individual with shape (z, y, x).
-    - mutation_rates (list or np.ndarray): The probability of mutation for each parameter.
-    - min_vals (list or np.ndarray): The minimum values for each parameter.
-    - max_vals (list or np.ndarray): The maximum values for each parameter.
-    - dtypes (list or np.ndarray): The data type ('int' or 'float') for each parameter.
+    - individual: ndarray
+        A multi-dimensional array representing an individual in the simulation.
+        The stop time and time step parameters are located at positions [-1, -1, 3]
+        and [-1, -1, 4] respectively.
+    - mutation_rate: float
+        The probability of each parameter being mutated, a value between 0 and 1.
+    - means: list or ndarray
+        A list or array containing the means for the normal distribution mutation.
+        Only used if distribution is set to "normal".
+    - std_devs: list or ndarray
+        A list or array containing the standard deviations for the normal distribution mutation.
+        Only used if distribution is set to "normal".
+    - min_vals: list or ndarray
+        A list or array containing the minimum bounds for the uniform distribution mutation.
+        Only used if distribution is set to "uniform".
+    - max_vals: list or ndarray
+        A list or array containing the maximum bounds for the uniform distribution mutation.
+        Only used if distribution is set to "uniform".
+    - distribution: str
+        The type of distribution to use for mutation. Must be either "uniform" or "normal".
 
     Returns:
-    - np.ndarray: The mutated `individual` array.
+    - individual: ndarray
+        The individual with possibly mutated stop time and time step parameters.
     """
 
-    min_vals = np.array(min_vals)
-    max_vals = np.array(max_vals)
-    dtypes = np.array(dtypes)
+    mut_mask = np.random.rand(2) < mutation_rate
 
-    for i in range(len(min_vals)):
-        if np.random.rand() < mutation_rates[i]:
-            if dtypes[i] == "int":
-                individual[-1, -1, 3 + i] = np.random.randint(min_vals[i], max_vals[i] + 1)
-            elif dtypes[i] == "float":
-                individual[-1, -1, 3 + i] = min_vals[i] + (max_vals[i] - min_vals[i]) * np.random.random()
-            else:
-                raise ValueError(f"Unsupported dtype '{dtypes[i]}' at index {i}. Must be 'int' or 'float'.")
+    for i in range(2):
+
+        if distribution == "uniform":
+            individual[-1, -1, i + 3] += (np.random.uniform(low=min_vals[i], high=max_vals[i]) - individual[
+                -1, -1, i + 3]) * mut_mask[i]
+        elif distribution == "normal":
+            individual[-1, -1, i + 3] += np.random.normal(loc=means[i], scale=std_devs[i]) * mut_mask[i]
+
+        individual[-1, -1, i + 3] = max(min_vals[i], min(max_vals[i], individual[-1, -1, i + 3]))
 
     return individual
 
 
 def apply_compartment_mutation(individual, mutation_rate, mean, std_dev, min_val, max_val, distribution):
     """
-    Apply mutation to the compartments of the individual based on the specified distribution.
-    This mutation function is specific for pattern matrices of the species.
+    Applies mutation to specific compartments (matrices) within an individual matrix.
+    The compartments that undergo mutation represent simulation patterns indicating
+    which cells are capable of producing specific products (initial conditions).
 
     Parameters:
-    - individual (np.ndarray): The array representing the individual with shape (z, y, x).
-    - mutation_rate (float): The probability of mutation for each cell in the compartment.
-    - mean (float): Mean of the Gaussian distribution used for mutation (ignored if uniform distribution).
-    - std_dev (float): Standard deviation of the Gaussian distribution used for mutation (ignored if uniform distribution).
-    - min_val (float, optional): Minimum value for uniform distribution (required if distribution is uniform).
-    - max_val (float, optional): Maximum value for uniform distribution (required if distribution is uniform).
-    - distribution (str): Type of distribution to use for mutation ("normal" or "uniform").
+    - individual: ndarray
+        A multi-dimensional array representing an individual in the simulation.
+        The compartments to be mutated are located at odd indices from 1 to num_species*2.
+    - mutation_rate: float
+        The probability of each element in the compartment being mutated, a value between 0 and 1.
+    - mean: float
+        The mean value used for the normal distribution mutation.
+        Only used if distribution is set to "normal".
+    - std_dev: float
+        The standard deviation for the normal distribution mutation.
+        Only used if distribution is set to "normal".
+    - min_val: float
+        The minimum bound for the uniform distribution mutation and the minimum value allowed
+        after mutation.
+    - max_val: float
+        The maximum bound for the uniform distribution mutation and the maximum value allowed
+        after mutation.
+    - distribution: str
+        The type of distribution to use for mutation. Must be either "uniform" or "normal".
 
     Returns:
-    - np.ndarray: The mutated individual array.
+    - individual: ndarray
+        The individual with mutated compartments, ensuring all values are non-negative
+        and within specified bounds.
     """
+
     num_species = int(individual[-1, -1, 0])
-    compartment_size = individual[0, :, :].shape
+    z, y, x = individual.shape
 
     for i in range(1, num_species * 2, 2):
-        # Create random mask where mutation will happen (False or True)
-        mut_mask = np.random.rand(compartment_size[0], compartment_size[1]) < mutation_rate
+        mut_mask = np.random.rand(y, x) < mutation_rate
 
         if distribution == "normal":
-            noise = np.random.normal(loc=mean, scale=std_dev, size=compartment_size)
+            noise = np.random.normal(loc=mean, scale=std_dev, size=(y, x))
         elif distribution == "uniform":
-            noise = np.random.uniform(low=min_val, high=max_val, size=compartment_size)
+            noise = np.random.uniform(low=min_val, high=max_val, size=(y, x))
 
         individual[i, :, :] += np.where(mut_mask, noise, 0)
-        individual[i, :, :] = np.maximum(individual[i, :, :], 0)
+        individual[i, :, :] = np.clip(individual[i, :, :], min_val, max_val)
 
     return individual
 
 
-def apply_parameter_mutation(individual, mutation_rate, means, std_devs, min_vals, max_vals, distribution):
+
+def apply_parameters_mutation(individual, mutation_rate, species_means, species_std_devs,
+                             species_min_vals, species_max_vals, complex_means, complex_std_devs,
+                             complex_min_vals, complex_max_vals, distribution):
     """
-    Apply mutation to specific regions of the individual based on the provided mutation rate and distribution.
+    Apply mutations to the parameters of an individual in an evolutionary algorithm.
+
+    This function mutates the species and complex parameters of an individual.
+    The mutations are applied based on a specified mutation rate and distribution type (normal or uniform).
 
     Parameters:
-    - individual (np.ndarray): The array representing the individual with shape (z, y, x).
-    - mutation_rate (float): The probability of mutation for each parameter.
-    - means (list or np.ndarray): Means for the normal distribution.
-    - std_devs (list or np.ndarray): Standard deviations for the normal distribution.
-    - min_vals (list or np.ndarray): Minimum values for the uniform distribution.
-    - max_vals (list or np.ndarray): Maximum values for the uniform distribution.
-    - distribution (str): Type of distribution for mutation ("normal" or "uniform").
+    - individual (numpy.ndarray): A multi-dimensional array representing the species and complex parameters.
+                                  The last row of the individual holds metadata:
+                                  [number of species, number of complexes].
+    - mutation_rate (float): The probability with which each parameter is mutated. Should be between 0 and 1.
+    - species_means (list of float): Mean values used for normal distribution mutation of species parameters.
+    - species_std_devs (list of float): Standard deviation values for normal distribution mutation of species parameters.
+    - species_min_vals (list of float): Minimum values used for uniform distribution mutation of species parameters.
+    - species_max_vals (list of float): Maximum values used for uniform distribution mutation of species parameters.
+    - complex_means (list of float): Mean values used for normal distribution mutation of complex parameters.
+    - complex_std_devs (list of float): Standard deviation values for normal distribution mutation of complex parameters.
+    - complex_min_vals (list of float): Minimum values used for uniform distribution mutation of complex parameters.
+    - complex_max_vals (list of float): Maximum values used for uniform distribution mutation of complex parameters.
+    - distribution (str): Type of distribution to use for mutation, either "normal" or "uniform".
 
     Returns:
-    - np.ndarray: The mutated individual array.
+    - numpy.ndarray: The mutated individual with the same shape as the input.
     """
+
     num_species = int(individual[-1, -1, 0])
     num_pairs = int(individual[-1, -1, 1])
     pair_start = num_species * 2
@@ -152,72 +235,94 @@ def apply_parameter_mutation(individual, mutation_rate, means, std_devs, min_val
         mut_mask = np.random.rand(3) < mutation_rate
         if distribution == "normal":
             for j in range(3):
-                individual[-1, i, j] += np.random.normal(loc=means[count], scale=std_devs[count]) * mut_mask[j]
+                individual[-1, i, j] += np.random.normal(loc=species_means[count], scale=species_std_devs[count]) * \
+                                        mut_mask[j]
         elif distribution == "uniform":
             for j in range(3):
-                individual[-1, i, j] += (np.random.uniform(low=min_vals[count], high=max_vals[count]) - individual[-1, i, j]) * mut_mask[j]
+                individual[-1, i, j] += (np.random.uniform(low=species_min_vals[count], high=species_max_vals[count]) -
+                                         individual[-1, i, j]) * mut_mask[j]
         count += 1
 
-    for i in range(pair_start, pair_stop, 2):
+    for i in range(pair_start + 1, pair_stop, 2):
         mut_mask = np.random.rand(4) < mutation_rate
         if distribution == "normal":
             for j in range(4):
-                individual[i, 1, j] += np.random.normal(loc=means[count], scale=std_devs[count]) * mut_mask[j]
+                individual[i, 1, j] += np.random.normal(loc=complex_means[count], scale=complex_std_devs[count]) * \
+                                       mut_mask[j]
         elif distribution == "uniform":
             for j in range(4):
-                individual[i, 1, j] += (np.random.uniform(low=min_vals[count], high=max_vals[count]) - individual[i, 1, j]) * mut_mask[j]
+                individual[i, 1, j] += (np.random.uniform(low=complex_min_vals[count], high=complex_max_vals[count]) -
+                                        individual[i, 1, j]) * mut_mask[j]
         count += 1
-
-    return individual
-
-
-def apply_species_insertion_mutation(individual, mutation_rate):
-
-    num_species = int(individual[-1, -1, 0])
-    num_pairs = int(individual[-1, -1, 1])
-    compartment_size = individual[0, :, :].shape
-
-    if np.random.rand() < mutation_rate:
-        pairs = pair_finding(num_species=num_species)
-        init_matrix = species_initialization(compartment_size=compartment_size, pairs=pairs)
-        individual = species_combine(individual=individual, init_matrix=init_matrix, num_species=num_species, num_pairs=num_pairs)
 
     return individual
 
 
 def apply_species_deletion_mutation(individual, mutation_rate):
+    """
+    Applies a species deletion mutation to the individual with a given probability.
 
+    This function randomly selects a species and deletes it along with all complexes involving that species
+    if a random value is below the specified mutation rate.
+
+    Parameters:
+    - individual (numpy.ndarray): The multi-dimensional array representing the species and complexes.
+    - mutation_rate (float): The probability of deleting a species.
+
+    Returns:
+    - numpy.ndarray: The updated individual with the species and related complexes removed if the mutation occurred.
+    """
     num_species = int(individual[-1, -1, 0])
-    if np.random.rand() < mutation_rate:
+    if np.random.rand() < mutation_rate and num_species > 1:
         deleted_species = int(np.random.choice(np.arange(1, num_species)))
         individual = species_deletion(individual=individual, deleted_species=deleted_species)
 
-        return individual
+    return individual
 
 
 
+def apply_species_insertion_mutation(individual, mutation_rate):
+    """
+    Applies a species insertion mutation to the individual with a given probability.
 
+    This function adds a new species to the individual if a random value is below the specified mutation rate.
+    When a new species is added, it automatically generates all possible complexes between the new species and
+    the existing species. The updated individual structure is then returned.
 
+    Parameters:
+    - individual (numpy.ndarray): The multi-dimensional array representing the species and complexes.
+    - mutation_rate (float): The probability of adding a new species.
 
-def species_deletion(individual, deleted_species):
+    Returns:
+    - numpy.ndarray: The updated individual with a new species and its complexes if the mutation occurred.
+    """
 
     num_species = int(individual[-1, -1, 0])
     num_pairs = int(individual[-1, -1, 1])
-    pair_start = int(num_species * 2) + 1
-    pair_stop = int(pair_start + (num_pairs * 2))
-    count = [deleted_species*2, deleted_species*2+1]
+    z, y, x = individual.shape
 
-    for i in range(pair_start, pair_stop, 2):
-        if individual[i, 0, 0] == deleted_species or individual[i, 0, 1] == deleted_species:
-            count.append(i-1)
-            count.append(i)
-    updated_individual = np.delete(individual, count, axis=0)
+    if np.random.rand() < mutation_rate:
+        pairs = pair_finding(num_species=num_species)
+        init_matrix = species_initialization(compartment_size=(y, x), pairs=pairs)
+        individual = species_combine(individual=individual, init_matrix=init_matrix, num_species=num_species,
+                                     num_pairs=num_pairs)
 
-    return updated_individual
-
+    return individual
 
 
 def pair_finding(num_species):
+    """
+    Finds all possible pairs between the new species and the existing species.
+
+    Given the current number of species, this function generates all possible pairs between
+    the new species (which is one more than the current number) and the existing species.
+
+    Parameters:
+    - num_species (int): The current number of species.
+
+    Returns:
+    - list of tuples: A list of pairs (as tuples) where each pair includes the new species.
+    """
 
     last = num_species + 1
     species = [i for i in range(1, num_species + 2, 1)]
@@ -228,32 +333,105 @@ def pair_finding(num_species):
     return out_pairs
 
 
-
-def species_combine(individual, init_matrix, num_species, num_pairs):
-
-    z, y, x = individual.shape
-    z1 = z + init_matrix.shape[0]
-
-    updated_individual = np.zeros((z1, y, x))
-    updated_individual[:num_species*2, :, :] = individual[:num_species*2, :, :]
-    updated_individual[num_species*2:num_species*2+init_matrix.shape[0], :, :] = init_matrix
-    updated_individual[num_species*2+init_matrix.shape[0]:, :, :] = individual[num_species*2:, :, :]
-    updated_individual[-1, 0, 0] = int(num_species+1)
-    updated_individual[-1, 0, 1] = int(num_pairs+((init_matrix.shape[0]-2)/2))
-
-    return updated_individual
-
-
 def species_initialization(compartment_size, pairs):
+    """
+    Initializes the parameters for the new species and its complexes.
+
+    This function creates an initialization matrix containing the new species and the complexes
+    formed between the new species and each existing species. It sets random initial values for the
+    parameters of these species and complexes.
+
+    Parameters:
+    - compartment_size (tuple of int): The size of each compartment in the individual matrix.
+    - pairs (list of tuples): A list of pairs representing the complexes between the new species and existing species.
+
+    Returns:
+    - numpy.ndarray: A matrix containing the initialized values for the new species and its complexes.
+    """
 
     num_species = len(pairs) + 1
     num_matrices = num_species * 2
     init_matrix = np.zeros((num_matrices, compartment_size[0], compartment_size[1]))
 
     for i in range(len(pairs)):
-        m = np.random.rand(2, compartment_size[0], compartment_size[1])
+        m = np.zeros((2, compartment_size[0], compartment_size[1]))
         m[-1, 0, 0] = int(pairs[i][0])
         m[-1, 0, 1] = int(pairs[i][1])
-        init_matrix[i*2+2:i*2+4, :, :] = m
+        m[-1, 1, :4] = np.random.rand(4)
+        init_matrix[i * 2 + 2:i * 2 + 4, :, :] = m
 
     return init_matrix
+
+
+def species_combine(individual, init_matrix, num_species, num_pairs):
+    """
+    Combines the new species and its complexes with the existing individual.
+
+    This function takes the existing individual matrix and the initialization matrix for the new species and its
+    complexes, and combines them into a single updated individual matrix. It also updates the metadata to reflect
+    the addition of the new species and complexes.
+
+    Parameters:
+    - individual (numpy.ndarray): The original individual matrix.
+    - init_matrix (numpy.ndarray): The initialization matrix for the new species and complexes.
+    - num_species (int): The original number of species.
+    - num_pairs (int): The original number of complexes.
+
+    Returns:
+    - numpy.ndarray: The updated individual matrix with the new species and complexes added.
+    """
+
+    z, y, x = individual.shape
+    z1 = z + init_matrix.shape[0]
+
+    updated_individual = np.zeros((z1, y, x))
+    updated_individual[:num_species * 2, :, :] = individual[:num_species * 2, :, :]
+    updated_individual[num_species * 2:num_species * 2 + init_matrix.shape[0], :, :] = init_matrix
+    updated_individual[num_species * 2 + init_matrix.shape[0]:, :, :] = individual[num_species * 2:, :, :]
+    updated_individual[-1, -1, 0] = int(num_species + 1)
+    updated_individual[-1, -1, 1] = int(num_pairs + ((init_matrix.shape[0] - 2) / 2))
+    updated_individual[-1, num_species * 2, :3] = np.random.rand(3)
+
+    return updated_individual
+
+
+def species_deletion(individual, deleted_species):
+    """
+    Deletes a species and all complexes involving that species from the individual matrix.
+
+    Parameters:
+    - individual (numpy.ndarray): The individual matrix before deletion.
+    - deleted_species (int): The index of the species to be deleted.
+
+    Returns:
+    - numpy.ndarray: The updated individual matrix after deletion.
+    """
+    num_species = int(individual[-1, -1, 0])
+    num_pairs = int(individual[-1, -1, 1])
+    pair_start = int((num_species * 2) + 1)
+    pair_stop = int(pair_start + (num_pairs * 2))
+
+    # Indices to delete: species and complexes involving the deleted species
+    delete_indices = [deleted_species * 2, deleted_species * 2 + 1]
+
+    # Collect complex indices involving the deleted species
+    for i in range(pair_start, pair_stop, 2):
+        if int(individual[i, 0, 0]) == deleted_species or int(individual[i, 0, 1]) == deleted_species:
+            delete_indices.extend([i - 1, i])
+    print(delete_indices)
+    # Delete the selected rows
+    updated_individual = np.delete(individual, delete_indices, axis=0)
+
+    # Update the number of species and pairs
+    updated_individual[-1, -1, 0] = num_species - 1
+    updated_individual[-1, -1, 1] = num_pairs - len(delete_indices) // 2 + 1
+
+    return updated_individual
+
+
+
+
+
+
+
+
