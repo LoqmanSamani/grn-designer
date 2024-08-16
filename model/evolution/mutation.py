@@ -258,6 +258,9 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
     return individual
 
 
+
+
+
 def apply_species_deletion_mutation(individual, mutation_rate):
     """
     Applies a species deletion mutation to the individual with a given probability.
@@ -273,11 +276,17 @@ def apply_species_deletion_mutation(individual, mutation_rate):
     - numpy.ndarray: The updated individual with the species and related complexes removed if the mutation occurred.
     """
     num_species = int(individual[-1, -1, 0])
+
     if np.random.rand() < mutation_rate and num_species > 1:
         deleted_species = int(np.random.choice(np.arange(1, num_species)))
-        individual = species_deletion(individual=individual, deleted_species=deleted_species)
+
+        individual = species_deletion(
+            individual=individual,
+            deleted_species=deleted_species
+        )
 
     return individual
+
 
 
 
@@ -302,10 +311,19 @@ def apply_species_insertion_mutation(individual, mutation_rate):
     z, y, x = individual.shape
 
     if np.random.rand() < mutation_rate:
-        pairs = pair_finding(num_species=num_species)
-        init_matrix = species_initialization(compartment_size=(y, x), pairs=pairs)
-        individual = species_combine(individual=individual, init_matrix=init_matrix, num_species=num_species,
-                                     num_pairs=num_pairs)
+        pairs = pair_finding(
+            num_species=num_species
+        )
+        init_matrix = species_initialization(
+            compartment_size=(y, x),
+            pairs=pairs
+        )
+        individual = species_combine(
+            individual=individual,
+            init_matrix=init_matrix,
+            num_species=num_species,
+            num_pairs=num_pairs
+        )
 
     return individual
 
@@ -353,16 +371,15 @@ def species_initialization(compartment_size, pairs):
     num_matrices = num_species * 2
     init_matrix = np.zeros((num_matrices, compartment_size[0], compartment_size[1]))
 
-    for i in range(2, len(pairs)):
+    for i in range(len(pairs)):
         m = np.zeros((2, compartment_size[0], compartment_size[1]))
-        m[-1, 0, 0] = int(pairs[i][0])
-        m[-1, 0, 1] = int(pairs[i][1])
+        m[-1, 0, 0] = int((pairs[i][0]-1)*2)
+        m[-1, 0, 1] = int((pairs[i][1]-1)*2)
         m[-1, 1, :4] = np.random.rand(4)
-        init_matrix[i * 2:i*2+2, :, :] = m
-
-    init_matrix[0, :, :] = np.random.rand(compartment_size[0], compartment_size[1])
+        init_matrix[i*2+2:i*2+4, :, :] = m
 
     return init_matrix
+
 
 
 def species_combine(individual, init_matrix, num_species, num_pairs):
@@ -397,6 +414,7 @@ def species_combine(individual, init_matrix, num_species, num_pairs):
     return updated_individual
 
 
+
 def species_deletion(individual, deleted_species):
     """
     Deletes a species and all complexes involving that species from the individual matrix.
@@ -413,22 +431,20 @@ def species_deletion(individual, deleted_species):
     pair_start = int((num_species * 2) + 1)
     pair_stop = int(pair_start + (num_pairs * 2))
 
-    # Indices to delete: species and complexes involving the deleted species
     delete_indices = [deleted_species * 2, deleted_species * 2 + 1]
 
-    # Collect complex indices involving the deleted species
     for i in range(pair_start, pair_stop, 2):
-        if int(individual[i, 0, 0]) == deleted_species or int(individual[i, 0, 1]) == deleted_species:
+        if int((individual[i, 0, 0] / 2) + 1) == deleted_species or int((individual[i, 0, 1] / 2) + 1) == deleted_species:
             delete_indices.extend([i - 1, i])
-    print(delete_indices)
-    # Delete the selected rows
+
     updated_individual = np.delete(individual, delete_indices, axis=0)
 
-    # Update the number of species and pairs
     updated_individual[-1, -1, 0] = num_species - 1
     updated_individual[-1, -1, 1] = num_pairs - len(delete_indices) // 2 + 1
 
     return updated_individual
+
+
 
 
 
