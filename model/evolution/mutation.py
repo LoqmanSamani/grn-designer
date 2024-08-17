@@ -91,7 +91,7 @@ def apply_mutation(individual, sim_mutation_rate, compartment_mutation_rate, par
             individual=individual,
             mutation_rate=insertion_mutation_rate
         )
-    if species_deletion_mutation:
+    if species_deletion_mutation and individual.shape[0] > 3:
         individual = apply_species_deletion_mutation(
             individual=individual,
             mutation_rate=deletion_mutation_rate
@@ -260,36 +260,6 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
 
 
 
-
-def apply_species_deletion_mutation(individual, mutation_rate):
-    """
-    Applies a species deletion mutation to the individual with a given probability.
-
-    This function randomly selects a species and deletes it along with all complexes involving that species
-    if a random value is below the specified mutation rate.
-
-    Parameters:
-    - individual (numpy.ndarray): The multi-dimensional array representing the species and complexes.
-    - mutation_rate (float): The probability of deleting a species.
-
-    Returns:
-    - numpy.ndarray: The updated individual with the species and related complexes removed if the mutation occurred.
-    """
-    num_species = int(individual[-1, -1, 0])
-
-    if np.random.rand() < mutation_rate and num_species > 1:
-        deleted_species = int(np.random.choice(np.arange(1, num_species)))
-
-        individual = species_deletion(
-            individual=individual,
-            deleted_species=deleted_species
-        )
-
-    return individual
-
-
-
-
 def apply_species_insertion_mutation(individual, mutation_rate):
     """
     Applies a species insertion mutation to the individual with a given probability.
@@ -328,6 +298,36 @@ def apply_species_insertion_mutation(individual, mutation_rate):
     return individual
 
 
+
+def apply_species_deletion_mutation(individual, mutation_rate):
+    """
+    Applies a species deletion mutation to the individual with a given probability.
+
+    This function randomly selects a species and deletes it along with all complexes involving that species
+    if a random value is below the specified mutation rate.
+
+    Parameters:
+    - individual (numpy.ndarray): The multi-dimensional array representing the species and complexes.
+    - mutation_rate (float): The probability of deleting a species.
+
+    Returns:
+    - numpy.ndarray: The updated individual with the species and related complexes removed if the mutation occurred.
+    """
+    num_species = int(individual[-1, -1, 0])
+
+    if np.random.rand() < mutation_rate and num_species > 1:
+        deleted_species = int(np.random.choice(np.arange(2, num_species+1)))
+
+        individual = species_deletion(
+            individual=individual,
+            deleted_species=deleted_species
+        )
+
+    return individual
+
+
+
+
 def pair_finding(num_species):
     """
     Finds all possible pairs between the new species and the existing species.
@@ -346,39 +346,11 @@ def pair_finding(num_species):
     species = [i for i in range(1, num_species + 2, 1)]
     pairs = list(itertools.combinations(species, 2))
 
-    out_pairs = [pair for pair in pairs if last in pair]
+    related_pairs = [pair for pair in pairs if last in pair]
+    pair_indices = [((pair[0] - 1) * 2, (pair[1]-1)*2) for pair in related_pairs]
 
-    return out_pairs
+    return pair_indices
 
-
-def species_initialization(compartment_size, pairs):
-    """
-    Initializes the parameters for the new species and its complexes.
-
-    This function creates an initialization matrix containing the new species and the complexes
-    formed between the new species and each existing species. It sets random initial values for the
-    parameters of these species and complexes.
-
-    Parameters:
-    - compartment_size (tuple of int): The size of each compartment in the individual matrix.
-    - pairs (list of tuples): A list of pairs representing the complexes between the new species and existing species.
-
-    Returns:
-    - numpy.ndarray: A matrix containing the initialized values for the new species and its complexes.
-    """
-
-    num_species = len(pairs) + 1
-    num_matrices = num_species * 2
-    init_matrix = np.zeros((num_matrices, compartment_size[0], compartment_size[1]))
-
-    for i in range(len(pairs)):
-        m = np.zeros((2, compartment_size[0], compartment_size[1]))
-        m[-1, 0, 0] = int((pairs[i][0]-1)*2)
-        m[-1, 0, 1] = int((pairs[i][1]-1)*2)
-        m[-1, 1, :4] = np.random.rand(4)
-        init_matrix[i*2+2:i*2+4, :, :] = m
-
-    return init_matrix
 
 
 
@@ -431,11 +403,12 @@ def species_deletion(individual, deleted_species):
     pair_start = int((num_species * 2) + 1)
     pair_stop = int(pair_start + (num_pairs * 2))
 
-    delete_indices = [deleted_species * 2, deleted_species * 2 + 1]
+    delete_indices = [(deleted_species-1)*2, ((deleted_species-1)*2)+1]
 
     for i in range(pair_start, pair_stop, 2):
         if int((individual[i, 0, 0] / 2) + 1) == deleted_species or int((individual[i, 0, 1] / 2) + 1) == deleted_species:
             delete_indices.extend([i - 1, i])
+    print(delete_indices)
 
     updated_individual = np.delete(individual, delete_indices, axis=0)
 
@@ -443,6 +416,17 @@ def species_deletion(individual, deleted_species):
     updated_individual[-1, -1, 1] = num_pairs - len(delete_indices) // 2 + 1
 
     return updated_individual
+
+
+
+
+
+
+
+
+
+
+
 
 
 
