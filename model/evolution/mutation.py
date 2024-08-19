@@ -3,6 +3,8 @@ from initialization import *
 import itertools
 
 
+
+
 def apply_mutation(individual, sim_mutation_rate, compartment_mutation_rate, parameter_mutation_rate,
                    insertion_mutation_rate, deletion_mutation_rate, sim_means, sim_std_devs, sim_min_vals, sim_max_vals,
                    compartment_mean, compartment_std, compartment_min_val, compartment_max_val, sim_distribution,
@@ -100,6 +102,8 @@ def apply_mutation(individual, sim_mutation_rate, compartment_mutation_rate, par
     return individual
 
 
+
+
 def apply_simulation_parameters_mutation(individual, mutation_rate, means, std_devs, min_vals, max_vals, distribution):
     """
     Applies mutation to the stop time and time step parameters of a simulation individual.
@@ -143,7 +147,11 @@ def apply_simulation_parameters_mutation(individual, mutation_rate, means, std_d
 
         individual[-1, -1, i + 3] = max(min_vals[i], min(max_vals[i], individual[-1, -1, i + 3]))
 
+    individual[-1, -1, 3:5] = np.maximum(individual[-1, -1, 3:5], 0)
+
     return individual
+
+
 
 
 def apply_compartment_mutation(individual, mutation_rate, mean, std_dev, min_val, max_val, distribution):
@@ -192,8 +200,10 @@ def apply_compartment_mutation(individual, mutation_rate, mean, std_dev, min_val
 
         individual[i, :, :] += np.where(mut_mask, noise, 0)
         individual[i, :, :] = np.clip(individual[i, :, :], min_val, max_val)
+        individual[i, :, :] = np.maximum(individual[i, :, :], 0)
 
     return individual
+
 
 
 
@@ -241,6 +251,7 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
             for j in range(3):
                 individual[-1, i, j] += (np.random.uniform(low=species_min_vals[count], high=species_max_vals[count]) -
                                          individual[-1, i, j]) * mut_mask[j]
+        individual[-1, i, :3] = np.maximum(individual[-1, i, :3], 0)
         count += 1
 
     for i in range(pair_start + 1, pair_stop, 2):
@@ -253,6 +264,7 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
             for j in range(4):
                 individual[i, 1, j] += (np.random.uniform(low=complex_min_vals[count], high=complex_max_vals[count]) -
                                         individual[i, 1, j]) * mut_mask[j]
+        individual[i, 1, :4] = np.maximum(individual[i, 1, :4], 0)
         count += 1
 
     return individual
@@ -299,6 +311,8 @@ def apply_species_insertion_mutation(individual, mutation_rate):
 
 
 
+
+
 def apply_species_deletion_mutation(individual, mutation_rate):
     """
     Applies a species deletion mutation to the individual with a given probability.
@@ -324,6 +338,7 @@ def apply_species_deletion_mutation(individual, mutation_rate):
         )
 
     return individual
+
 
 
 
@@ -387,6 +402,7 @@ def species_combine(individual, init_matrix, num_species, num_pairs):
 
 
 
+
 def species_deletion(individual, deleted_species):
     """
     Deletes a species and all complexes involving that species from the individual matrix.
@@ -408,7 +424,6 @@ def species_deletion(individual, deleted_species):
     for i in range(pair_start, pair_stop, 2):
         if int((individual[i, 0, 0] / 2) + 1) == deleted_species or int((individual[i, 0, 1] / 2) + 1) == deleted_species:
             delete_indices.extend([i - 1, i])
-    print(delete_indices)
 
     updated_individual = np.delete(individual, delete_indices, axis=0)
 
@@ -416,10 +431,6 @@ def species_deletion(individual, deleted_species):
     updated_individual[-1, -1, 1] = num_pairs - len(delete_indices) // 2 + 1
 
     return updated_individual
-
-
-
-
 
 
 

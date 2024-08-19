@@ -240,11 +240,28 @@ In summary, Numba optimization proves to be highly beneficial, especially when d
 ## Genetic Algorithm Based on Natural Selection Theory:
 
 
-  under development!
 
+### Mutation Operations ([`apply_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))
 
+In this section of the algorithm, the mutation operation is applied to various parts of the system, ranging from initial conditions (at the compartment level, such as determining if a cell can produce a specific product) to parameters (including those for species and complexes, such as species production, degradation, diffusion, complex collision, and dissociation) to the simulation's hyperparameters (such as the simulation's stop time and the time step, `dt`). 
 
+In addition to these mutations, which modify existing conditions and parameters, the system also includes two unique mutation operations: species deletion and species insertion.
 
+Overall, there are five specific mutation operations in the system:
+
+1. **Initial Compartment Conditions Mutation ([`apply_compartment_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))**: As discussed in the ***Simulation Algorithm*** section of this report, each species in the system is associated with two compartments: one representing the species concentration in each cell and the other defining the species production pattern (i.e., which cells can produce the species). The mutation in this case (`apply_compartment_mutation(...)`) is applied to the production pattern compartment, altering the ability of cells to produce the species (molecule). These compartments are defined as initial condition compartments.
+
+2. **Species and Complex Parameters Mutation ([`apply_parameters_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))**: This mutation alters the parameters of both species and complexes based on a specified mutation rate. 
+
+3. **Simulation Hyperparameters Mutation ([`apply_simulation_parameters_mutation`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))**: In this operation, two specific hyperparameters of the [simulation algorithm](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_ind/simulation.py) undergo mutation. The first is the simulation stop time or duration, and the second is the time step for each epoch of the simulation. These hyperparameters determine the simulation steps (simulation steps = simulation duration / time step). Therefore, three hyperparameters of the system are affected by this mutation, with two being directly altered and one indirectly. The fourth hyperparameter, the maximum number of simulation epochs, is not mutated to ensure computational efficiency.
+
+4. **Species Insertion Mutation ([`apply_species_insertion_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))**: To allow the system to adapt and generate diverse end simulation patterns, this mutation adds new species to the system. This increases the system's flexibility and enhances its ability to evolve towards the desired patterns. When a new species is added, the system also generates additional compartments for any potential complexes involving the new species. For example, if the system initially contains two species (A and B), adding a third species (C) will result in the creation of new compartments for complexes A-C and B-C.
+
+5. **Species Deletion Mutation ([`apply_species_deletion_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))**: Complementing the insertion mutation, this mutation simplifies the system by randomly removing a species. This helps regulate system complexity and introduces a mechanism to prevent uncontrolled growth. When a species is deleted, all associated complexes that involve the deleted species are also removed. For instance, if the system contains species A, B, and C along with complexes A-B, B-C, and A-C, deleting species B will also remove complexes A-B and B-C, leaving only species A, C, and the A-C complex.
+
+For the first three mutation types (initial compartment conditions mutation, species and complex parameters mutation, and simulation hyperparameters mutation), the mutation is applied based on specific parameters for each case. Two different distribution options (uniform and normal) can be used to select new values. Each distribution has its own hyperparameters (mean and standard deviation for normal distribution, and minimum and maximum values for uniform distribution) that can be adjusted to refine the mutation process.
+
+Each of these five mutation types is optional and can be selected within the algorithm as needed, providing flexibility in how the system evolves.
 
 
 
