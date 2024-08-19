@@ -198,7 +198,7 @@ while the third function handles the diffusion for the cells in between.
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
-### Benchmarking Results
+### Simulation Algorithms Benchmarking Results
 
 The benchmarking results, displayed in ***Figure 8***, provide insights into how Numba optimization affects the performance of the simulation algorithm. The results are categorized based on three key factors: compartment size, simulation epochs, and population size.
 
