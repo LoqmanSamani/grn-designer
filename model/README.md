@@ -263,7 +263,7 @@ Overall, there are five specific mutation operations in the system:
 
 ![del](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/del.jpg)
 
-*Figure 8: Species Insertion and Deletion*
+*Figure 9: Species Insertion and Deletion*
 
 
 
