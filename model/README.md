@@ -108,10 +108,32 @@ After completing the allowed number of epochs, the first matrix of each individu
 
 
 
-### Diffusion System
+### [Diffusion System](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_ind/diffusion.py)
 
-    ....
+In simulating a biological system in 2D or 3D, one of the most crucial aspects is modeling the diffusion pattern of each molecule within the compartment (tissue). 
+The way a molecule spreads from a cell can vary depending on several factors. For instance, diffusion might occur in a specific direction in response to a source of pressure or energy,
+leading to a particular diffusion pattern. Alternatively, it could happen uniformly in all directions, depending on the dimensions of the compartment.
 
+For this project, we've defined the system as a 2D compartment with specific axis lengths. Typically, we assume a square compartment (where x = y) and model each cell within this compartment
+as a square (with a = 1 unit). For example, a compartment with dimensions x = 100 and y = 100 contains 100 * 100 cells. This setup means that each cell is in direct contact with four neighboring cells,
+allowing material exchange with these adjacent cells. As shown in ***Figure 7***, the compartment (tissue) is illustrated as a 10 * 10 unit area (100 cells).
+
+In our simulation, the diffusion of a molecule within the compartment is influenced primarily by the molecule's diffusion rate, its concentration within a specific cell,
+and the presence of other molecules in the system. Some of these other molecules might anchor or trap the diffusing molecule, or they could react with it to produce a new species.
+For simplicity, we have excluded all physical forces that could affect material movement within the system (in this case, a biological tissue).
+
+To apply diffusion across all molecules in the system and simulate it over time, we define a small time step (e.g., dt = 0.001). During each epoch (equal to dt) of the simulation,
+diffusion is applied throughout the entire compartment, column by column, from left to right (see Figure 7). Each epoch is divided into x steps/iterations (where x = compartment width),
+and in each step, one column of the compartment is updated based on the system's diffusion rules.
+
+During each iteration of an epoch, three different functions are used to update the specific column. Two of these diffusion functions are used for the first and last cells in the column,
+while the third function handles the diffusion for the cells in between.
+
+
+![pop-sim](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/diff.jpg)
+
+
+*Figure 7: Diffusion Pattern*
 
 
 ### Reactions
