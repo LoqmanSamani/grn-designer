@@ -274,7 +274,27 @@ Each of these five mutation types is optional and can be selected within the alg
 
 
 
+### Crossover Operations ([`apply_crossover(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/crossover.py))
 
+Similar to mutation operations, crossover operations can be applied to three different aspects of each individual:
+
+1. **Initial Compartment Conditions Crossover ([`apply_compartment_crossover(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/crossover.py))**: This operation applies crossover to the pattern compartments within the system. 
+
+2. **Species and Complex Parameters Crossover ([`apply_parameter_crossover(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/crossover.py))**: This operation applies crossover to the parameters of species and complexes in the system. These parameters include species production rate, species/complex degradation rate, complex collision rate, complex dissociation rate, and species/complex diffusion rate.
+
+3. **Simulation Hyperparameters Crossover ([`apply_simulation_variable_crossover(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/crossover.py))**: This operation applies crossover to the simulation parameters, specifically the simulation duration (stop time) and epoch time step (`dt`).
+
+All three crossover operations are executed sequentially within the main crossover function ([`apply_crossover(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/crossover.py)). The crossover method used here is a specific numerical approach where an "elite" individual is employed to enhance another individual.
+
+The elite individual is one of the top-performing individuals in the current generation, selected randomly from the top 5 individuals with the highest fitness (or lowest cost). This elite individual is used to improve another individual in the current generation whose cost is higher than the average cost of the population. A key hyperparameter in this process is `alpha`, which determines the degree of influence the elite individual has on the individual being modified. The `alpha` value is adjustable between 0 and 1.
+
+During each crossover operation, the relevant part of the individual is updated based on the following formula:
+
+```
+individual = (alpha * individual) + ((1 - alpha) * elite_individual)
+```
+
+This process aims to enhance high-cost individuals by blending their characteristics with those of a low-cost (elite) individual.
 
 
 

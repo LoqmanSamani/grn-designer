@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 
 def apply_crossover(elite_individuals, individual, crossover_alpha, sim_crossover, compartment_crossover, param_crossover):
@@ -25,7 +26,7 @@ def apply_crossover(elite_individuals, individual, crossover_alpha, sim_crossove
         - numpy.ndarray: The updated individual after applying the specified crossover operations.
     """
 
-    elite_individual = np.random.choice(elite_individuals)
+    elite_individual = random.choice(elite_individuals)
 
 
     if sim_crossover:
