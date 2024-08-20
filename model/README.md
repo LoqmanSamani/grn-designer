@@ -93,7 +93,7 @@ In each epoch, the simulation processes the compartments column-wise. Instead of
 
 
 
-![pop-sim](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/pop-sim.png)
+![pop-sim](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/react.jpg)
 
 
 *Figure 5: Population Simulation*
