@@ -141,6 +141,3 @@ def create_box_blur_kernel(size):
     - np.ndarray: A box blur kernel with shape (size, size).
     """
     return np.ones((size, size)) / (size * size)
-
-
-

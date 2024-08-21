@@ -158,9 +158,3 @@ def filter_elite_individuals(low_cost_individuals, elite_individuals, high_cost_
         filtered_elite_individuals = [ind for ind in low_cost_individuals if ind.shape[0] == high_cost_individual.shape[0]]
 
     return filtered_elite_individuals
-
-
-
-
-
-

@@ -431,20 +431,3 @@ def species_deletion(individual, deleted_species):
     updated_individual[-1, -1, 1] = num_pairs - len(delete_indices) // 2 + 1
 
     return updated_individual
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
