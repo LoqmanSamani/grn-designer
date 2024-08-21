@@ -247,7 +247,7 @@ The evolutionary algorithm implemented in our system is known as the "Genetic Al
 
 *Figure 9: Flowchart of the Genetic Algorithm Based on Natural Selection Theory (GABONST)*
 
-Our implementation of the GABONST algorithm ([`evolutionary_optimization(...)`])(https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/gabonst.py) includes several key components:
+Our implementation of the GABONST algorithm ([`evolutionary_optimization(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/gabonst.py))includes several key components:
 
 1. **Population Simulation**: 
 
