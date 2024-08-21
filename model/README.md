@@ -1,7 +1,8 @@
 # Development of the algorithm
 
 --------------------
---------------------
+
+
 
 
 ## Simulation Algorithm
@@ -78,6 +79,8 @@ This loop updates each column of the species and complex compartments in each st
 Each of these steps updates the system based on the input information, including the reaction rates (production, dissociation, degradation, diffusion) and any additional required details, such as the array pattern for production or the entire compartment for diffusion.
 
 After completing the allowed number of epochs, the first matrix of the individual matrix (individual[0, :, :]) is returned for further processing in the algorithm (the specific version of the genetic algorithm that is still under development!).
+
+
 
 --------------------------------------------------------------------------------------------------------------------------
 
@@ -196,7 +199,8 @@ while the third function handles the diffusion for the cells in between.
 *Figure 7: Diffusion Pattern*
 
 
-----------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------
 
 ### Simulation Algorithms Benchmarking Results
 
@@ -234,7 +238,7 @@ In summary, Numba optimization proves to be highly beneficial, especially when d
 
 
 --------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------
+
 
 
 ## Genetic Algorithm Based on Natural Selection Theory (GABONST)
@@ -351,8 +355,95 @@ This process aims to enhance high-cost individuals by blending their characteris
 
 
 
+### Initialization Methods
+
+Within the evolutionary algorithm (EA) used in our system, there are two key instances where initialization is required: the creation of a new individual and the modification of an existing individual. These processes involve initializing new data structures or altering existing ones based on the specific needs of the algorithm.
+
+1. **Individual Initialization/Creation** ([`population_initialization(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/initialization.py)):  
+
+   In the final phase of the GABONST algorithm, after evaluating the "second chance" for high-cost individuals, those that still perform poorly are removed and replaced with newly initialized individuals using the `population_initialization(...)` function.
+
+   There are two scenarios for individual initialization (`population_initialization(...)`):
+
+   - **Fixed Individual Size**:  
+   
+     In this scenario, the size of each individual is constant, typically when only the initial conditions need to be optimized. Here, the number of species, complexes, and their parameters are fixed. The algorithm focuses on improving each individual using only four out of eight possible mutation and crossover operations: "***initial compartment conditions mutation***", "***simulation hyperparameters mutation***", "***initial compartment conditions crossover***", and "***simulation hyperparameters crossover***". These operations help optimize the system and enhance the performance of the individuals.
+
+     For initialization, species and complex compartments are first set to zero. Then, the species pattern compartments are populated using `numpy.random.rand()`, which assigns random floating-point numbers between zero and one. This approach ensures that each individual can produce some level of species in the early generations of the evolutionary algorithm. Initializing with zeros alone could delay species production, diffusion, and complex formation, potentially leading to the deletion of newly created species before they have a chance to demonstrate any performance.
+
+   - **Variable Individual Size**:  
+   
+     In cases where all eight mutation and crossover operations are applied ("***initial compartment conditions mutation***", "***species and complex parameters mutation***", "***simulation hyperparameters mutation***", "***species deletion mutation***", "***species insertion mutation***", "***initial compartment conditions crossover***", "***simulation hyperparameters crossover***" and "***species and complex parameters crossover***"), the species, complexes, and their parameters are not predefined. Initialization begins with the smallest possible system size—a network containing only one species.
+
+     Each individual is represented as a three-dimensional matrix with the shape (3, compartment length (y), compartment width (x)). This matrix consists of three compartments:
+   
+     1. **Diffusion Compartment** (`[0, :, :]`)
+     2. **Secretion Pattern Compartment** (`[1, :, :]`)
+     3. **Species and Simulation Information Matrix** (`[-1, :, :]`)
+
+     Here, the diffusion compartment is initialized with zeros, the secretion pattern compartment with random values (`numpy.random.rand(...)`), and the species and simulation information matrix also with zeros, except for the simulation's maximum number of epochs (`[-1, -1, 2]`), which is set to a specific value to limit the computational load.
+
+
+2. **Partial Individual (Species) Initialization** ([`species_initialization(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/initialization.py)): 
+
+   During the "***species insertion mutation***" phase, when new species or complexes are added to the system, the algorithm automatically introduces two new compartments for each addition:
+
+   - For species: **Species Diffusion Compartment** and **Species Secretion Pattern Compartment**.
+   - For complexes: **Complex Diffusion Compartment** and **Complex Information Matrix**.
+
+   Initially, all these matrices are set to zero. Subsequently, **simulation information**, **species parameters**, and **complex parameters** and also **species diffusion compartment** are randomly assigned (`numpy.random.rand(...)`) and integrated into the system.
 
 
 
 
+### Cost Functions
+
+In the development of our evolutionary algorithm, three distinct [cost functions](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/cost.py) have been implemented. Each cost function has its own strengths and weaknesses, and selecting the appropriate one is critical, as it directly impacts the effectiveness of the algorithm. The robustness of an evolutionary or machine learning algorithm is tightly linked to the choice of the cost (or fitness) function, making this decision a crucial part of the design process.
+
+We will evaluate each of these cost functions across various tasks to determine which performs best, and ultimately, select the most suitable one as the default for our algorithm. Below are the cost functions we have developed:
+
+1. **Mean Squared Error (MSE)**
+
+   The Mean Squared Error (MSE) is a widely used metric that calculates the average squared difference between predicted values and actual target values. This cost function is sensitive to large errors, as squaring the differences amplifies the impact of larger deviations. MSE is particularly useful for assessing how closely a model’s predictions match the actual data.
+
+   **Mathematical Formulation**:
+   ```
+   MSE_i = (1 / (y * x)) * Σ[(T_jk - P_ijk) ^ 2]
+   ```
+   - `P_ijk` is the predicted value at position (i, j, k) for the i-th individual.
+   - `T_jk` is the target value at position (j, k).
+   - `y * x` is the total number of elements in the matrices.
+
+   This function computes the mean of the squared differences across all elements, providing a single error value for each individual.
+
+
+2. **Normalized Cross-Correlation (NCC)**
+
+   Normalized Cross-Correlation (NCC) measures the similarity between two matrices (or images) on a pixel-by-pixel basis. Unlike MSE, which focuses on the absolute differences, NCC evaluates pattern similarity, making it less sensitive to differences in contrast between the matrices. NCC is particularly useful when the goal is to match the overall patterns rather than the exact pixel values.
+
+   **Mathematical Formulation**:
+   ```
+   NCC_i = (1 / (y * x)) * Σ[((P_ijk - μ_P) * (T_jk - μ_T)) / (σ_P * σ_T)]
+   ```
+   - `μ_P` and `σ_P` are the mean and standard deviation of the predicted values for the i-th individual.
+   - `μ_T` and `σ_T` are the mean and standard deviation of the target values.
+   - The NCC value quantifies the degree of correlation between the predicted and target matrices, with higher values indicating greater similarity.
+
+   If the standard deviations `σ_P` or `σ_T` are zero (indicating no variance), the NCC is set to zero, as meaningful correlation cannot be computed.
+
+
+3. **GRM Fitness Error**
+
+   The GRM Fitness Error is a specialized cost function developed by R. Mousavi & D. Lobo (2024). It integrates spatial similarity with a penalty for non-equilibrium states. This method applies a box blur to both the target and predicted matrices, reducing the sensitivity to noise and small-scale variations. The error is then calculated based on deviations that exceed a defined threshold, combined with a penalty for large concentration changes in the predicted matrix.
+
+   **Mathematical Formulation**:
+   ```
+   GRM_i = (1 / (y * x)) * Σ[log(1 + max(diff_ijk - α, 0))] + max(ΔD_i - β, 0)
+   ```
+   - `diff_ijk` represents the absolute difference between the blurred prediction and target values at position (i, j, k).
+   - `α` is the error concentration threshold, determining which deviations are penalized.
+   - `β` is the equilibrium penalty threshold, controlling the penalty applied to large changes in concentration `ΔD_i`.
+   - The first term accounts for the deviation between the blurred matrices, and the second term penalizes non-equilibrium states.
+
+   The GRM Fitness Error is particularly useful in scenarios where spatial consistency and stability of the prediction are critical.
 

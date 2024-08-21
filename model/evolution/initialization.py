@@ -42,6 +42,10 @@ def population_initialization(population_size, individual_shape, species_paramet
     if individual_fix_size:
         population = [np.zeros(individual_shape) for _ in range(population_size)]
 
+        for ind in population:
+            for i in range(1, num_species*2, 2):
+                ind[1, :, :] = np.random.rand(individual_shape[1], individual_shape[2])
+
         for i in range(0, len(species_parameters) * 2, 2):
             print(i//2)
             for ind in population:
@@ -90,6 +94,7 @@ def species_initialization(compartment_size, pairs):
     num_species = len(pairs) + 1
     num_matrices = num_species * 2
     init_matrix = np.zeros((num_matrices, compartment_size[0], compartment_size[1]))
+    init_matrix[1, :, :] = np.random.rand(compartment_size[0], compartment_size[1])
 
     for i in range(len(pairs)):
         m = np.zeros((2, compartment_size[0], compartment_size[1]))
