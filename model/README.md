@@ -404,7 +404,7 @@ We will evaluate each of these cost functions across various tasks to determine 
 
 1. **Mean Squared Error (MSE)**
 
-   The Mean Squared Error (MSE) is a widely used metric that calculates the average squared difference between predicted values and actual target values. This cost function is sensitive to large errors, as squaring the differences amplifies the impact of larger deviations. MSE is particularly useful for assessing how closely a model’s predictions match the actual data.
+   The Mean Squared Error (MSE) is a widely used metric that calculates the average squared difference between predicted values and actual target values. This cost function is sensitive to large errors, as squaring the differences amplifies the impact of larger deviations. ***MSE is particularly useful for assessing how closely a model’s predictions match the actual data.***
 
    **Mathematical Formulation**:
    ```
@@ -419,7 +419,7 @@ We will evaluate each of these cost functions across various tasks to determine 
 
 2. **Normalized Cross-Correlation (NCC)**
 
-   Normalized Cross-Correlation (NCC) measures the similarity between two matrices (or images) on a pixel-by-pixel basis. Unlike MSE, which focuses on the absolute differences, NCC evaluates pattern similarity, making it less sensitive to differences in contrast between the matrices. NCC is particularly useful when the goal is to match the overall patterns rather than the exact pixel values.
+   Normalized Cross-Correlation (NCC) measures the similarity between two matrices (or images) on a pixel-by-pixel basis. Unlike MSE, which focuses on the absolute differences, NCC evaluates pattern similarity, making it less sensitive to differences in contrast between the matrices. ***NCC is particularly useful when the goal is to match the overall patterns rather than the exact pixel values.***
 
    **Mathematical Formulation**:
    ```
@@ -445,5 +445,5 @@ We will evaluate each of these cost functions across various tasks to determine 
    - `β` is the equilibrium penalty threshold, controlling the penalty applied to large changes in concentration `ΔD_i`.
    - The first term accounts for the deviation between the blurred matrices, and the second term penalizes non-equilibrium states.
 
-   The GRM Fitness Error is particularly useful in scenarios where spatial consistency and stability of the prediction are critical.
+   ***The GRM Fitness Error is particularly useful in scenarios where spatial consistency and stability of the prediction are critical.***
 
