@@ -1,5 +1,5 @@
-from model.sim import *
-from model.evolution import *
+#from sim import *
+#from evolution import *
 
 
 

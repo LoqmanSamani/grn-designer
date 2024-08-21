@@ -205,7 +205,7 @@ The benchmarking results, displayed in ***Figure 8***, provide insights into how
 
 ![bench_m](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench-m.png)
 
-*Figure 8: The benchmarking results**
+*Figure 8: The benchmarking results*
 
 
 #### Compartment Size
@@ -237,7 +237,59 @@ In summary, Numba optimization proves to be highly beneficial, especially when d
 --------------------------------------------------------------------------------------------------------------
 
 
-## Genetic Algorithm Based on Natural Selection Theory:
+## Genetic Algorithm Based on Natural Selection Theory (GABONST)
+
+The evolutionary algorithm implemented in our system is known as the "Genetic Algorithm Based on Natural Selection Theory (GABONST)," developed by [M.A. Albadr et al. (2020)](https://doaj.org/article/bbb78b4b46b148cfb2c12e28190ac985). GABONST is an enhanced version of the traditional genetic algorithm (GA), designed to address the common challenges associated with GAs, particularly in balancing exploration (searching for new solutions) and exploitation (refining existing solutions). By more accurately modeling the principles of natural selection, GABONST effectively improves both the exploration of new possibilities and the refinement of known good solutions.
+
+***Figure 9*** presents a flowchart of the GABONST algorithm.
+
+![GABONST Flowchart](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/gabonst.png)
+
+*Figure 9: Flowchart of the Genetic Algorithm Based on Natural Selection Theory (GABONST)*
+
+Our implementation of the [GABONST algorithm](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/gabonst.py) includes several key components:
+
+1. **Population Simulation**: 
+
+   The first step involves simulating the entire population. Each individual in the population is simulated using the [`individual_simulation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_ind/simulation.py) function. The simulation results, or predictions, are stored in a three-dimensional matrix with dimensions (m, y, x), where `m` represents the number of individuals in the population, and `y` and `x` correspond to the compartment dimensions. The outcome of simulating the system with each individual is a two-dimensional matrix (y, x), and the simulation of the entire population produces a three-dimensional matrix (population size, y, x).
+
+2. **Evaluation of Simulation Results**: 
+
+   Following the simulation, the results are evaluated using a [specific cost function](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/cost.py). We have developed three different cost functions for this purpose: 
+
+   - Mean Squared Error (MSE)
+   - Normalized Cross-Correlation (NCC): This method evaluates the similarity between two images on a pixel-by-pixel basis, focusing on pattern similarity rather than contrast.
+   - GRM Fitness Error: A specialized cost function developed by [R. Mousavi & D. Lobo (2024)](https://www.nature.com/articles/s41540-024-00361-5).
+   
+   The evaluation results are stored in a list of floating-point numbers. Detailed explanations of each cost method are provided in the **Cost/Fitness Function Methods** section of this report.
+
+3. **Population Segmentation**:
+
+   The population is then divided into two groups based on their evaluation scores:
+
+   - **Low-Cost Individuals**: These individuals have a cost lower than the population's average, indicating better performance. They are passed to the next generation after undergoing [mutation](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py). We implement five types of mutation operations:
+
+     1. Initial Compartment Conditions Mutation
+     2. Species and Complex Parameters Mutation
+     3. Simulation Hyperparameters Mutation
+     4. Species Insertion Mutation
+     5. Species Deletion Mutation
+
+     Each mutation operation introduces diversity and prevents the algorithm from getting stuck in local optima. These operations are optional and can be toggled on or off as needed.
+
+   - **High-Cost Individuals**: Individuals with higher-than-average costs require more modifications to improve the population's overall performance. The first modification applied to this group is [crossover](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/crossover.py), involving three distinct processes:
+   
+     1. Initial Compartment Conditions Crossover
+     2. Species and Complex Parameters Crossover
+     3. Simulation Hyperparameters Crossover
+
+     Each crossover operation is optional and can be disabled if necessary. After crossover, the modified individuals are re-evaluated to determine whether their performance has improved. If an individual’s new cost is below the original population's average, it progresses to the next generation.
+
+4. **Second Chance and Replacement**:
+
+   High-cost individuals that do not improve after crossover undergo mutation as a "second chance" to enhance their performance. If they still fail to achieve an evaluation score better than the original population's average, they are removed from the population. To maintain a consistent population size, each removed individual is replaced with a [randomly initialized](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/initialization.py) individual for the next generation.
+
+
 
 
 
@@ -255,15 +307,15 @@ Overall, there are five specific mutation operations in the system:
 
 3. **Simulation Hyperparameters Mutation ([`apply_simulation_parameters_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))**: In this operation, two specific hyperparameters of the [simulation algorithm](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_ind/simulation.py) undergo mutation. The first is the simulation stop time or duration, and the second is the time step for each epoch of the simulation. These hyperparameters determine the simulation steps (simulation steps = simulation duration / time step). Therefore, three hyperparameters of the system are affected by this mutation, with two being directly altered and one indirectly. The fourth hyperparameter, the maximum number of simulation epochs, is not mutated to ensure computational efficiency.
 
-4. **Species Insertion Mutation ([`apply_species_insertion_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))**: To allow the system to adapt and generate diverse end simulation patterns, this mutation adds new species to the system. This increases the system's flexibility and enhances its ability to evolve towards the desired patterns. When a new species is added, the system also generates additional compartments for any potential complexes involving the new species. For example, if the system initially contains two species (A and B), adding a third species (C) will result in the creation of new compartments for complexes A-C and B-C (***Figure 9***).
+4. **Species Insertion Mutation ([`apply_species_insertion_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))**: To allow the system to adapt and generate diverse end simulation patterns, this mutation adds new species to the system. This increases the system's flexibility and enhances its ability to evolve towards the desired patterns. When a new species is added, the system also generates additional compartments for any potential complexes involving the new species. For example, if the system initially contains two species (A and B), adding a third species (C) will result in the creation of new compartments for complexes A-C and B-C (***Figure 10***).
 
-5. **Species Deletion Mutation ([`apply_species_deletion_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))**: Complementing the insertion mutation, this mutation simplifies the system by randomly removing a species. This helps regulate system complexity and introduces a mechanism to prevent uncontrolled growth. When a species is deleted, all associated complexes that involve the deleted species are also removed. For instance, if the system contains species A, B, and C along with complexes A-B, B-C, and A-C, deleting species B will also remove complexes A-B and B-C, leaving only species A, C, and the A-C complex (***Figure 9***).
+5. **Species Deletion Mutation ([`apply_species_deletion_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))**: Complementing the insertion mutation, this mutation simplifies the system by randomly removing a species. This helps regulate system complexity and introduces a mechanism to prevent uncontrolled growth. When a species is deleted, all associated complexes that involve the deleted species are also removed. For instance, if the system contains species A, B, and C along with complexes A-B, B-C, and A-C, deleting species B will also remove complexes A-B and B-C, leaving only species A, C, and the A-C complex (***Figure 10***).
 
 
 
 ![del](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/del.jpg)
 
-*Figure 9: Species Insertion and Deletion*
+*Figure 10: Species Insertion and Deletion*
 
 
 
