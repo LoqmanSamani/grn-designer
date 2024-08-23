@@ -79,8 +79,9 @@ class NumericalOptimization:
 
                 # Perturb the parameter positively
                 param_flat[i] += epsilon
+                print("params: ", param_flat[i])
                 perturbed_value = param_flat.reshape(original_value.shape)
-                param = perturbed_value
+                parameters[param_name] = perturbed_value
                 individual = self.update_parameters(
                     individual=individual,
                     parameters=parameters
@@ -96,7 +97,7 @@ class NumericalOptimization:
                 # Perturb the parameter negatively
                 param_flat[i] -= 2 * epsilon
                 perturbed_value = param_flat.reshape(original_value.shape)
-                param = perturbed_value
+                parameters[param_name] = perturbed_value
                 individual = self.update_parameters(
                     individual=individual,
                     parameters=parameters
@@ -111,7 +112,7 @@ class NumericalOptimization:
 
                 # Calculate gradient
                 gradient.flat[i] = (cost_plus - cost_minus) / (2 * epsilon)
-
+                print("grad: ", gradient.flat[i])
                 # Restore original parameter value
                 param = original_value
 
@@ -137,6 +138,7 @@ class NumericalOptimization:
     def optimize(self, individual):
 
         costs = []
+
         for epoch in range(self.epochs):
 
             parameters = self.parameter_extraction(
@@ -148,6 +150,7 @@ class NumericalOptimization:
                 parameters=parameters,
                 epsilon=self.epsilon
             )
+            print("grads: ", gradients)
 
             updated_parameters = self.update_parameters_(
                 gradients=gradients,
@@ -158,7 +161,6 @@ class NumericalOptimization:
                 individual=individual,
                 parameters=updated_parameters
             )
-
 
             y_hat, dd = self.simulation(
                 individual=individual
@@ -174,26 +176,26 @@ class NumericalOptimization:
 
 
 t = np.zeros((50, 50))
-t[:, 25:30] = .1
-t[:, 20:25] = .01
-t[:, 30:35] = .3
+t[:, 20:25] = 10
+t[:, 25:30] = 12
+t[:, 30:35] = 30
 
 ind = np.zeros((7, 50, 50))
-ind[1, :, 20:25] = 1
-ind[3, :, 45:] = 1
+ind[1, :, 20:35] = 1
+ind[3, :, 40:] = 1
 ind[-1, -1, :5] = [2, 1, 500, 20, .4]
-ind[-1, 0, :3] = [.9, .1, 6]
-ind[-1, 2, :3] = [.9, .1, 8]
+ind[-1, 0, :3] = [.1, .1, 2.3]
+ind[-1, 2, :3] = [.2, .1, 3.5]
 ind[-2, 0, :2] = [0, 2]
-ind[-2, 1, :4] = [.6, .1, .1, 4]
+ind[-2, 1, :4] = [.3, .1, .1, 1.4]
 
 
 
 g = NumericalOptimization(
-    epochs=30,
+    epochs=10,
     learning_rate=0.01,
     target=t,
-    epsilon=1e-7
+    epsilon=1e-2
 )
 
 inds, costs = g.optimize(ind)
