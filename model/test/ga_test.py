@@ -1,6 +1,9 @@
 from gabonst import *
+from simulation import *
 
 
+
+"""
 ind = np.zeros((3, 10, 10))
 ind[1, :, :] = np.random.rand(10, 10)
 ind[-1, 0, :3] = [.5, .4, 2]
@@ -232,3 +235,31 @@ print(new_pop)
 
 for i in new_pop:
     print(i.shape)
+"""
+
+
+
+class Test:
+    def __init__(self, ind):
+        self.ind = ind
+
+    def simulation_test(self):
+        sim_ind = individual_simulation(self.ind)
+        return sim_ind
+
+
+
+ind = np.zeros((7, 100, 100))
+ind[1, :, 0] = 1
+ind[3, :, -1] = 1
+
+ind[-1, 0, :3] = [.09, .007, 1.1]
+ind[-1, 2, :3] = [0.09, 0.006, 1.2]
+ind[-1, -1, :5] = [2, 1, 1000, 5, .01]
+ind[-2, 0, 0:2] = [0, 2]
+ind[-2, 1, 0:4] = [6, .01, 0.001, 1.3]
+
+g = Test(ind)
+
+sp1 = g.simulation_test()
+print(sp1)
