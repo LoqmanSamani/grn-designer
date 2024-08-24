@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 
 
-@jit(nopython=True)
+
 def apply_component_production(initial_concentration, production_pattern, production_rate, time_step):
     """
     Update the concentration of a species in each cell of a compartment.
@@ -21,7 +21,7 @@ def apply_component_production(initial_concentration, production_pattern, produc
     return updated_concentration
 
 
-@jit(nopython=True)
+
 def apply_component_degradation(initial_concentration, degradation_rate, time_step):
     """
     Apply degradation to the concentration of a species over time.
@@ -39,7 +39,6 @@ def apply_component_degradation(initial_concentration, degradation_rate, time_st
     return updated_concentration
 
 
-@jit(nopython=True)
 def apply_species_collision(species1, species2, complex_, collision_rate, time_step):
     """
     Apply the effect of species collision to form a complex and update the concentrations of the species.
@@ -66,7 +65,7 @@ def apply_species_collision(species1, species2, complex_, collision_rate, time_s
     return updated_species1, updated_species2, updated_complex
 
 
-@jit(nopython=True)
+
 def apply_complex_dissociation(species1, species2, complex_, dissociation_rate, time_step):
     """
     Apply the effect of complex dissociation to update the concentrations of the two species and the complex of them.
