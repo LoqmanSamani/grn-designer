@@ -45,12 +45,12 @@ class GradientOptimization:
 
         species = 1
         for i in range(0, num_species * 2, 2):
-            individual[-1, i, :3] = parameters[f"species_{species}"].numpy()
+            individual[-1, i, :3] = parameters[f"species_{species}"]
             species += 1
 
         pair = 1
         for j in range(pair_start + 1, pair_stop + 1, 2):
-            individual[j, 1, :4] = parameters[f"pair_{pair}"].numpy()
+            individual[j, 1, :4] = parameters[f"pair_{pair}"]
             pair += 1
 
         return individual
@@ -59,8 +59,8 @@ class GradientOptimization:
     def simulation(self, individual):
 
         y_hat, delta_D = individual_simulation(individual)
-        y_hat = tf.convert_to_tensor(y_hat, dtype=tf.float32)
-        y_hat = tf.constant(y_hat)
+        #y_hat = tf.convert_to_tensor(y_hat, dtype=tf.float32)
+        #y_hat = tf.constant(y_hat)
         return y_hat, delta_D
 
 
@@ -75,8 +75,9 @@ class GradientOptimization:
 
         costs = []
         parameters = self.parameter_extraction(individual)
-        self.target = tf.convert_to_tensor(self.target, dtype=tf.float32)
-        print("this is params: ", parameters)
+        self.target = tf.convert_to_tensor(self.target, dtype=tf.float64)
+        # print("this is params: ", parameters, type(parameters))
+        print("target: ", self.target.shape,type(self.target))
 
         optimizer = tf.keras.optimizers.Adam(
             learning_rate=self.learning_rate,
@@ -86,29 +87,31 @@ class GradientOptimization:
         y_hat, dd = self.simulation(
             individual=individual
         )
-        print("this is y_hat: ", y_hat)
+        print("y_hat: ", y_hat.shape, type(individual))
+        print("dd:", type(dd))
 
         for i in range(self.epochs):
             variables = list(parameters.values())
-            with tf.GradientTape(watch_accessed_variables=False, persistent=True) as tape:
-                tape.watch(variables)
+            print("variables: ", variables)
+            with tf.GradientTape() as tape:
+
                 cost = self.compute_cost_(
                     y_hat=y_hat,
                     target=self.target
                 )
-                print("this is cost:", cost)
+                print("cost:", cost)
                 costs.append(cost.numpy())  # Store the cost value for each epoch
 
-            variables = list(parameters.values())
-            print("these are variables:", variables)
+            #variables = list(parameters.values())
+            #print("these are variables:", variables)
             gradients = tape.gradient(cost, variables)
-            print("Gradients: ", gradients)
+            print("Gradients: ", gradients, type(gradients))
             optimizer.apply_gradients(zip(gradients, variables))
 
-        individual = self.update_parameters(
-            individual=individual,
-            parameters=parameters
-        )
+        #individual = self.update_parameters(
+            #individual=individual,
+            #parameters=parameters
+        #)
 
         return individual, costs
 

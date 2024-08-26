@@ -9,14 +9,14 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
     Apply diffusion to update the concentration of species in a specific column of a 2D compartment for all individual in population.
 
     Parameters:
-    - current_concentration (2d array): Array of current concentrations for each cell.
-    - compartment (3d array): Array representing the 2D compartment where diffusion takes place for all individual in population.
+    - current_concentration (1d array): Array of current concentrations for each cell of the column.
+    - compartment (2d array): Array representing the 2D compartment where diffusion takes place.
     - column_position (int): Column position of the cells being updated (0-based index).
-    - diffusion_rates (1d array): Rates at which the species diffuses between cells.
-    - time_step (float/1d array): Discrete time step/s for the calculation.
+    - diffusion_rate (float): Rate at which the species diffuses between cells.
+    - time_step (float): Discrete time step for the calculation.
 
     Returns:
-    - 2d array: updated current_concentration array.
+    - 1d array: updated current_concentration array.
     """
     compartment_size = compartment.shape[1]
     temporary_concentration = np.copy(current_concentration)
@@ -300,7 +300,7 @@ def update_right_side_concentration(
     right_cell_in = time_step * left_cell_concentration * diffusion_rate
 
     in_diffusion = upper_cell_in + lower_cell_in + right_cell_in
-    out_diffusion = time_step * cell_concentration.T * diffusion_rate * 3
+    out_diffusion = time_step * cell_concentration * diffusion_rate * 3
 
     updated_concentration = cell_concentration + in_diffusion - out_diffusion
 

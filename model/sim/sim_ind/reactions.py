@@ -16,7 +16,7 @@ def apply_component_production(initial_concentration, production_pattern, produc
     Returns:
     - Updated concentration array.
     """
-    updated_concentration = np.maximum(initial_concentration + (production_pattern * production_rate * time_step), 0)
+    updated_concentration = np.maximum(initial_concentration + (production_pattern * production_rate * time_step), 0.0)
 
     return updated_concentration
 
@@ -34,7 +34,7 @@ def apply_component_degradation(initial_concentration, degradation_rate, time_st
     Returns:
     - Updated concentrations after applying degradation.
     """
-    updated_concentration = np.maximum(initial_concentration - (initial_concentration * degradation_rate * time_step), 0)
+    updated_concentration = np.maximum(initial_concentration - (initial_concentration * degradation_rate * time_step), 0.0)
 
     return updated_concentration
 
@@ -56,12 +56,10 @@ def apply_species_collision(species1, species2, complex_, collision_rate, time_s
     """
     collision_effect = collision_rate * time_step
     complex_formed = np.minimum(species1 * collision_effect, species2 * collision_effect)
-    complex_formed = np.maximum(complex_formed, 0)
 
-    updated_species1 = np.maximum(species1 - complex_formed, 0)
-    updated_species2 = np.maximum(species2 - complex_formed, 0)
-
-    updated_complex = complex_ + complex_formed
+    updated_species1 = np.maximum(species1 - complex_formed, 0.0)
+    updated_species2 = np.maximum(species2 - complex_formed, 0.0)
+    updated_complex = np.maximum(complex_ + complex_formed, 0.0)
 
     return updated_species1, updated_species2, updated_complex
 
@@ -83,11 +81,10 @@ def apply_complex_dissociation(species1, species2, complex_, dissociation_rate, 
     """
     dissociation_effect = dissociation_rate * time_step
     dissociated_amount = complex_ * dissociation_effect
-    dissociated_amount = np.maximum(dissociated_amount, 0)
 
-    updated_complex = np.maximum(complex_ - dissociated_amount, 0)
-    updated_species1 = np.maximum(species1 + dissociated_amount, 0)
-    updated_species2 = np.maximum(species2 + dissociated_amount, 0)
+    updated_complex = np.maximum(complex_ - dissociated_amount, 0.0)
+    updated_species1 = np.maximum(species1 + dissociated_amount, 0.0)
+    updated_species2 = np.maximum(species2 + dissociated_amount, 0.0)
 
     return updated_species1, updated_species2, updated_complex
 
