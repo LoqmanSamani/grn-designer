@@ -447,3 +447,14 @@ We will evaluate each of these cost functions across various tasks to determine 
 
    ***The GRM Fitness Error is particularly useful in scenarios where spatial consistency and stability of the prediction are critical.***
 
+
+
+----------------------------------------------------------------------------------------------------------------------
+
+
+## Gradient-Based Parameter Optimization  with TensorFlow's GradientTape
+
+to be continued !!!
+
+
+
