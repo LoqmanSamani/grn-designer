@@ -6,9 +6,10 @@ import h5py
 # from heatmap import *
 # from multi_heatmap import *
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
-
+"""
 def run_simulation_with_timing():
     try:
         com_size = [10, 50, 100, 200, 500, 1000]
@@ -272,9 +273,20 @@ plt.legend()
 plt.grid(True)
 
 plt.show()
+"""
 
 
 
+pop = np.zeros((7, 30, 30))
+pop[1, :, 0] = 10
+pop[3, :, -1] = 10
 
-
+pop[-1, 0, :3] = [.09, .007, 1.1]
+pop[-1, 2, :3] = [0.09, 0.006, 1.2]
+pop[-1, -1, :5] = [2, 1, 500, 5, .01]
+pop[-2, 0, 0:2] = [0, 2]
+pop[-2, 1, 0:4] = [6, .01, 0.001, 1.3]
+result = individual_simulation(pop)
+sns.heatmap(result[0])
+plt.show()
 

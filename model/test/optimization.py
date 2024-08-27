@@ -1,7 +1,7 @@
-import tensorflow as tf
-from simulation import *
-from cost import *
-import numpy as np
+from tensor_simulation import *
+
+
+
 
 class GradientOptimization:
 
@@ -34,35 +34,55 @@ class GradientOptimization:
             parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
             pair += 1
 
-        return parameters
+        num_species = int(individual[-1, -1, 0])
+        num_pairs = int(individual[-1, -1, 1])
+        max_epoch = int(individual[-1, -1, 2])
+        stop = int(individual[-1, -1, 3])
+        time_step = individual[-1, -1, 4]
+
+        return parameters, num_species, num_pairs, max_epoch, stop, time_step
+
 
     def update_parameters(self, individual, parameters):
 
-        num_species = int(individual[-1, -1, 0])
-        num_pairs = int(individual[-1, -1, 1])
+        num_species = int(individual[-1, -1, 0].numpy())
+        num_pairs = int(individual[-1, -1, 1].numpy())
         pair_start = int(num_species * 2)
-        pair_stop = int(pair_start + (num_pairs * 2))
 
-        species = 1
-        for i in range(0, num_species * 2, 2):
-            individual[-1, i, :3] = parameters[f"species_{species}"]
-            species += 1
+        # Update species parameters
+        for species in range(1, num_species + 1):
 
-        pair = 1
-        for j in range(pair_start + 1, pair_stop + 1, 2):
-            individual[j, 1, :4] = parameters[f"pair_{pair}"]
-            pair += 1
+            i = (species - 1) * 2
+            individual = tf.tensor_scatter_nd_update(
+                individual,
+                indices=tf.constant([[individual.shape[0] - 1, i, k] for k in range(3)], dtype=tf.int32),
+                updates=parameters[f"species_{species}"]
+            )
+
+        # Update pair parameters
+        for pair in range(1, num_pairs + 1):
+            j = pair_start + (pair - 1) * 2 + 1
+            individual = tf.tensor_scatter_nd_update(
+                individual,
+                indices=tf.constant([[j, 1, k] for k in range(4)], dtype=tf.int32),
+                updates=parameters[f"pair_{pair}"]
+            )
 
         return individual
 
+    def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch):
 
-    def simulation(self, individual):
+        y_hat = tensor_simulation(
+            individual=individual,
+            parameters=parameters,
+            num_species=num_species,
+            num_pairs=num_pairs,
+            stop=stop,
+            time_step=time_step,
+            max_epoch=max_epoch
+        )
 
-        y_hat, delta_D = individual_simulation(individual)
-        #y_hat = tf.convert_to_tensor(y_hat, dtype=tf.float32)
-        #y_hat = tf.constant(y_hat)
-        return y_hat, delta_D
-
+        return y_hat
 
 
     def compute_cost_(self, y_hat, target):
@@ -74,76 +94,45 @@ class GradientOptimization:
     def gradient_optimization(self, individual):
 
         costs = []
-        parameters = self.parameter_extraction(individual)
-        self.target = tf.convert_to_tensor(self.target, dtype=tf.float64)
-        # print("this is params: ", parameters, type(parameters))
-        print("target: ", self.target.shape,type(self.target))
-
+        parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
+            individual=individual
+        )
         optimizer = tf.keras.optimizers.Adam(
             learning_rate=self.learning_rate,
             weight_decay=self.weight_decay
         )
 
-        y_hat, dd = self.simulation(
-            individual=individual
-        )
-        print("y_hat: ", y_hat.shape, type(individual))
-        print("dd:", type(dd))
-
         for i in range(self.epochs):
-            variables = list(parameters.values())
-            print("variables: ", variables)
             with tf.GradientTape() as tape:
+
+                y_hat = self.simulation(
+                    individual=individual,
+                    parameters=parameters,
+                    num_species=num_species,
+                    num_pairs=num_pairs,
+                    stop=stop,
+                    time_step=time_step,
+                    max_epoch=max_epoch
+                )
 
                 cost = self.compute_cost_(
                     y_hat=y_hat,
                     target=self.target
                 )
-                print("cost:", cost)
-                costs.append(cost.numpy())  # Store the cost value for each epoch
 
-            #variables = list(parameters.values())
-            #print("these are variables:", variables)
+                costs.append(cost.numpy())
+
+            variables = list(parameters.values())
             gradients = tape.gradient(cost, variables)
-            print("Gradients: ", gradients, type(gradients))
+            print(gradients)
             optimizer.apply_gradients(zip(gradients, variables))
 
-        #individual = self.update_parameters(
-            #individual=individual,
-            #parameters=parameters
-        #)
+        individual = self.update_parameters(
+            individual=individual,
+            parameters=parameters
+        )
 
         return individual, costs
-
-
-t = np.zeros((50, 50))
-t[:, 25:30] = 10
-t[:, 20:25] = 5
-t[:, 30:35] = 14
-
-ind = np.zeros((7, 50, 50))
-ind[1, :, 20:25] = 1
-ind[3, :, 45:] = 1
-ind[-1, -1, :5] = [2, 1, 500, 20, .4]
-ind[-1, 0, :3] = [.9, .1, 6]
-ind[-1, 2, :3] = [.9, .1, 8]
-ind[-2, 0, :2] = [0, 2]
-ind[-2, 1, :4] = [.6, .1, .1, 4]
-
-g = GradientOptimization(
-    epochs=100,
-    learning_rate=0.01,
-    target=t,
-    cost_alpha=0.1,
-    cost_beta=0.1,
-    cost_kernel_size=3,
-    weight_decay=0.01
-)
-
-inds, costs = g.gradient_optimization(ind)
-
-print(costs)
-
 
 
 

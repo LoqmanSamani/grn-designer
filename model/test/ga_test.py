@@ -263,3 +263,90 @@ g = Test(ind)
 
 sp1 = g.simulation_test()
 print(sp1)
+
+
+
+
+
+
+
+
+
+
+
+t = np.zeros((10, 10))
+t[:, 8] = 1
+t[:, 7] = 0.6
+t[:, 5:7] = 1.4
+tt = tf.convert_to_tensor(t, dtype=tf.float32)
+
+
+ind = np.zeros((7, 10, 10))
+ind[1, :, 3:5] = 1
+ind[3, :, -2:] = 1
+ind[-1, -1, :5] = [2, 1, 50, 5, .1]
+ind[-1, 0, :3] = [.9, .1, 6]
+ind[-1, 2, :3] = [.9, .1, 8]
+ind[-2, 0, :2] = [0, 2]
+ind[-2, 1, :4] = [.6, .1, .1, 4]
+t_ind = tf.convert_to_tensor(ind, dtype=tf.float32)
+
+g = GradientOptimization(
+    epochs=10,
+    learning_rate=0.01,
+    target=tt,
+    cost_alpha=0.1,
+    cost_beta=0.1,
+    cost_kernel_size=3,
+    weight_decay=0.01
+)
+
+inds, costs = g.gradient_optimization(t_ind)
+
+print(costs)
+
+
+
+
+"""
+parameters = {
+    "species_1": tf.Variable([.09, .007, 1.1]),
+    "species_2": tf.Variable([0.09, 0.006, 1.2]),
+    "pair_1": tf.Variable([6, .01, 0.001, 1.3])
+}
+
+
+
+
+
+
+num_species = 2
+num_pairs = 1
+stop = 5
+time_step = .01
+max_epoch = 500
+
+ind = np.zeros((7, 30, 30))
+ind[1, :, 0] = 10
+ind[3, :, -1] = 10
+ind[-2, 0, 0:2] = [0, 2]
+ind_tensor = tf.convert_to_tensor(ind, dtype=tf.float32)
+
+ind1 = individual_simulation(
+    individual=ind_tensor,
+    parameters=parameters,
+    num_species=num_species,
+    num_pairs=num_pairs,
+    stop=stop,
+    time_step=time_step,
+    max_epoch=max_epoch
+)
+
+
+print(ind1)
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.heatmap(ind1)
+plt.show()
+
+"""
