@@ -186,8 +186,8 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
 
         epoch += 1
 
-    return individual[0, :, :]
 
+    return individual[0, :, :]
 
 
 

@@ -3,7 +3,8 @@ from simulation import *
 
 
 
-"""
+
+# how to test evolutionary_optimization()
 ind = np.zeros((3, 10, 10))
 ind[1, :, :] = np.random.rand(10, 10)
 ind[-1, 0, :3] = [.5, .4, 2]
@@ -235,34 +236,6 @@ print(new_pop)
 
 for i in new_pop:
     print(i.shape)
-"""
-
-
-
-class Test:
-    def __init__(self, ind):
-        self.ind = ind
-
-    def simulation_test(self):
-        sim_ind = individual_simulation(self.ind)
-        return sim_ind
-
-
-
-ind = np.zeros((7, 100, 100))
-ind[1, :, 0] = 1
-ind[3, :, -1] = 1
-
-ind[-1, 0, :3] = [.09, .007, 1.1]
-ind[-1, 2, :3] = [0.09, 0.006, 1.2]
-ind[-1, -1, :5] = [2, 1, 1000, 5, .01]
-ind[-2, 0, 0:2] = [0, 2]
-ind[-2, 1, 0:4] = [6, .01, 0.001, 1.3]
-
-g = Test(ind)
-
-sp1 = g.simulation_test()
-print(sp1)
 
 
 
@@ -274,6 +247,7 @@ print(sp1)
 
 
 
+# how to test GradientOptimization:
 t = np.zeros((10, 10))
 t[:, 8] = 1
 t[:, 7] = 0.6
@@ -305,20 +279,34 @@ inds, costs = g.gradient_optimization(t_ind)
 
 print(costs)
 
-
-
+"""
+Epoch 1/10, Cost: 0.4855841100215912
+Epoch 2/10, Cost: 0.5479841828346252
+Epoch 3/10, Cost: 0.4306187331676483
+Epoch 4/10, Cost: 0.41393744945526123
+Epoch 5/10, Cost: 0.4987949728965759
+Epoch 6/10, Cost: 0.8985116481781006
+Epoch 7/10, Cost: 0.4105818569660187
+Epoch 8/10, Cost: 0.40525782108306885
+Epoch 9/10, Cost: 0.41774845123291016
+Epoch 10/10, Cost: 0.40810641646385193
+[0.4855841, 0.5479842, 0.43061873, 0.41393745, 0.49879497, 0.89851165, 0.41058186, 0.40525782, 0.41774845, 0.40810642]
 
 """
+
+
+
+
+
+
+
+
+# How to test tensor_simulation(...)
 parameters = {
     "species_1": tf.Variable([.09, .007, 1.1]),
     "species_2": tf.Variable([0.09, 0.006, 1.2]),
     "pair_1": tf.Variable([6, .01, 0.001, 1.3])
 }
-
-
-
-
-
 
 num_species = 2
 num_pairs = 1
@@ -332,7 +320,7 @@ ind[3, :, -1] = 10
 ind[-2, 0, 0:2] = [0, 2]
 ind_tensor = tf.convert_to_tensor(ind, dtype=tf.float32)
 
-ind1 = individual_simulation(
+ind1 = tensor_simulation(
     individual=ind_tensor,
     parameters=parameters,
     num_species=num_species,
@@ -341,12 +329,10 @@ ind1 = individual_simulation(
     time_step=time_step,
     max_epoch=max_epoch
 )
-
-
 print(ind1)
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.heatmap(ind1)
 plt.show()
 
-"""
+

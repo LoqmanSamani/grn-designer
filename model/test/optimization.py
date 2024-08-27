@@ -122,9 +122,9 @@ class GradientOptimization:
 
                 costs.append(cost.numpy())
 
+            print(f"Epoch {i + 1}/{self.epochs}, Cost: {cost.numpy()}")
             variables = list(parameters.values())
             gradients = tape.gradient(cost, variables)
-            print(gradients)
             optimizer.apply_gradients(zip(gradients, variables))
 
         individual = self.update_parameters(
@@ -133,7 +133,4 @@ class GradientOptimization:
         )
 
         return individual, costs
-
-
-
 
