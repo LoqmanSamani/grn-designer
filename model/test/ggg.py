@@ -1,6 +1,5 @@
 from tensor_simulation import *
-
-
+import os
 
 
 class GradientOptimization:
@@ -14,6 +13,9 @@ class GradientOptimization:
         self.cost_beta = cost_beta
         self.cost_kernel_size = cost_kernel_size
         self.weight_decay = weight_decay
+        # Define the directory where logs will be stored
+        self.logdir = os.path.join("/home/samani/Documents/sim/", "gradient_optimization_graph")
+        self.writer = tf.summary.create_file_writer(self.logdir)
 
 
     def parameter_extraction(self, individual):
@@ -37,7 +39,7 @@ class GradientOptimization:
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
         max_epoch = int(individual[-1, -1, 2])
-        stop = int(individual[-1, -1, 3])
+        stop = individual[-1, -1, 3]
         time_step = individual[-1, -1, 4]
 
         return parameters, num_species, num_pairs, max_epoch, stop, time_step
@@ -91,8 +93,8 @@ class GradientOptimization:
 
         return cost
 
+    #@tf.function
     def gradient_optimization(self, individual):
-
         costs = []
         parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
             individual=individual
@@ -104,7 +106,6 @@ class GradientOptimization:
 
         for i in range(self.epochs):
             with tf.GradientTape() as tape:
-
                 y_hat = self.simulation(
                     individual=individual,
                     parameters=parameters,
@@ -114,7 +115,7 @@ class GradientOptimization:
                     time_step=time_step,
                     max_epoch=max_epoch
                 )
-                
+
                 cost = self.compute_cost_(
                     y_hat=y_hat,
                     target=self.target
@@ -133,3 +134,53 @@ class GradientOptimization:
         )
 
         return individual, costs
+
+    def run_optimization_and_log_graph(self, individual):
+        with self.writer.as_default():
+            # Start trace without the profiler
+            tf.summary.trace_on(graph=True, profiler=False)
+
+            individual, costs = self.gradient_optimization(individual)
+
+            # Export the trace
+            tf.summary.trace_export(name="gradient_optimization_trace", step=0)
+
+        return individual, costs
+
+
+import numpy as np
+
+t = np.zeros((10, 10))
+t[:, 8] = 1
+t[:, 7] = 0.6
+t[:, 5:7] = 1.4
+tt = tf.convert_to_tensor(t, dtype=tf.float32)
+
+
+ind = np.zeros((7, 10, 10))
+ind[1, :, 3:5] = 1.0
+ind[3, :, -2:] = 1.0
+ind[-1, -1, :5] = [2, 1, 50, 5.0, .1]
+ind[-1, 0, :3] = [.9, .1, 6.0]
+ind[-1, 2, :3] = [.9, .1, 8.0]
+ind[-2, 0, :2] = [0, 2]
+ind[-2, 1, :4] = [.6, .1, .1, 4.0]
+t_ind = tf.convert_to_tensor(ind, dtype=tf.float32)
+
+model = GradientOptimization(
+    epochs=1,
+    learning_rate=0.01,
+    target=tt,
+    cost_alpha=0.1,
+    cost_beta=0.1,
+    cost_kernel_size=3,
+    weight_decay=0.01
+)
+
+
+# Run the optimization and log the graph
+model.run_optimization_and_log_graph(t_ind)
+
+# After running the script, launch TensorBoard
+# tensorboard --logdir=logs/gradient_optimization_graph
+

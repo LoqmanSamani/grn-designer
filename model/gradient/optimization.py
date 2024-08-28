@@ -37,7 +37,7 @@ class GradientOptimization:
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
         max_epoch = int(individual[-1, -1, 2])
-        stop = int(individual[-1, -1, 3])
+        stop = individual[-1, -1, 3]
         time_step = individual[-1, -1, 4]
 
         return parameters, num_species, num_pairs, max_epoch, stop, time_step
@@ -122,9 +122,9 @@ class GradientOptimization:
 
                 costs.append(cost.numpy())
 
+            print(f"Epoch {i + 1}/{self.epochs}, Cost: {cost.numpy()}")
             variables = list(parameters.values())
             gradients = tape.gradient(cost, variables)
-            print(gradients)
             optimizer.apply_gradients(zip(gradients, variables))
 
         individual = self.update_parameters(
