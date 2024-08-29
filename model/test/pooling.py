@@ -25,6 +25,7 @@ class PoolingLayers:
 
         Attributes:
             - target (np.ndarray): The target matrix to be used for up sampling.
+            - - pooling_method (str): max or average
             - pool_size (tuple of int): The size of the pooling window (height, width).
             - strides (tuple of int): The strides of the pooling operation (height, width).
             - padding (str): Padding mode for the pooling operation. Either 'valid' or 'same'.
@@ -166,6 +167,7 @@ class PoolingLayers:
         Parameters:
 
             - target (np.ndarray): The matrix to be down sampled.
+            - pooling_method (str): max or average
             - zero_padding (tuple of int): The amount of zero padding to apply before pooling (height, width).
             - pool_size (tuple of int): The size of the pooling window (height, width).
             - strides (tuple of int): The strides of the pooling operation (height, width).
