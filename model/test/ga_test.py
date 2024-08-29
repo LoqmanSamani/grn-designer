@@ -336,3 +336,48 @@ sns.heatmap(ind1)
 plt.show()
 
 
+
+
+
+
+
+# pooling test
+
+ind = np.zeros((7, 20, 20))
+ind[1, :, 3:5] = 1
+ind[3, :, -2:] = 1
+ind[-1, -1, :5] = [2, 1, 50, 5, .1]
+ind[-1, 0, :3] = [.9, .1, 6]
+ind[-1, 2, :3] = [.9, .1, 8]
+ind[-2, 0, :2] = [0, 2]
+ind[-2, 1, :4] = [.6, .1, .1, 4]
+
+t = np.full((20, 20), fill_value=12)
+
+
+obj = PoolingLayers(
+    target=t,
+    pool_size=(2, 2),
+    strides=(1, 1),
+    padding="valid",
+    zero_padding=(1, 1),
+    kernel_size=(2, 2),
+    up_padding="valid",
+    up_strides=(1, 1),
+    pooling_method="average"
+)
+
+
+h = obj.pooling(
+    compartment=[ind, ind],
+    method= "population up sampling"
+)
+print(h[0][1, :, :])
+
+
+j = obj.pooling(
+    compartment=t,
+    method= "target pooling"
+)
+print(j)
+print(j.shape)

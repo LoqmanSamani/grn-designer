@@ -1,6 +1,4 @@
 import numpy as np
-from numba import jit
-import itertools
 
 
 
@@ -37,7 +35,6 @@ def population_initialization(population_size, individual_shape, species_paramet
 
     pair_start = int(num_species * 2)
     pair_stop = int(pair_start + (num_pairs * 2))
-    population = []
 
     if individual_fix_size:
         population = [np.zeros(individual_shape) for _ in range(population_size)]
