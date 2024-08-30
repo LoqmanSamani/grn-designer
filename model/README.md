@@ -2,7 +2,9 @@
 
 
 ***BIO:*** Bio-Optimization
+
 ***ES:*** Evolutionary Strategies
+
 ***AG:*** Adaptive Gradient-based Adam
 
 
