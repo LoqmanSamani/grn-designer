@@ -413,6 +413,14 @@ class BioEsAg:
 
         # Phase 1 of Evolutionary Optimization
         evolution_costs_one = np.zeros(shape=(self.evolution_one_epochs, self.num_saved_individuals+2)) # array to save the cost of elite chromosomes
+
+        print("----------------------------------------------------------------")
+        print("                         BioEsAg Algorithm                      ")
+        print("----------------------------------------------------------------")
+        print()
+        print("                   Evolutionary Optimization I                  ")
+        print()
+
         for i in range(self.evolution_one_epochs):
 
             population, cost, mean_cost = evolutionary_optimization(
@@ -461,6 +469,8 @@ class BioEsAg:
                 complex_parameters=self.individual_parameters["pair_parameters"]
             )
 
+            print(f"Epoch {i + 1}/{self.evolution_one_epochs}, Average Population Cost: {mean_cost}")
+
             sorted_cost = np.sort(cost)
             evolution_costs_one[i, :-2] = sorted_cost[:self.num_saved_individuals]
             evolution_costs_one[i, -2] = mean_cost
@@ -494,6 +504,11 @@ class BioEsAg:
 
             # Phase 2 of Evolutionary Optimization
             evolution_costs_two = np.zeros(shape=(self.evolution_two_epochs, self.num_saved_individuals+2))  # array to save the cost of elite chromosomes
+
+            print()
+            print("                   Evolutionary Optimization II                 ")
+            print()
+
             for j in range(self.evolution_two_epochs):
                 population, cost, mean_cost = evolutionary_optimization(
                     population=population,
@@ -541,6 +556,8 @@ class BioEsAg:
                     complex_parameters=self.individual_parameters["pair_parameters"]
                 )
 
+                print(f"Epoch {j + 1}/{self.evolution_two_epochs}, Average Population Cost: {mean_cost}")
+
                 sorted_cost = np.sort(cost)
                 evolution_costs_two[j, :-2] = sorted_cost[:self.num_saved_individuals]
                 evolution_costs_two[j, -2] = mean_cost
@@ -567,7 +584,15 @@ class BioEsAg:
         if self.gradient_optimization:
             optimization_costs = np.zeros(shape=(self.optimization_epochs, self.num_gradient_optimization))
 
+            print()
+            print("                   Adam Optimization                 ")
+            print()
+
             for k, individual in enumerate(population):
+
+                print(f"                Individual {k}                  ")
+                print()
+
                 optimized_individual, costs = self.gradient_optimization.gradient_optimization(
                     individual=tf.convert_to_tensor(individual)
                 )
