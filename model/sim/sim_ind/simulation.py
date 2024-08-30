@@ -1,5 +1,6 @@
-from reactions import *
-from diffusion import *
+from reactions import apply_complex_dissociation, apply_species_collision, apply_component_degradation, apply_component_production
+from numba import jit
+from diffusion import apply_diffusion
 
 
 @jit(nopython=True)

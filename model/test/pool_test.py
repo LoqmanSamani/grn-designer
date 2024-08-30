@@ -1,6 +1,9 @@
+import numpy as np
+from pooling import *
 
-# Define the target and population matrices
-ind = np.zeros((7, 15, 15))
+
+
+ind = np.zeros((7, 100, 100))
 ind[1, :, 3:5] = 1
 ind[3, :, -2:] = 1
 ind[-1, -1, :5] = [2, 1, 50, 5, .1]
@@ -9,19 +12,19 @@ ind[-1, 2, :3] = [.9, .1, 8]
 ind[-2, 0, :2] = [0, 2]
 ind[-2, 1, :4] = [.6, .1, .1, 4]
 
-t = np.full((30, 30), fill_value=12)
+t = np.full((200, 200), fill_value=12)
 population = [ind, ind, ind]
 
 # Create an instance of PoolingLayers
 obj = PoolingLayers(
     target=t,
     pooling_method="max",
-    pool_size=(2, 2),
+    pool_size=(3, 3),
     strides=(2, 2),
     padding="valid",
-    zero_padding=(2, 2),
-    kernel_size=(2, 2),
-    up_padding="valid",
+    zero_padding=(1, 1),
+    kernel_size=(3, 3),
+    up_padding="same",
     up_strides=(2, 2)
 )
 

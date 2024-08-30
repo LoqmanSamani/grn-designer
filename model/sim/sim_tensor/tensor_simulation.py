@@ -1,9 +1,12 @@
-from tensor_reactions import *
-from tensor_diffusion import *
+from tensor_reactions import apply_complex_dissociation, apply_species_collision, apply_component_degradation, apply_component_production
+from tensor_diffusion import apply_diffusion
+import tensorflow as tf
 
 
 
-def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time_step, max_epoch):
+
+
+def tensor_simulation_(individual, parameters, num_species, num_pairs, stop, time_step, max_epoch):
     """
     Simulates the evolution of species and complexes in a spatial compartment over time.
 

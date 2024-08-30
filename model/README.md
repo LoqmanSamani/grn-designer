@@ -1,4 +1,10 @@
-# Development of the algorithm
+# Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Adam (BIOESAG)
+
+
+BIO: Bio-Optimization
+ES: Evolutionary Strategies
+AG: Adaptive Gradient-based Adam
+
 
 --------------------
 

@@ -259,7 +259,7 @@ def evolutionary_optimization(
 
         low_cost_individuals = low_cost_individuals + high_cost_individuals
 
-    return low_cost_individuals
+    return low_cost_individuals, costs, mean_cost
 
 
 

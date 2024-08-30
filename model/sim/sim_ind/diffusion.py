@@ -1,6 +1,6 @@
 import numpy as np
 from numba import jit
-import copy
+
 
 
 @jit(nopython=True)

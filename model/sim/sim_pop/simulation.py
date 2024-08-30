@@ -1,9 +1,11 @@
-from reactions import *
-from diffusion import *
+from reactions import apply_complex_dissociation, apply_species_collision, apply_component_degradation, apply_component_production
+from numba import jit
+from diffusion import apply_diffusion
+import numpy as np
 
 
 
-#@jit(nopython=True)
+@jit(nopython=True)
 def population_simulation(population):
     """
     Simulate the dynamics of a population of individuals within a specified compartmental system.

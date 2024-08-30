@@ -1,6 +1,6 @@
-import numpy as np
-from initialization import *
+from initialization import species_initialization
 import itertools
+import numpy as np
 
 
 
