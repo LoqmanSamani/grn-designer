@@ -1,9 +1,15 @@
 # Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Adam (BIOESAG)
 
 
-BIO: Bio-Optimization
-ES: Evolutionary Strategies
-AG: Adaptive Gradient-based Adam
+***BIO:*** Bio-Optimization
+***ES:*** Evolutionary Strategies
+***AG:*** Adaptive Gradient-based Adam
+
+
+![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/model_structure.png)
+
+*Figure1: Model Structure*
+
 
 
 --------------------
