@@ -8,9 +8,22 @@
 ***AG:*** Adaptive Gradient-based Adam
 
 
+![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/model.jpg)
+
+*Figure1: BioEsAg Algorithm Structure*
+
+
+
+![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/pool.jpg)
+
+*Figure1: Pooling & Padding*
+
+
 ![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/model_structure.png)
 
-*Figure1: Model Structure*
+*Figure1: Model Directory Structure*
+
+
 
 
 
