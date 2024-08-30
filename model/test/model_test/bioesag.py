@@ -31,6 +31,41 @@ class BioEsAg:
                  complex_param_min_vals=(0.0, 0.0, 0.0, 0.0), complex_param_max_vals=(1000, 50, 100, 50), param_distribution="uniform"
                  ):
         """
+        BioEsAg (Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Optimization) is an
+        advanced algorithm designed for optimizing biological systems. It combines evolutionary strategies,
+        gradient-based optimization, and pooling techniques to optimize the initial conditions, parameters, and
+        relationships between species in a biological model.
+
+
+        The algorithm works through several phases:
+
+            1. Pooling Down-sampling (Optional): This initial step reduces computational costs by down-sampling the target
+                                                 compartments before initializing the population. This phase is optional;
+                                                  the algorithm can proceed without down-sampling if preferred.
+
+            2. Initialization: The algorithm starts by initializing a diverse population of individuals, each representing
+                               different species and parameter settings within the model.
+
+            3. Evolutionary Optimization (Phase 1): In this phase, the algorithm uses evolutionary methods like mutation and
+                                                    crossover to explore and improve the population. This helps in finding
+                                                    optimal solutions through iterative adjustments.
+
+            4. Pooling Up-sampling (If Down-sampling Was Used): If down-sampling was performed, this step up-samples the population
+                                                                back to its original size. This allows for a more detailed and refined
+                                                                search in the next phase.
+
+            5. Evolutionary Optimization (Phase 2): The algorithm then further refines the population, focusing on a subset of individuals
+                                                    from the up-sampled population. This phase includes additional optimization to enhance the results.
+
+            6. Gradient-based Optimization with Adam (Optional): Finally, if needed, the algorithm uses the Adam optimizer to fine-tune
+                                                                 the best-performing individuals from Phase 2. This step is optional and only
+                                                                 used if further refinement is necessary.
+
+        This approach is particularly well-suited for complex biological systems where the interaction between species
+        and environmental factors is highly non-linear and difficult to model using traditional methods.
+
+
+
         Initialize the BioEsAg with the given parameters.
 
         Parameters:
