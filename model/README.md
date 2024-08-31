@@ -1,4 +1,4 @@
-# Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Adam (BIOESAG)
+# 1.0.0:  Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Adam (BIOESAG)
 
 **BIO:** Bio-Optimization  
 **ES:** Evolutionary Strategies  
@@ -20,7 +20,7 @@ The purpose of this algorithm is to analyze an input image—a two-dimensional m
    
    The algorithm optimizes these parameters based on the input diffusion pattern.
 
-## BioEsAg Algorithm Structure
+## 1.1.0: BioEsAg Algorithm Structure
 
 Once the algorithm receives the input diffusion pattern, it follows these steps:
 
@@ -54,7 +54,7 @@ In **Figure 2** below, you can see the structure of the BioEsAg algorithm reposi
 
 ![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/model_structure.png)
 
-*Figure 1: BioEsAg Algorithm Repository Structure*
+*Figure 2: BioEsAg Algorithm Repository Structure*
 
 
 
@@ -95,7 +95,7 @@ In **Figure 2** below, you can see the structure of the BioEsAg algorithm reposi
 
 ![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/pool.jpg)
 
-*Figure1: Pooling & Padding*
+*Figure3: Pooling & Padding*
 
 
 
