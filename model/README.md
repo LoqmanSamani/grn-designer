@@ -1,16 +1,95 @@
 # Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Adam (BIOESAG)
 
+**BIO:** Bio-Optimization  
+**ES:** Evolutionary Strategies  
+**AG:** Adaptive Gradient-based Adam
 
-***BIO:*** Bio-Optimization
+In this report, I will introduce a specific algorithm designed to predict initial conditions for optimal spatial patterns in 2D reaction-diffusion systems. The algorithm, which we have developed, combines machine learning methods to solve complex optimization problems. Specifically, we use a modified version of a genetic algorithm based on natural selection theory (GABONST) and a gradient-based optimization algorithm (Adam, which stands for Adaptive Moment Estimation).
 
-***ES:*** Evolutionary Strategies
+The purpose of this algorithm is to analyze an input image—a two-dimensional matrix representing the diffusion pattern of a specific molecule (e.g., a protein, drug, hormone, or any diffusible substance) within a tissue. The goal is to determine key information about the biological system in which the molecule is diffused:
 
-***AG:*** Adaptive Gradient-based Adam
+1. **Molecules Involved in the System:** The algorithm attempts to identify other molecules that interact with the input molecule to generate the observed diffusion pattern. In the evolutionary part of the algorithm, it randomly adds or removes proteins, anchors, and other molecules to create a biological network (pathway) that can reproduce the same pattern. Essentially, the algorithm's first task is to design a biological system capable of generating the observed diffusion pattern.
+
+2. **Optimization of Initial Conditions:** While building the pathway, the algorithm optimizes the initial conditions for each type of molecule involved. This means it determines the best secretion pattern for each molecule within the tissue (compartment) to recreate the input diffusion pattern. For instance, if two types of molecules are involved, the algorithm finds the optimal secretion pattern for each molecule in each cell of the compartment.
+
+3. **Parameter Optimization:** The final and perhaps most critical step involves optimizing the production, degradation, and diffusion rates for each molecule, as well as the interactions between pairs of molecules. For simplicity, we assume only pairwise interactions, characterized by four rates: 
+   1. **Collision Rate:** The rate at which two molecules collide to form a complex.
+   2. **Dissociation Rate:** The rate at which these complexes break apart into their original molecules.
+   3. **Degradation Rate:** The rate at which molecules degrade over time.
+   4. **Diffusion Rate:** The rate at which molecules spread through the tissue.
+   
+   The algorithm optimizes these parameters based on the input diffusion pattern.
+
+## BioEsAg Algorithm Structure
+
+Once the algorithm receives the input diffusion pattern, it follows these steps:
+
+1. **Pooling Down-sampling (Optional):** If the input pattern is too large and computationally demanding, the algorithm reduces its size using a combination of padding and pooling layers. These techniques, common in computer vision, help maintain the essential information while reducing computational intensity. This step is optional; if resources allow, the algorithm can proceed with the original size.
+
+2. **Initialization:** A population of candidate solutions (agents) is generated, each with the same dimensions as the reduced-size compartment (target(Height, width)). Each agent(z, Height, width) represents a potential pathway, with its own unique set of molecules and complexes (z represents the number of different molecules and complexes).
+
+3. **Evolutionary Optimization (Phase 1):** The algorithm applies evolutionary techniques such as mutation, crossover, and selection to optimize each agent by minimizing its difference from the target. This phase focuses on evolving the agents to better match the input pattern.
+
+4. **Transpose Convolution:** A proportion of the agents is selected for up-sampling back to the original compartment size using a transpose convolution operation. This step is necessary to continue the optimization on the original scale while managing computational costs.
+
+5. **Evolutionary Optimization (Phase 2):** The second phase of evolutionary optimization further refines the agents. The population size is reduced to lessen computational intensity, and some mutation operations (like species insertion and deletion) are limited or omitted. The assumption is that the optimal system structure has already been identified, so further fine-tuning focuses on the original compartment size.
+
+6. **Gradient-based Optimization with Adam (Optional):** In this final step, the algorithm applies the Adam optimizer to fine-tune the parameters (rates) of the most promising agents. This phase is optional and typically used if the evolutionary optimization phases do not converge sufficiently. Only a select few agents with the lowest cost (best potential) are further optimized to increase the solution's accuracy.
+
+A schematic representation of the BioEsAg Algorithm structure can be found in **Figure 1** below:
 
 
-![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/model.jpg)
+![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/model.jpg) 
 
-*Figure1: BioEsAg Algorithm Structure*
+*Figure 1: BioEsAg Algorithm Structure*
+
+
+
+
+Throughout the process, the algorithm saves progress at three checkpoints: after Phase 1 of the evolutionary algorithm, after Phase 2, and after the final gradient-based optimization. This allows for re-running or adjusting the algorithm from these points without starting over. The data is stored in an H5PY format file, with input information saved in a JSON file format to facilitate experiment reproduction if needed.
+
+
+
+In **Figure 2** below, you can see the structure of the BioEsAg algorithm repository. The entire codebase is written in [Python](https://www.python.org/). In the sections that follow, I will provide a detailed explanation of each step of the algorithm.
+
+![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/model_structure.png)
+
+*Figure 1: BioEsAg Algorithm Repository Structure*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -19,9 +98,7 @@
 *Figure1: Pooling & Padding*
 
 
-![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/model_structure.png)
 
-*Figure1: Model Directory Structure*
 
 
 

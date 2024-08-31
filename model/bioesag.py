@@ -16,21 +16,21 @@ import time
 class BioEsAg:
     def __init__(self,
                  target, population_size, individual_shape, individual_parameters, simulation_parameters, store_path=None,
-                 cost_alpha=0.01, cost_beta=0.1, cost_kernel_size=3, cost_method="MSE",
-                 learning_rate=0.01, weight_decay=0.01, optimization_epochs=50, gradient_optimization=False, num_gradient_optimization=3,
-                 num_saved_individuals=3, evolution_one_epochs=100, evolution_two_epochs=50, evolution_two_ratio=0.2,
-                 pooling=False, pooling_method="average", pool_size=(3, 3), strides=(2, 2), padding="valid", zero_padding=(1, 1),
-                 pool_kernel_size=(3, 3), up_padding="same", up_strides=(2, 2), individual_fix_shape=False,
-                 sim_mutation=True, compartment_mutation=True, param_mutation=False, species_insertion_mutation_one=False,
-                 species_deletion_mutation_one=False, species_insertion_mutation_two=False, species_deletion_mutation_two=False,
-                 crossover_alpha=0.5, sim_crossover=True, compartment_crossover=True, param_crossover=False, num_elite_individuals=5,
-                 sim_mutation_rate=0.05, compartment_mutation_rate=0.8, parameter_mutation_rate=0.05, insertion_mutation_rate=0.2,
-                 deletion_mutation_rate=0.25, sim_means=(5.0, 0.5), sim_std_devs=(100.0, 2.0), sim_min_vals=(3.0, 0.001),
-                 sim_max_vals=(200.0, 2.0), compartment_mean=0.0, compartment_std=200.0, compartment_min_val=0.0,
-                 compartment_max_val=1000, sim_distribution="uniform", compartment_distribution="uniform",
-                 species_param_means=(0.5, 0.1, 1.0), species_param_stds=(10.0, 5.0, 10.0), species_param_min_vals=(0.0, 0.0, 0.0),
-                 species_param_max_vals=(10, 7, 20), complex_param_means=(3, 0.1, 0.1, 1.0), complex_param_stds=(100.0, 10.0, 5.0, 10.0),
-                 complex_param_min_vals=(0.0, 0.0, 0.0, 0.0), complex_param_max_vals=(1000, 50, 100, 50), param_distribution="uniform"
+                 cost_alpha=0.01, cost_beta=0.1, cost_kernel_size=3, cost_method="MSE", learning_rate=0.01, weight_decay=0.01,
+                 optimization_epochs=50, gradient_optimization=False, num_gradient_optimization=3, num_saved_individuals=3,
+                 evolution_one_epochs=100, evolution_two_epochs=50, evolution_two_ratio=0.2, pooling=False, pooling_method="average",
+                 pool_size=(3, 3), strides=(2, 2), padding="valid", zero_padding=(1, 1), pool_kernel_size=(3, 3), up_padding="same",
+                 up_strides=(2, 2), individual_fix_shape=False, sim_mutation=True, compartment_mutation=True, param_mutation=False,
+                 species_insertion_mutation_one=False, species_deletion_mutation_one=False, species_insertion_mutation_two=False,
+                 species_deletion_mutation_two=False, crossover_alpha=0.5, sim_crossover=True, compartment_crossover=True,
+                 param_crossover=False, num_elite_individuals=5, sim_mutation_rate=0.05, compartment_mutation_rate=0.8,
+                 parameter_mutation_rate=0.05, insertion_mutation_rate=0.2, deletion_mutation_rate=0.25, sim_means=(5.0, 0.5),
+                 sim_std_devs=(100.0, 2.0), sim_min_vals=(3.0, 0.001), sim_max_vals=(200.0, 2.0), compartment_mean=0.0,
+                 compartment_std=200.0, compartment_min_val=0.0, compartment_max_val=1000, sim_distribution="uniform",
+                 compartment_distribution="uniform", species_param_means=(0.5, 0.1, 1.0), species_param_stds=(10.0, 5.0, 10.0),
+                 species_param_min_vals=(0.0, 0.0, 0.0), species_param_max_vals=(10, 7, 20), complex_param_means=(3, 0.1, 0.1, 1.0),
+                 complex_param_stds=(100.0, 10.0, 5.0, 10.0), complex_param_min_vals=(0.0, 0.0, 0.0, 0.0),
+                 complex_param_max_vals=(1000, 50, 100, 50), param_distribution="uniform"
                  ):
         """
         BioEsAg (Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Optimization) is an
