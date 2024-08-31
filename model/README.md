@@ -22,22 +22,22 @@ The purpose of this algorithm is to analyze an input image—a two-dimensional m
 
 
 
-## 1.1.0.0: BioEsAg Algorithm Structure
+## 1.1.0.0: [BioEsAg Algorithm Structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/bioesag.py)
 
 
 Once the algorithm receives the input diffusion pattern, it follows these steps:
 
-1. **Pooling Down-sampling (Optional):** If the input pattern is too large and computationally demanding, the algorithm reduces its size using a combination of padding and pooling layers. These techniques, common in computer vision, help maintain the essential information while reducing computational intensity. This step is optional; if resources allow, the algorithm can proceed with the original size.
+1. [**Pooling Down-sampling (Optional):**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/pooling.py) If the input pattern is too large and computationally demanding, the algorithm reduces its size using a combination of padding and pooling layers. These techniques, common in computer vision, help maintain the essential information while reducing computational intensity. This step is optional; if resources allow, the algorithm can proceed with the original size.
 
-2. **Initialization:** A population of candidate solutions (agents) is generated, each with the same dimensions as the reduced-size compartment (target(Height, width)). Each agent(z, Height, width) represents a potential pathway, with its own unique set of molecules and complexes (z represents the number of different molecules and complexes).
+2. [**Initialization:**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/initialization.py) A population of candidate solutions (agents) is generated, each with the same dimensions as the reduced-size compartment (target(Height, width)). Each agent(z, Height, width) represents a potential pathway, with its own unique set of molecules and complexes (z represents the number of different molecules and complexes).
 
-3. **Evolutionary Optimization (Phase 1):** The algorithm applies evolutionary techniques such as mutation, crossover, and selection to optimize each agent by minimizing its difference from the target. This phase focuses on evolving the agents to better match the input pattern.
+3. [**Evolutionary Optimization (Phase 1):**](https://github.com/LoqmanSamani/master_project/tree/systembiology/model/evolution) The algorithm applies evolutionary techniques such as mutation, crossover, and selection to optimize each agent by minimizing its difference from the target. This phase focuses on evolving the agents to better match the input pattern.
 
-4. **Transpose Convolution:** A proportion of the agents is selected for up-sampling back to the original compartment size using a transpose convolution operation. This step is necessary to continue the optimization on the original scale while managing computational costs.
+4. [**Transpose Convolution:**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/pooling.py) A proportion of the agents is selected for up-sampling back to the original compartment size using a transpose convolution operation. This step is necessary to continue the optimization on the original scale while managing computational costs.
 
-5. **Evolutionary Optimization (Phase 2):** The second phase of evolutionary optimization further refines the agents. The population size is reduced to lessen computational intensity, and some mutation operations (like species insertion and deletion) are limited or omitted. The assumption is that the optimal system structure has already been identified, so further fine-tuning focuses on the original compartment size.
+5. [**Evolutionary Optimization (Phase 2):**](https://github.com/LoqmanSamani/master_project/tree/systembiology/model/evolution) The second phase of evolutionary optimization further refines the agents. The population size is reduced to lessen computational intensity, and some mutation operations (like species insertion and deletion) are limited or omitted. The assumption is that the optimal system structure has already been identified, so further fine-tuning focuses on the original compartment size.
 
-6. **Gradient-based Optimization with Adam (Optional):** In this final step, the algorithm applies the Adam optimizer to fine-tune the parameters (rates) of the most promising agents. This phase is optional and typically used if the evolutionary optimization phases do not converge sufficiently. Only a select few agents with the lowest cost (best potential) are further optimized to increase the solution's accuracy.
+6. [**Gradient-based Optimization with Adam (Optional):**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/gradient/optimization.py) In this final step, the algorithm applies the Adam optimizer to fine-tune the parameters (rates) of the most promising agents. This phase is optional and typically used if the evolutionary optimization phases do not converge sufficiently. Only a select few agents with the lowest cost (best potential) are further optimized to increase the solution's accuracy.
 
 A schematic representation of the BioEsAg Algorithm structure can be found in **Figure 1** below:
 
@@ -123,7 +123,7 @@ These parameters include the production rate, degradation rate, and diffusion ra
 All these matrices are combined into the individual matrix (Z represents the total number of matrices, related to the number of species). 
 The system is then simulated using this individual matrix, and the output is the target matrix, which is the first 2D matrix ([0, :, :]) of the individual matrix after simulation.
 
--------------------------------------------------------------------------------------------------------------------------
+
 
 The simulation process begins by extracting the necessary information from the individual matrix (see Figure 4). A while loop is then used to run the simulation, continuing until either the maximum number of epochs (max_epoch) or a specified number of epochs (num_epochs) is reached:
 
@@ -151,7 +151,7 @@ After completing the allowed number of epochs, the first matrix of the individua
 
 
 
---------------------------------------------------------------------------------------------------------------------------
+
 
 
 ### 1.3.2.0: Population simulation
