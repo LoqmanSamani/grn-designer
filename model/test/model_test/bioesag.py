@@ -7,35 +7,44 @@ import tensorflow as tf
 import json
 import os
 import h5py
-
-
+import time
 
 
 class BioEsAg:
     def __init__(self,
-                 target, population_size, individual_shape, individual_parameters, simulation_parameters, store_path=None,
+                 target, population_size, individual_shape, individual_parameters, simulation_parameters,
+                 store_path=None,
                  cost_alpha=0.01, cost_beta=0.1, cost_kernel_size=3, cost_method="MSE",
-                 learning_rate=0.01, weight_decay=0.01, optimization_epochs=50, gradient_optimization=False, num_gradient_optimization=3,
+                 learning_rate=0.01, weight_decay=0.01, optimization_epochs=50, gradient_optimization=False,
+                 num_gradient_optimization=3,
                  num_saved_individuals=3, evolution_one_epochs=100, evolution_two_epochs=50, evolution_two_ratio=0.2,
-                 pooling=False, pooling_method="average", pool_size=(3, 3), strides=(2, 2), padding="valid", zero_padding=(1, 1),
+                 pooling=False, pooling_method="average", pool_size=(3, 3), strides=(2, 2), padding="valid",
+                 zero_padding=(1, 1),
                  pool_kernel_size=(3, 3), up_padding="same", up_strides=(2, 2), individual_fix_shape=False,
-                 sim_mutation=True, compartment_mutation=True, param_mutation=False, species_insertion_mutation_one=False,
-                 species_deletion_mutation_one=False, species_insertion_mutation_two=False, species_deletion_mutation_two=False,
-                 crossover_alpha=0.5, sim_crossover=True, compartment_crossover=True, param_crossover=False, num_elite_individuals=5,
-                 sim_mutation_rate=0.05, compartment_mutation_rate=0.8, parameter_mutation_rate=0.05, insertion_mutation_rate=0.2,
-                 deletion_mutation_rate=0.25, sim_means=(5.0, 0.5), sim_std_devs=(100.0, 2.0), sim_min_vals=(3.0, 0.001),
+                 sim_mutation=True, compartment_mutation=True, param_mutation=False,
+                 species_insertion_mutation_one=False,
+                 species_deletion_mutation_one=False, species_insertion_mutation_two=False,
+                 species_deletion_mutation_two=False,
+                 crossover_alpha=0.5, sim_crossover=True, compartment_crossover=True, param_crossover=False,
+                 num_elite_individuals=5,
+                 sim_mutation_rate=0.05, compartment_mutation_rate=0.8, parameter_mutation_rate=0.05,
+                 insertion_mutation_rate=0.2,
+                 deletion_mutation_rate=0.25, sim_means=(5.0, 0.5), sim_std_devs=(100.0, 2.0),
+                 sim_min_vals=(3.0, 0.001),
                  sim_max_vals=(200.0, 2.0), compartment_mean=0.0, compartment_std=200.0, compartment_min_val=0.0,
                  compartment_max_val=1000, sim_distribution="uniform", compartment_distribution="uniform",
-                 species_param_means=(0.5, 0.1, 1.0), species_param_stds=(10.0, 5.0, 10.0), species_param_min_vals=(0.0, 0.0, 0.0),
-                 species_param_max_vals=(10, 7, 20), complex_param_means=(3, 0.1, 0.1, 1.0), complex_param_stds=(100.0, 10.0, 5.0, 10.0),
-                 complex_param_min_vals=(0.0, 0.0, 0.0, 0.0), complex_param_max_vals=(1000, 50, 100, 50), param_distribution="uniform"
+                 species_param_means=(0.5, 0.1, 1.0), species_param_stds=(10.0, 5.0, 10.0),
+                 species_param_min_vals=(0.0, 0.0, 0.0),
+                 species_param_max_vals=(10, 7, 20), complex_param_means=(3, 0.1, 0.1, 1.0),
+                 complex_param_stds=(100.0, 10.0, 5.0, 10.0),
+                 complex_param_min_vals=(0.0, 0.0, 0.0, 0.0), complex_param_max_vals=(1000, 50, 100, 50),
+                 param_distribution="uniform"
                  ):
         """
         BioEsAg (Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Optimization) is an
         advanced algorithm designed for optimizing biological systems. It combines evolutionary strategies,
         gradient-based optimization, and pooling techniques to optimize the initial conditions, parameters, and
         relationships between species in a biological model.
-
 
         The algorithm works through several phases:
 
@@ -63,7 +72,6 @@ class BioEsAg:
 
         This approach is particularly well-suited for complex biological systems where the interaction between species
         and environmental factors is highly non-linear and difficult to model using traditional methods.
-
 
 
         Initialize the BioEsAg with the given parameters.
@@ -243,7 +251,6 @@ class BioEsAg:
             weight_decay=self.weight_decay
         )
 
-
     # store all input information to a json file to use it later if needed (reproduce)
     def save_to_json(self):
         """
@@ -339,7 +346,6 @@ class BioEsAg:
         with open(path, 'w') as json_file:
             json.dump(data, json_file, indent=4)
 
-
     def save_to_h5py(self, dataset_name, data_array):
         """
         Save a numpy array to an HDF5 file.
@@ -367,8 +373,6 @@ class BioEsAg:
 
         with h5py.File(path, 'a') as h5file:
             h5file[dataset_name] = data_array
-
-
 
     def fit(self):
         """
@@ -405,6 +409,9 @@ class BioEsAg:
         Returns:
         None
         """
+        run_time = np.zeros(4)
+
+        prep_start = time.time()
         # Save the input configuration and initial target to files
         self.save_to_json()  # save the input info into a JSON file
         self.save_to_h5py(
@@ -429,7 +436,6 @@ class BioEsAg:
             data_array=target_
         )  # store the down-sampled target into the already created HDF5 file
 
-
         # Initialize the population based on the reduced target shape
         population = population_initialization(
             population_size=self.population_size,
@@ -443,11 +449,13 @@ class BioEsAg:
             time_step=self.simulation_parameters["time_step"],
             individual_fix_size=self.individual_fix_shape
         )
+        prep_stop = time.time()
+        run_time[0] = prep_stop - prep_start
 
-
-
+        evo1_start = time.time()
         # Phase 1 of Evolutionary Optimization
-        evolution_costs_one = np.zeros(shape=(self.evolution_one_epochs, self.num_saved_individuals+2)) # array to save the cost of elite chromosomes
+        evolution_costs_one = np.zeros(shape=(
+        self.evolution_one_epochs, self.num_saved_individuals + 2))  # array to save the cost of elite chromosomes
 
         print("----------------------------------------------------------------")
         print("                         BioEsAg Algorithm                      ")
@@ -527,7 +535,10 @@ class BioEsAg:
             dataset_name="evolution_costs_one",
             data_array=evolution_costs_one
         )
+        evo1_stop = time.time()
+        run_time[1] = evo1_stop - evo1_start
 
+        evo2_start = time.time()
         # Phase 2: Up-sampling the population (resize it to the original size)
         if self.pooling:
             population = self.pooling_layers.pooling(
@@ -535,10 +546,9 @@ class BioEsAg:
                 method="population up sampling"
             )
 
-
-
             # Phase 2 of Evolutionary Optimization
-            evolution_costs_two = np.zeros(shape=(self.evolution_two_epochs, self.num_saved_individuals+2))  # array to save the cost of elite chromosomes
+            evolution_costs_two = np.zeros(shape=(
+            self.evolution_two_epochs, self.num_saved_individuals + 2))  # array to save the cost of elite chromosomes
 
             print()
             print("                   Evolutionary Optimization II                 ")
@@ -613,8 +623,10 @@ class BioEsAg:
                 dataset_name="evolution_costs_two",
                 data_array=evolution_costs_two
             )
+        evo2_stop = time.time()
+        run_time[3] = evo2_stop - evo2_start
 
-
+        gradient_start = time.time()
         # Phase 3: Gradient-based optimization using tf.GradientTape and the Adam algorithm
         if self.gradient_optimization:
             optimization_costs = np.zeros(shape=(self.optimization_epochs, self.num_gradient_optimization))
@@ -624,7 +636,6 @@ class BioEsAg:
             print()
 
             for k, individual in enumerate(population):
-
                 print(f"                Individual {k}                  ")
                 print()
 
@@ -644,3 +655,10 @@ class BioEsAg:
                 dataset_name="gradient_optimization_costs",
                 data_array=optimization_costs
             )
+
+        gradient_stop = time.time()
+        run_time[-1] = gradient_stop - gradient_start
+        self.save_to_h5py(
+            dataset_name="run_time",
+            data_array=run_time
+        )

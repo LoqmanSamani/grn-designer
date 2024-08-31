@@ -405,10 +405,7 @@ class BioEsAg:
         Returns:
         None
         """
-        prepararion_time = None
-        evolution_time_1 = None
-        evolution_time_2 = None
-        gradient_time = None
+        run_time = np.zeros(4)
 
         prep_start = time.time()
         # Save the input configuration and initial target to files
@@ -450,7 +447,7 @@ class BioEsAg:
             individual_fix_size=self.individual_fix_shape
         )
         prep_stop = time.time()
-        preparation_time = prep_stop - prep_start
+        run_time[0] = prep_stop - prep_start
 
         evo1_start = time.time()        
         # Phase 1 of Evolutionary Optimization
@@ -535,7 +532,9 @@ class BioEsAg:
             data_array=evolution_costs_one
         )
         evo1_stop = time.time()
-        evolution_time_1 = evo1_stop - evo1_start
+        run_time[1] = evo1_stop - evo1_start
+
+        evo2_start = time.time()
         # Phase 2: Up-sampling the population (resize it to the original size)
         if self.pooling:
             population = self.pooling_layers.pooling(
@@ -621,8 +620,10 @@ class BioEsAg:
                 dataset_name="evolution_costs_two",
                 data_array=evolution_costs_two
             )
+        evo2_stop = time.time()
+        run_time[3] = evo2_stop - evo2_start
 
-
+        gradient_start = time.time()
         # Phase 3: Gradient-based optimization using tf.GradientTape and the Adam algorithm
         if self.gradient_optimization:
             optimization_costs = np.zeros(shape=(self.optimization_epochs, self.num_gradient_optimization))
@@ -652,4 +653,12 @@ class BioEsAg:
                 dataset_name="gradient_optimization_costs",
                 data_array=optimization_costs
             )
+
+        gradient_stop = time.time()
+        run_time[-1] = gradient_stop - gradient_start
+        self.save_to_h5py(
+            dataset_name="run_time",
+            data_array=run_time
+        )
+
 
