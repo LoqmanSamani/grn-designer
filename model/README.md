@@ -1,4 +1,4 @@
-# 1.0.0:  Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Adam (BIOESAG)
+# 1.0.0.0: Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Adam (BIOESAG)
 
 **BIO:** Bio-Optimization  
 **ES:** Evolutionary Strategies  
@@ -20,7 +20,10 @@ The purpose of this algorithm is to analyze an input image—a two-dimensional m
    
    The algorithm optimizes these parameters based on the input diffusion pattern.
 
-## 1.1.0: BioEsAg Algorithm Structure
+
+
+## 1.1.0.0: BioEsAg Algorithm Structure
+
 
 Once the algorithm receives the input diffusion pattern, it follows these steps:
 
@@ -58,40 +61,7 @@ In **Figure 2** below, you can see the structure of the BioEsAg algorithm reposi
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+## 1.2.0.0: Pooling Down-sampling
 
 ![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/pool.jpg)
 
@@ -104,21 +74,16 @@ In **Figure 2** below, you can see the structure of the BioEsAg algorithm reposi
 
 
 
---------------------
+## 1.3.0.0: Simulation Algorithms
 
 
-
-
-## Simulation Algorithm
-
-
-### Individual simulation
+### 1.3.1.0: Individual simulation
 
 In a genetic algorithm, one approach to simulating a population is to run each individual simulation one by one. This means using a for loop to process one individual in an iteration in the population for every generation.
 I developed a system to handle this using the [`individual_simulation(individual)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_ind/simulation.py) function. This function takes one individual at a time and returns the target or predicted species compartment after running the simulation based on the individual matrix.
 
 
-#### individual matrix:
+#### 1.3.1.1: individual matrix:
 
 The input for the individual simulation function is a three-dimensional matrix known as the ***individual matrix*** (see Figure 1).
 
@@ -189,7 +154,7 @@ After completing the allowed number of epochs, the first matrix of the individua
 --------------------------------------------------------------------------------------------------------------------------
 
 
-### Population simulation
+### 1.3.2.0: Population simulation
 
 An alternative approach to simulating a population is to perform the simulation for the entire population in parallel, rather than sequentially. This method leverages the power of vectorization to simulate multiple individuals simultaneously.
 
@@ -218,7 +183,7 @@ After completing the allowed number of epochs, the first matrix of each individu
 
 
 
-### Reactions
+### 1.3.2.1: Reactions
 
 The [reactions](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_ind/reactions.py) currently available for simulating a biological system are:
 
@@ -240,7 +205,7 @@ The [reactions](https://github.com/LoqmanSamani/master_project/blob/systembiolog
 
 The answer is yes! These four reaction types—component production, component degradation, component collision, and component dissociation—provide a solid foundation for modeling a wide range of biological systems. By carefully defining the rates for these reactions, we can simulate complex biological interactions and phenomena.
 
-#### Examples and Further Details:
+#### 1.3.2.2: Examples and Further Details:
 
 1. **Component Production and Degradation**:
 
@@ -275,7 +240,7 @@ By manipulating these reaction rates, we can model a variety of biological syste
 
 
 
-### [Diffusion System](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_ind/diffusion.py)
+### 1.3.2.3: [Diffusion System](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_ind/diffusion.py)
 
 In simulating a biological system in 2D or 3D, one of the most crucial aspects is modeling the diffusion pattern of each molecule within the compartment (tissue). 
 The way a molecule spreads from a cell can vary depending on several factors. For instance, diffusion might occur in a specific direction in response to a source of pressure or energy,
@@ -304,48 +269,9 @@ while the third function handles the diffusion for the cells in between.
 
 
 
---------------------------------------------------------------------------------------------------------------------------
-
-### Simulation Algorithms Benchmarking Results
-
-The benchmarking results, displayed in ***Figure 8***, provide insights into how Numba optimization affects the performance of the simulation algorithm. The results are categorized based on three key factors: compartment size, simulation epochs, and population size.
 
 
-![bench_m](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench-m.png)
-
-*Figure 8: The benchmarking results*
-
-
-#### Compartment Size
-
-The left-side plot in ***Figure 8*** shows the performance based on compartment size. As the compartment size increases, the time required to complete simulations without Numba (both cases: population_simulation() and individual_population())grows quickly.
-In contrast, Numba optimization significantly reduces this time, especially for larger compartments. For small compartments, the time difference between using Numba and not using it is less noticeable, but as the compartment size gets larger, Numba's advantage becomes much clearer.
-
-
-#### Simulation Epochs
-
-The middle plot illustrates how the number of simulation epochs affects performance. Without Numba (both cases: population_simulation() and individual_population()), increasing the number of epochs leads to a sharp rise in simulation time. With Numba (both cases: population_simulation() and individual_population()), the increase in time is much less steep. This means that Numba is particularly effective in speeding up simulations that run for many epochs, providing substantial time savings for longer simulations.
-
-
-#### Population Size
-
-The right-side plot compares the performance based on population size. Similar to the previous cases, simulations with larger populations take much longer without Numba (both cases: population_simulation() and individual_population()). Numba optimization reduces the simulation time significantly, particularly for larger populations. For smaller populations, the time difference is smaller, but Numba still offers improvements.
-
-#### Population Simulation vs. Individual Simulation
-
-Surprisingly, the population simulation does not outperform the individual simulation as expected. Despite the anticipation that processing multiple individuals simultaneously would yield faster results, the performance did not meet expectations.
-
-#### Summary
-
-In summary, Numba optimization proves to be highly beneficial, especially when dealing with larger datasets. It consistently reduces the time required for simulations as compartment size, number of epochs, and population size increase. The most noticeable improvements are seen with larger and more complex simulations, making Numba a valuable tool for efficient computation in these scenarios.
-
-
-
---------------------------------------------------------------------------------------------------------------
-
-
-
-## Genetic Algorithm Based on Natural Selection Theory (GABONST)
+## 1.4.0.0: Genetic Algorithm Based on Natural Selection Theory (GABONST)
 
 The evolutionary algorithm implemented in our system is known as the "Genetic Algorithm Based on Natural Selection Theory (GABONST)," developed by [M.A. Albadr et al. (2020)](https://doaj.org/article/bbb78b4b46b148cfb2c12e28190ac985). GABONST is an enhanced version of the traditional genetic algorithm (GA), designed to address the common challenges associated with GAs, particularly in balancing exploration (searching for new solutions) and exploitation (refining existing solutions). By more accurately modeling the principles of natural selection, GABONST effectively improves both the exploration of new possibilities and the refinement of known good solutions.
 
@@ -401,7 +327,7 @@ Our implementation of the GABONST algorithm ([`evolutionary_optimization(...)`](
 
 
 
-### Mutation Operations ([`apply_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))
+### 1.4.1.0: Mutation Operations ([`apply_mutation(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/mutation.py))
 
 In this section of the algorithm, the mutation operation is applied to various parts of the system, ranging from initial conditions (at the compartment level, such as determining if a cell can produce a specific product) to parameters (including those for species and complexes, such as species production, degradation, diffusion, complex collision, and dissociation) to the simulation's hyperparameters (such as the simulation's stop time and the time step, `dt`). 
 
@@ -434,7 +360,7 @@ Each of these five mutation types is optional and can be selected within the alg
 
 
 
-### Crossover Operations ([`apply_crossover(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/crossover.py))
+### 1.4.2.0: Crossover Operations ([`apply_crossover(...)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/crossover.py))
 
 Similar to mutation operations, crossover operations can be applied to three different aspects of each individual:
 
@@ -459,7 +385,7 @@ This process aims to enhance high-cost individuals by blending their characteris
 
 
 
-### Initialization Methods
+### 1.4.3.0: Initialization Methods
 
 Within the evolutionary algorithm (EA) used in our system, there are two key instances where initialization is required: the creation of a new individual and the modification of an existing individual. These processes involve initializing new data structures or altering existing ones based on the specific needs of the algorithm.
 
@@ -500,7 +426,7 @@ Within the evolutionary algorithm (EA) used in our system, there are two key ins
 
 
 
-### Cost Functions
+### 1.4.4.0: Cost Functions
 
 In the development of our evolutionary algorithm, three distinct [cost functions](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/cost.py) have been implemented. Each cost function has its own strengths and weaknesses, and selecting the appropriate one is critical, as it directly impacts the effectiveness of the algorithm. The robustness of an evolutionary or machine learning algorithm is tightly linked to the choice of the cost (or fitness) function, making this decision a crucial part of the design process.
 
@@ -553,16 +479,15 @@ We will evaluate each of these cost functions across various tasks to determine 
 
 
 
-----------------------------------------------------------------------------------------------------------------------
 
 
-## Gradient-Based Parameter Optimization with TensorFlow's GradientTape
+## 1.5.0.0: Gradient-Based Parameter Optimization with TensorFlow's GradientTape
 
 After employing a metaheuristic algorithm (genetic algorithm based on natural selection theory (GABONST)), to find solutions for the simulation system, a gradient-based optimization algorithm is utilized to further refine the solutions. This step is crucial if the evolutionary algorithm does not converge on the exact solution. The gradient-based optimization is implemented in a class named [`GradientOptimization`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/gradient/optimization.py), which leverages TensorFlow, a widely used machine learning library. TensorFlow’s [`GradientTape`](https://www.tensorflow.org/api_docs/python/tf/GradientTape) module is instrumental in automatic differentiation, a fundamental aspect of gradient-based optimization. For effective use of GradientTape, the simulation model must be implemented using TensorFlow functionalities. As mentioned earlier, the simulation models (both [`individual_simulation(individual)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_ind/simulation.py) and [`population_simulation(population)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_pop/simulation.py)) were initially implemented using NumPy. To leverage TensorFlow’s gradient capabilities, we reimplemented the individual simulation using TensorFlow. To distinguish between the NumPy and TensorFlow implementations, the new function is named [`tensor_simulation(...)](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_tensor/tensor_simulation.py), which simulates the system using TensorFlow functionalities while preserving the behavior of the NumPy-based version.
 
 In the simulation algorithm described in this report, each compartment is updated iteratively column-wise during each epoch. This frequent in-place updating makes NumPy arrays suitable due to their support for in-place updates. However, TensorFlow tensors ([`tf.Tensor`](https://www.tensorflow.org/api_docs/python/tf/Tensor)) are immutable, which presents a challenge. To address this, we use [`tf.tensor_scatter_nd_update`](https://www.tensorflow.org/api_docs/python/tf/tensor_scatter_nd_update) to create a new tensor by applying sparse updates to the input tensor. This method combines the information from the previous tensor with new updates, thus facilitating the simulation process.
 
-### GradientTape
+### 1.5.1.0: GradientTape
 
 In machine learning, especially within gradient-based optimization, the process typically involves a forward pass and a backward pass. During the forward pass, the input data is passed through the model—in a neural network, this involves propagating data through its layers. The output of this process, known as `y_hat` (or the prediction), is compared with the target values (`y`) to compute the cost. In supervised learning, this cost represents the difference between the prediction and the target. 
 
@@ -580,3 +505,43 @@ The computational graph for our model, shown in ***Figure 11***, illustrates a s
 
 
 
+
+
+
+# 2.0.0.0: Benchmarking Results
+
+
+## 2.1.0.0: Simulation Algorithms Benchmarking Results
+
+The benchmarking results, displayed in ***Figure 8***, provide insights into how Numba optimization affects the performance of the simulation algorithm. The results are categorized based on three key factors: compartment size, simulation epochs, and population size.
+
+
+![bench_m](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/bench-m.png)
+
+*Figure 8: The benchmarking results*
+
+
+#### 2.1.1.0: Compartment Size
+
+The left-side plot in ***Figure 8*** shows the performance based on compartment size. As the compartment size increases, the time required to complete simulations without Numba (both cases: population_simulation() and individual_population())grows quickly.
+In contrast, Numba optimization significantly reduces this time, especially for larger compartments. For small compartments, the time difference between using Numba and not using it is less noticeable, but as the compartment size gets larger, Numba's advantage becomes much clearer.
+
+
+#### 2.1.2.0: Simulation Epochs
+
+The middle plot illustrates how the number of simulation epochs affects performance. Without Numba (both cases: population_simulation() and individual_population()), increasing the number of epochs leads to a sharp rise in simulation time. With Numba (both cases: population_simulation() and individual_population()), the increase in time is much less steep. This means that Numba is particularly effective in speeding up simulations that run for many epochs, providing substantial time savings for longer simulations.
+
+
+#### 2.1.3.0: Population Size
+
+The right-side plot compares the performance based on population size. Similar to the previous cases, simulations with larger populations take much longer without Numba (both cases: population_simulation() and individual_population()). Numba optimization reduces the simulation time significantly, particularly for larger populations. For smaller populations, the time difference is smaller, but Numba still offers improvements.
+
+#### 2.1.4.0: Population Simulation vs. Individual Simulation
+
+Surprisingly, the population simulation does not outperform the individual simulation as expected. Despite the anticipation that processing multiple individuals simultaneously would yield faster results, the performance did not meet expectations.
+
+#### 2.1.5.0: Summary
+
+In summary, Numba optimization proves to be highly beneficial, especially when dealing with larger datasets. It consistently reduces the time required for simulations as compartment size, number of epochs, and population size increase. The most noticeable improvements are seen with larger and more complex simulations, making Numba a valuable tool for efficient computation in these scenarios.
+
+ 
