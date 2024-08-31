@@ -7,6 +7,7 @@ import tensorflow as tf
 import json
 import os
 import h5py
+import time
 
 
 
@@ -404,6 +405,12 @@ class BioEsAg:
         Returns:
         None
         """
+        prepararion_time = None
+        evolution_time_1 = None
+        evolution_time_2 = None
+        gradient_time = None
+
+        prep_start = time.time()
         # Save the input configuration and initial target to files
         self.save_to_json()  # save the input info into a JSON file
         self.save_to_h5py(
@@ -442,9 +449,10 @@ class BioEsAg:
             time_step=self.simulation_parameters["time_step"],
             individual_fix_size=self.individual_fix_shape
         )
+        prep_stop = time.time()
+        preparation_time = prep_stop - prep_start
 
-
-
+        evo1_start = time.time()        
         # Phase 1 of Evolutionary Optimization
         evolution_costs_one = np.zeros(shape=(self.evolution_one_epochs, self.num_saved_individuals+2)) # array to save the cost of elite chromosomes
 
@@ -526,7 +534,8 @@ class BioEsAg:
             dataset_name="evolution_costs_one",
             data_array=evolution_costs_one
         )
-
+        evo1_stop = time.time()
+        evolution_time_1 = evo1_stop - evo1_start
         # Phase 2: Up-sampling the population (resize it to the original size)
         if self.pooling:
             population = self.pooling_layers.pooling(
