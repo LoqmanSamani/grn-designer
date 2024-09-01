@@ -31,7 +31,7 @@ Once the algorithm receives the input diffusion pattern, it follows these steps:
 
 2. [**Initialization:**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/initialization.py) A population of candidate solutions (agents) is generated, each with the same dimensions as the reduced-size compartment (target(Height, width)). Each agent(z, Height, width) represents a potential pathway, with its own unique set of molecules and complexes (z represents the number of different molecules and complexes).
 
-3. [**Evolutionary Optimization (Phase 1):**](https://github.com/LoqmanSamani/master_project/tree/systembiology/model/evolution) The algorithm applies evolutionary techniques such as mutation, crossover, and selection to optimize each agent by minimizing its difference from the target. This phase focuses on evolving the agents to better match the input pattern.
+3. [**Evolutionary Optimization (Phase 1):**](https://github.com/LoqmanSamani/master_project/tree/systembiology/model/evolution) The algorithm applies evolutionary techniques such as mutation, crossover, and selection to optimize each agent by minimizing its difference from the target (i.e. the system is simulated with each agent and the result - the prediction - is compared with the target and the difference is shown as a cost). This phase focuses on evolving the agents to better match the input pattern.
 
 4. [**Transpose Convolution:**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/pooling.py) A proportion of the agents is selected for up-sampling back to the original compartment size using a transpose convolution operation. This step is necessary to continue the optimization on the original scale while managing computational costs.
 
