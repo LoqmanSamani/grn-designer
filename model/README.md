@@ -63,7 +63,7 @@ In **Figure 2** below, you can see the structure of the BioEsAg algorithm reposi
 
 ## 1.2.0.0: Pooling Down-sampling
 
-![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/pool.jpg)
+![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/pooling.jpg)
 
 *Figure3: Pooling & Padding*
 
