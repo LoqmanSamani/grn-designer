@@ -499,7 +499,7 @@ The computed gradients are then used to update the model parameters, reducing th
 
 The computational graph for our model, shown in ***Figure 11***, illustrates a schematic representation of the operations involved in this process for an individual with two species and one complex.
 
-![Computational Graph](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/gradinet.jpg)
+![Computational Graph](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/gradient.jpg)
 
 *Figure 11: Computational Graph of the BioEsAg Algorithm*
 
