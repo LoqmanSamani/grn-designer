@@ -258,3 +258,39 @@ class PoolingLayers:
 
 
 
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import zoom
+import seaborn as sns
+
+# Example 2D matrix (downsampled)
+downsampled_matrix = np.array([[4, 9, 9, 0, 9, 7], [3,2,1,8, 4, 6], [6,8,9,2, 4, 6]])
+
+# Upsample by a factor of 2 using bilinear interpolation
+upsampled_matrix = zoom(downsampled_matrix, zoom=2, order=1)  # order=1 corresponds to bilinear interpolation
+
+print(upsampled_matrix)
+
+
+# Example 2D matrix
+matrix = np.array([[4, 9, 9], [8, 4, 6], [2, 4, 6]])
+
+# Downsample by a factor of 0.5 (reduce size) using bilinear interpolation
+downsampled_matrix1 = zoom(upsampled_matrix, zoom=0.5, order=1)  # order=1 for bilinear interpolation
+
+print(downsampled_matrix1)
+
+sns.heatmap(downsampled_matrix)
+plt.show()
+
+
+sns.heatmap(upsampled_matrix)
+plt.show()
+
+sns.heatmap(downsampled_matrix1)
+plt.show()
+
+
+
+
+
