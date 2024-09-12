@@ -148,14 +148,17 @@ class GradientOptimization:
         return individual, costs
 
 
+
+
+
+
 import numpy as np
 
 t = np.zeros((10, 10))
 t[:, 8] = 1
 t[:, 7] = 0.6
 t[:, 5:7] = 1.4
-tt = tf.convert_to_tensor(t, dtype=tf.float32)
-
+tt = tf.convert_to_tensor(t, dtype=tf.float64)
 
 ind = np.zeros((7, 10, 10))
 ind[1, :, 3:5] = 1.0
@@ -165,22 +168,23 @@ ind[-1, 0, :3] = [.9, .1, 6.0]
 ind[-1, 2, :3] = [.9, .1, 8.0]
 ind[-2, 0, :2] = [0, 2]
 ind[-2, 1, :4] = [.6, .1, .1, 4.0]
-t_ind = tf.convert_to_tensor(ind, dtype=tf.float32)
+t_ind = tf.convert_to_tensor(ind, dtype=tf.float64)
 
 model = GradientOptimization(
     epochs=1,
     learning_rate=0.01,
     target=tt,
+    param_opt=True,
+    compartment_opt=True,
     cost_alpha=0.1,
     cost_beta=0.1,
     cost_kernel_size=3,
     weight_decay=0.01
 )
 
+ind_, cost_ = model.gradient_optimization(ind)
 
-# Run the optimization and log the graph
-model.run_optimization_and_log_graph(t_ind)
+print(ind_)
+print(cost_)
 
-# After running the script, launch TensorBoard
-# tensorboard --logdir=logs/gradient_optimization_graph
 

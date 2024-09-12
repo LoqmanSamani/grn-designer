@@ -1,6 +1,6 @@
 from evolution.gabonst import evolutionary_optimization
 from initialization import population_initialization
-from pooling import PoolingLayers
+from reshape import Resize
 from gradient.optimization import GradientOptimization
 import numpy as np
 import tensorflow as tf
@@ -12,18 +12,17 @@ import time
 
 
 
-
 class BioEsAg:
     def __init__(self,
                  target, population_size, individual_shape, individual_parameters, simulation_parameters, store_path=None,
                  cost_alpha=0.01, cost_beta=0.1, cost_kernel_size=3, cost_method="MSE", learning_rate=0.01, weight_decay=0.01,
-                 optimization_epochs=50, gradient_optimization=False, num_gradient_optimization=3, num_saved_individuals=3,
-                 evolution_one_epochs=100, evolution_two_epochs=50, evolution_two_ratio=0.2, pooling=False, pooling_method="average",
-                 pool_size=(3, 3), strides=(2, 2), padding="valid", zero_padding=(1, 1), pool_kernel_size=(3, 3), up_padding="same",
-                 up_strides=(2, 2), individual_fix_shape=False, sim_mutation=True, compartment_mutation=True, param_mutation=False,
-                 species_insertion_mutation_one=False, species_deletion_mutation_one=False, species_insertion_mutation_two=False,
-                 species_deletion_mutation_two=False, crossover_alpha=0.5, sim_crossover=True, compartment_crossover=True,
-                 param_crossover=False, num_elite_individuals=5, sim_mutation_rate=0.05, compartment_mutation_rate=0.8,
+                 optimization_epochs=50, gradient_optimization=False, parameter_optimization=False, condition_optimization=False,
+                 num_gradient_optimization=3, num_saved_individuals=3, evolution_one_epochs=100, evolution_two_epochs=50,
+                 evolution_two_ratio=0.2, zoom_=False, zoom_in_factor=0.5, zoom_out_factor=2, zoom_order=1, zoom_mode="constant",
+                 zoom_cval=0.0, zoom_grid_mode=False, individual_fix_shape=False, sim_mutation=True, compartment_mutation=True,
+                 param_mutation=False, species_insertion_mutation_one=False, species_deletion_mutation_one=False,
+                 species_insertion_mutation_two=False, species_deletion_mutation_two=False, crossover_alpha=0.5, sim_crossover=True,
+                 compartment_crossover=True, param_crossover=False, num_elite_individuals=5, sim_mutation_rate=0.05, compartment_mutation_rate=0.8,
                  parameter_mutation_rate=0.05, insertion_mutation_rate=0.2, deletion_mutation_rate=0.25, sim_means=(5.0, 0.5),
                  sim_std_devs=(100.0, 2.0), sim_min_vals=(3.0, 0.001), sim_max_vals=(200.0, 2.0), compartment_mean=0.0,
                  compartment_std=200.0, compartment_min_val=0.0, compartment_max_val=1000, sim_distribution="uniform",
@@ -85,20 +84,23 @@ class BioEsAg:
             - weight_decay (float): The weight decay rate for gradient optimization.
             - optimization_epochs (int): The number of epochs for gradient optimization.
             - gradient_optimization (bool): Flag indicating whether to apply gradient optimization.
+            - parameter_optimization (bool): if True species and pair parameters (rates) will be optimized with gradient optimization method (Adam)
+            - condition_optimization (bool): if True species initial condition will be optimized with gradient optimization method (Adam)
             - num_gradient_optimization (int): Number of gradient optimization runs.
             - num_saved_individuals (int): The number of individuals to save from the evolution process.
             - evolution_one_epochs (int): Number of iterations for the first phase of evolutionary optimization.
             - evolution_two_epochs (int): Number of iterations for the second phase of evolutionary optimization.
             - evolution_two_ratio (float): Ratio of the second phase in evolutionary optimization.
-            - pooling (bool): Flag indicating whether pooling should be applied.
-            - pooling_method (str): Method used for pooling, e.g., "average" or "max".
-            - pool_size (tuple of int): Size of the pooling window (height, width).
-            - strides (tuple of int): Strides of the pooling operation (height, width).
-            - padding (str): Padding mode for the pooling operation ("valid" or "same").
-            - zero_padding (tuple of int): Zero padding to apply before pooling (height, width).
-            - pool_kernel_size (tuple of int): Size of the kernel for the transposed convolution (height, width).
-            - up_padding (str): Padding mode for the up sampling operation ("valid" or "same").
-            - up_strides (tuple of int): Strides of the up sampling operation (height, width).
+            - zoom_ (bool): Flag indicating whether zoom_ should be applied.
+            - zoom_in_factor (float or tuple): A float applies the same zoom across all axes. A tuple
+                                            allows different zoom factors for each axis.
+            - zoom_out_factor (float or tuple): A float applies the same zoom across all axes. A tuple
+                                            allows different zoom factors for each axis.
+            - zoom_oder (int): The order of spline interpolation. The value must be between 0 and 5.
+            - zoom_mode (str): The mode parameter determines how the input array's edges are handled.
+                               Modes can be 'constant', 'nearest', 'reflect', 'mirror', or 'wrap'.
+            - zoom_cval (float): The value used for padding when mode is 'constant'. Default is 0.0.
+            - zoom_grid_mode (bool) If False, pixel centers are zoomed. If True, the full pixel extent is used.
             - individual_fix_shape (bool): Flag indicating whether to fix the shape of individuals.
             - sim_mutation (bool): Flag indicating whether to apply simulation parameter mutations.
             - compartment_mutation (bool): Flag indicating whether to apply compartment parameter mutations.
@@ -155,6 +157,8 @@ class BioEsAg:
         self.weight_decay = weight_decay
         self.optimization_epochs = optimization_epochs
         self.gradient_optimization = gradient_optimization
+        self.parameter_optimization = parameter_optimization
+        self.condition_optimization = condition_optimization
         self.num_gradient_optimization = num_gradient_optimization
         self.num_saved_individuals = num_saved_individuals
 
@@ -163,16 +167,14 @@ class BioEsAg:
         self.evolution_two_epochs = evolution_two_epochs
         self.evolution_two_ratio = evolution_two_ratio
 
-        # Pooling parameters
-        self.pooling = pooling
-        self.pooling_method = pooling_method
-        self.pool_size = pool_size
-        self.strides = strides
-        self.padding = padding
-        self.zero_padding = zero_padding
-        self.pool_kernel_size = pool_kernel_size
-        self.up_padding = up_padding
-        self.up_strides = up_strides
+        # Zoom parameters
+        self.zoom_ = zoom_
+        self.zoom_in_factor = zoom_in_factor
+        self.zoom_out_factor = zoom_out_factor
+        self.zoom_order = zoom_order
+        self.zoom_mode = zoom_mode
+        self.zoom_cval = zoom_cval
+        self.zoom_grid_mode = zoom_grid_mode
         self.individual_fix_shape = individual_fix_shape
 
         # Mutation parameters
@@ -219,17 +221,12 @@ class BioEsAg:
         self.complex_param_max_vals = complex_param_max_vals
         self.param_distribution = param_distribution
 
-        # Initialize PoolingLayers
-        self.pooling_layers = PoolingLayers(
-            target=self.target,
-            pooling_method=self.pooling_method,
-            pool_size=self.pool_size,
-            strides=self.strides,
-            padding=self.padding,
-            zero_padding=self.zero_padding,
-            kernel_size=self.pool_kernel_size,
-            up_padding=self.up_padding,
-            up_strides=self.up_strides
+        # Initialize Zoom_
+        self.reshape_ = Resize(
+            order=self.zoom_order,
+            mode=self.zoom_mode,
+            cval=self.zoom_cval,
+            grid_mode=self.zoom_grid_mode
         )
 
         # Initialize Gradient Optimization
@@ -237,6 +234,8 @@ class BioEsAg:
             epochs=self.optimization_epochs,
             learning_rate=self.learning_rate,
             target=tf.convert_to_tensor(self.target),  # Convert target array to tf.tensor
+            param_opt=self.parameter_optimization,
+            compartment_opt=self.condition_optimization,
             cost_alpha=self.cost_alpha,
             cost_beta=self.cost_beta,
             cost_kernel_size=self.cost_kernel_size,
@@ -261,16 +260,47 @@ class BioEsAg:
         Returns:
         None
         """
-
         data = {
             "population_size": self.population_size,
             "individual_shape": self.individual_shape,
             "individual_parameters": self.individual_parameters,
             "simulation_parameters": self.simulation_parameters,
+            "store_path": self.store_path,
             "cost_alpha": self.cost_alpha,
             "cost_beta": self.cost_beta,
             "cost_kernel_size": self.cost_kernel_size,
             "cost_method": self.cost_method,
+            "learning_rate": self.learning_rate,
+            "weight_decay": self.weight_decay,
+            "optimization_epochs": self.optimization_epochs,
+            "gradient_optimization": self.gradient_optimization,
+            "parameter_optimization": self.parameter_optimization,
+            "condition_optimization": self.condition_optimization,
+            "num_gradient_optimization": self.num_gradient_optimization,
+            "num_saved_individuals": self.num_saved_individuals,
+            "evolution_one_epochs": self.evolution_one_epochs,
+            "evolution_two_epochs": self.evolution_two_epochs,
+            "evolution_two_ratio": self.evolution_two_ratio,
+            "zoom_": self.zoom_,
+            "zoom_in_factor": self.zoom_in_factor,
+            "zoom_out_factor": self.zoom_out_factor,
+            "zoom_order": self.zoom_order,
+            "zoom_mode": self.zoom_mode,
+            "zoom_cval": self.zoom_cval,
+            "zoom_grid_mode": self.zoom_grid_mode,
+            "individual_fix_shape": self.individual_fix_shape,
+            "sim_mutation": self.sim_mutation,
+            "compartment_mutation": self.compartment_mutation,
+            "param_mutation": self.param_mutation,
+            "species_insertion_mutation_one": self.species_insertion_mutation_one,
+            "species_deletion_mutation_one": self.species_deletion_mutation_one,
+            "species_insertion_mutation_two": self.species_insertion_mutation_two,
+            "species_deletion_mutation_two": self.species_deletion_mutation_two,
+            "crossover_alpha": self.crossover_alpha,
+            "sim_crossover": self.sim_crossover,
+            "compartment_crossover": self.compartment_crossover,
+            "param_crossover": self.param_crossover,
+            "num_elite_individuals": self.num_elite_individuals,
             "sim_mutation_rate": self.sim_mutation_rate,
             "compartment_mutation_rate": self.compartment_mutation_rate,
             "parameter_mutation_rate": self.parameter_mutation_rate,
@@ -294,38 +324,7 @@ class BioEsAg:
             "complex_param_stds": self.complex_param_stds,
             "complex_param_min_vals": self.complex_param_min_vals,
             "complex_param_max_vals": self.complex_param_max_vals,
-            "param_distribution": self.param_distribution,
-            "sim_mutation": self.sim_mutation,
-            "compartment_mutation": self.compartment_mutation,
-            "param_mutation": self.param_mutation,
-            "species_insertion_mutation_one": self.species_insertion_mutation_one,
-            "species_deletion_mutation_one": self.species_deletion_mutation_one,
-            "species_insertion_mutation_two": self.species_insertion_mutation_two,
-            "species_deletion_mutation_two": self.species_deletion_mutation_two,
-            "crossover_alpha": self.crossover_alpha,
-            "sim_crossover": self.sim_crossover,
-            "compartment_crossover": self.compartment_crossover,
-            "param_crossover": self.param_crossover,
-            "num_elite_individuals": self.num_elite_individuals,
-            "evolution_one_epochs": self.evolution_one_epochs,
-            "evolution_two_epochs": self.evolution_two_epochs,
-            "pooling": self.pooling,
-            "pooling_method": self.pooling_method,
-            "pool_size": self.pool_size,
-            "strides": self.strides,
-            "padding": self.padding,
-            "zero_padding": self.zero_padding,
-            "pool_kernel_size": self.pool_kernel_size,
-            "up_padding": self.up_padding,
-            "up_strides": self.up_strides,
-            "individual_fix_shape": self.individual_fix_shape,
-            "gradient_optimization": self.gradient_optimization,
-            "optimization_epochs": self.optimization_epochs,
-            "learning_rate": self.learning_rate,
-            "weight_decay": self.weight_decay,
-            "num_saved_individuals": self.num_saved_individuals,
-            "evolution_two_ratio": self.evolution_two_ratio,
-            "num_gradient_optimization": self.num_gradient_optimization,
+            "param_distribution": self.param_distribution
         }
 
         if self.store_path:
@@ -370,7 +369,7 @@ class BioEsAg:
 
 
 
-    def fit(self):
+    def fit(self, start_point="Zoom_in"):
         """
         Execute the multi-phase evolutionary algorithm to optimize the population.
 
@@ -394,13 +393,13 @@ class BioEsAg:
         Key Steps:
 
             1. Save initial inputs and targets.
-            2. Pool the target if enabled and perform the first phase of evolutionary optimization.
+            2. Pool the target (zoom in) if enabled and perform the first phase of evolutionary optimization.
             3. Save the elite individuals and their costs from Phase 1.
-            4. Upsample the population and perform the second phase of evolutionary optimization.
+            4. Upsample the population (zoom out) and perform the second phase of evolutionary optimization.
             5. Optionally, perform gradient-based optimization on the top individuals from Phase 2.
 
         Parameters:
-        None
+            start_point (str): ???
 
         Returns:
         None
@@ -419,10 +418,10 @@ class BioEsAg:
         num_pairs = len(self.individual_parameters["pair_parameters"])
 
         # Phase 1: Pooling the Target to reduce the computational cost
-        if self.pooling:
-            target_ = self.pooling_layers.pooling(
-                compartment=self.target,
-                method="target pooling"
+        if self.zoom_:
+            target_ = self.reshape_.zoom_in(
+                target=self.target,
+                zoom_=self.zoom_in_factor
             )
         else:
             target_ = self.target
@@ -536,10 +535,12 @@ class BioEsAg:
 
         evo2_start = time.time()
         # Phase 2: Up-sampling the population (resize it to the original size)
-        if self.pooling:
-            population = self.pooling_layers.pooling(
-                compartment=population,
-                method="population up sampling"
+        if self.zoom_:
+            population = self.reshape_.zoom_out(
+                population=population,
+                zoom_=self.zoom_out_factor,
+                x_=self.target.shape[0],
+                y_=self.target.shape[1]
             )
 
 
