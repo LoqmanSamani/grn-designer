@@ -95,7 +95,7 @@ def compute_mean_squared_error(predictions, target):
     costs = np.zeros(num_predictions)
 
     for i in range(num_predictions):
-        costs[i] = np.mean((target - predictions[i, :, :]) ** 2) / (height * width)
+        costs[i] = np.mean((target - predictions[i, :, :]) ** 2) #  / (height * width)
     return costs
 
 

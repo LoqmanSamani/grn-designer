@@ -95,6 +95,11 @@ class BioEsAg:
             - zoom_out_factor (float or tuple): A float applies the same zoom across all axes. A tuple
                                             allows different zoom factors for each axis.
             - zoom_oder (int): The order of spline interpolation. The value must be between 0 and 5.
+                - order 0 (Nearest-Neighbor Interpolation)
+                - order 1 (Bilinear Interpolation)
+                - order 2 (Quadratic Interpolation)
+                - order 3 (Cubic Interpolation, Default)
+                - orders 4 and 5 (Quartic and Quintic Interpolation)
             - zoom_mode (str): The mode parameter determines how the input array's edges are handled.
                                Modes can be 'constant', 'nearest', 'reflect', 'mirror', or 'wrap'.
             - zoom_cval (float): The value used for padding when mode is 'constant'. Default is 0.0.

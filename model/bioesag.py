@@ -24,12 +24,12 @@ class BioEsAg:
                  species_insertion_mutation_two=False, species_deletion_mutation_two=False, crossover_alpha=0.5, sim_crossover=True,
                  compartment_crossover=True, param_crossover=False, num_elite_individuals=5, sim_mutation_rate=0.05, compartment_mutation_rate=0.8,
                  parameter_mutation_rate=0.05, insertion_mutation_rate=0.2, deletion_mutation_rate=0.25, sim_means=(5.0, 0.5),
-                 sim_std_devs=(100.0, 2.0), sim_min_vals=(3.0, 0.001), sim_max_vals=(200.0, 2.0), compartment_mean=0.0,
-                 compartment_std=200.0, compartment_min_val=0.0, compartment_max_val=1000, sim_distribution="uniform",
-                 compartment_distribution="uniform", species_param_means=(0.5, 0.1, 1.0), species_param_stds=(10.0, 5.0, 10.0),
-                 species_param_min_vals=(0.0, 0.0, 0.0), species_param_max_vals=(10, 7, 20), complex_param_means=(3, 0.1, 0.1, 1.0),
-                 complex_param_stds=(100.0, 10.0, 5.0, 10.0), complex_param_min_vals=(0.0, 0.0, 0.0, 0.0),
-                 complex_param_max_vals=(1000, 50, 100, 50), param_distribution="uniform"
+                 sim_std_devs=(100.0, 2.0), sim_min_vals=(5.0, 0.0001), sim_max_vals=(100.0, 1.0), compartment_mean=0.0,
+                 compartment_std=100.0, compartment_min_val=-100.0, compartment_max_val=100.0, sim_distribution="uniform",
+                 compartment_distribution="normal", species_param_means=(0.0, 0.0, 0.0), species_param_stds=(10.0, 5.0, 10.0),
+                 species_param_min_vals=(-5, -2, -10), species_param_max_vals=(5.0, 2.0, 10.0), complex_param_means=(0.0, 0.0, 0.0, 0.0),
+                 complex_param_stds=(100.0, 10.0, 5.0, 10.0), complex_param_min_vals=(-100, -10, -10, -10),
+                 complex_param_max_vals=(100, 10, 10, 10), param_distribution="uniform"
                  ):
         """
         BioEsAg (Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Optimization) is an

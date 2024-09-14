@@ -1,6 +1,6 @@
-import numpy as np
-from initialization import *
+from initialization import species_initialization
 import itertools
+import numpy as np
 
 
 
@@ -19,7 +19,7 @@ def apply_mutation(individual, sim_mutation_rate, compartment_mutation_rate, par
         (such as simulation parameters, compartment properties, species parameters, and species presence) to be mutated.
 
         Parameters:
-        - individual (numpy.ndarray): The multi-dimensional array representing the individual to be mutated.
+        - individual (numpy.ndarray): The multidimensional array representing the individual to be mutated.
         - sim_mutation_rate (float): The mutation rate for the simulation parameters.
         - compartment_mutation_rate (float): The mutation rate for the compartment properties.
         - parameter_mutation_rate (float): The mutation rate for species and complex parameters.
@@ -110,7 +110,7 @@ def apply_simulation_parameters_mutation(individual, mutation_rate, means, std_d
 
     Parameters:
     - individual: ndarray
-        A multi-dimensional array representing an individual in the simulation.
+        A multidimensional array representing an individual in the simulation.
         The stop time and time step parameters are located at positions [-1, -1, 3]
         and [-1, -1, 4] respectively.
     - mutation_rate: float
@@ -148,6 +148,9 @@ def apply_simulation_parameters_mutation(individual, mutation_rate, means, std_d
         individual[-1, -1, i + 3] = max(min_vals[i], min(max_vals[i], individual[-1, -1, i + 3]))
 
     individual[-1, -1, 3:5] = np.maximum(individual[-1, -1, 3:5], 0)
+    if individual[-1, -1, 3] / individual[-1, -1, 4] > 1000 or individual[-1, -1, 3] / individual[-1, -1, 4] < 100:
+        individual[-1, -1, 3] = 20
+        individual[-1, -1, 4] = 0.1
 
     return individual
 
@@ -162,7 +165,7 @@ def apply_compartment_mutation(individual, mutation_rate, mean, std_dev, min_val
 
     Parameters:
     - individual: ndarray
-        A multi-dimensional array representing an individual in the simulation.
+        A multidimensional array representing an individual in the simulation.
         The compartments to be mutated are located at odd indices from 1 to num_species*2.
     - mutation_rate: float
         The probability of each element in the compartment being mutated, a value between 0 and 1.
@@ -199,8 +202,8 @@ def apply_compartment_mutation(individual, mutation_rate, mean, std_dev, min_val
             noise = np.random.uniform(low=min_val, high=max_val, size=(y, x))
 
         individual[i, :, :] += np.where(mut_mask, noise, 0)
-        individual[i, :, :] = np.clip(individual[i, :, :], min_val, max_val)
         individual[i, :, :] = np.maximum(individual[i, :, :], 0)
+        individual[i, :, :] = np.minimum(individual[i, :, :], 100)
 
     return individual
 
@@ -217,7 +220,7 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
     The mutations are applied based on a specified mutation rate and distribution type (normal or uniform).
 
     Parameters:
-    - individual (numpy.ndarray): A multi-dimensional array representing the species and complex parameters.
+    - individual (numpy.ndarray): A multidimensional array representing the species and complex parameters.
                                   The last row of the individual holds metadata:
                                   [number of species, number of complexes].
     - mutation_rate (float): The probability with which each parameter is mutated. Should be between 0 and 1.
@@ -251,9 +254,13 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
             for j in range(3):
                 individual[-1, i, j] += (np.random.uniform(low=species_min_vals[count], high=species_max_vals[count]) -
                                          individual[-1, i, j]) * mut_mask[j]
-        individual[-1, i, :3] = np.maximum(individual[-1, i, :3], 0)
+
+        individual[-1, i, 2] = np.minimum(individual[-1, i, 2], 30)
+        individual[-1, i, 0:2] = np.minimum(individual[-1, i, 0:2], 10)
+        individual[-1, i, :3] = np.maximum(individual[-1, i, :3], np.random.rand())
         count += 1
 
+    count = 0
     for i in range(pair_start + 1, pair_stop, 2):
         mut_mask = np.random.rand(4) < mutation_rate
         if distribution == "normal":
@@ -264,7 +271,11 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
             for j in range(4):
                 individual[i, 1, j] += (np.random.uniform(low=complex_min_vals[count], high=complex_max_vals[count]) -
                                         individual[i, 1, j]) * mut_mask[j]
-        individual[i, 1, :4] = np.maximum(individual[i, 1, :4], 0)
+
+        individual[i, 1, 1:3] = np.minimum(individual[i, 1, 1:3], 10)
+        individual[i, 1, 0] = np.minimum(individual[i, 1, 0], 200)
+        individual[i, 1, 3] = np.minimum(individual[i, 1, 3], 50)
+        individual[i, 1, :4] = np.maximum(individual[i, 1, :4], np.random.rand())
         count += 1
 
     return individual
@@ -281,7 +292,7 @@ def apply_species_insertion_mutation(individual, mutation_rate):
     the existing species. The updated individual structure is then returned.
 
     Parameters:
-    - individual (numpy.ndarray): The multi-dimensional array representing the species and complexes.
+    - individual (numpy.ndarray): The multidimensional array representing the species and complexes.
     - mutation_rate (float): The probability of adding a new species.
 
     Returns:
@@ -321,7 +332,7 @@ def apply_species_deletion_mutation(individual, mutation_rate):
     if a random value is below the specified mutation rate.
 
     Parameters:
-    - individual (numpy.ndarray): The multi-dimensional array representing the species and complexes.
+    - individual (numpy.ndarray): The multidimensional array representing the species and complexes.
     - mutation_rate (float): The probability of deleting a species.
 
     Returns:
@@ -431,20 +442,3 @@ def species_deletion(individual, deleted_species):
     updated_individual[-1, -1, 1] = num_pairs - len(delete_indices) // 2 + 1
 
     return updated_individual
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

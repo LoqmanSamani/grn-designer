@@ -3,8 +3,6 @@ from scipy.ndimage import zoom
 
 
 
-
-
 class Resize:
     """
     A class to perform zoom-in and zoom-out operations on multi-dimensional arrays,
