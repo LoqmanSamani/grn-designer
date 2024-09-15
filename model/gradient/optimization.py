@@ -1,7 +1,5 @@
-from ..sim.sim_tensor.tensor_simulation import tensor_simulation_
+from ..sim.sim_tensor import tensor_simulation
 import tensorflow as tf
-
-
 
 class GradientOptimization:
     """
@@ -21,7 +19,8 @@ class GradientOptimization:
         - weight_decay (float): The weight decay (regularization) factor for the Adam optimizer.
     """
 
-    def __init__(self, epochs, learning_rate, target, param_opt, compartment_opt, cost_alpha, cost_beta, cost_kernel_size, weight_decay):
+    def __init__(self, epochs, learning_rate, target, param_opt, compartment_opt, cost_alpha, cost_beta,
+                 cost_kernel_size, weight_decay):
 
         self.epochs = epochs
         self.learning_rate = learning_rate
@@ -36,9 +35,7 @@ class GradientOptimization:
         Initializes the GradientOptimization class with the specified parameters.
         """
 
-
-
-    def parameter_extraction(self, individual, param_opt, compartment_opt):
+    def parameter_extraction(self, individual, compartment_opt):
         """
         Extracts the parameters of species, pairs and initial condition compartments from the given individual tensor.
 
@@ -66,28 +63,24 @@ class GradientOptimization:
         pair_start = int(num_species * 2)
         pair_stop = int(pair_start + (num_pairs * 2))
 
+        species = 1
+        for i in range(0, num_species * 2, 2):
+            parameters[f"species_{species}"] = tf.Variable(individual[-1, i, 0:3], trainable=True)
+            species += 1
 
-        if param_opt:
-
-            species = 1
-            for i in range(0, num_species*2, 2):
-                parameters[f"species_{species}"] = tf.Variable(individual[-1, i, 0:3], trainable=True)
-                species += 1
-
-            pair = 1
-            for j in range(pair_start+1, pair_stop+1, 2):
-                parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
-                pair += 1
+        pair = 1
+        for j in range(pair_start + 1, pair_stop + 1, 2):
+            parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
+            pair += 1
 
         if compartment_opt:
             sp = 1
-            for k in range(1, num_species*2, 2):
+            for k in range(1, num_species * 2, 2):
                 compartment = tf.Variable(individual[k, :, :], trainable=True)
                 parameters[f'compartment_{sp}'] = compartment
                 sp += 1
 
         return parameters, num_species, num_pairs, max_epoch, stop, time_step
-
 
 
 
@@ -113,7 +106,6 @@ class GradientOptimization:
         if param_opt:
             # Update species parameters
             for species in range(1, num_species + 1):
-
                 i = (species - 1) * 2
                 individual = tf.tensor_scatter_nd_update(
                     individual,
@@ -133,7 +125,7 @@ class GradientOptimization:
         # Update initial conditions
         if compartment_opt:
             sp = 1
-            for i in range(1, num_species*2, 2):
+            for i in range(1, num_species * 2, 2):
                 indices_ = []
                 updates = tf.reshape(parameters[f"compartment_{sp}"], [-1])
                 for row in range(individual[0, :, :].shape[0]):
@@ -148,10 +140,6 @@ class GradientOptimization:
                 sp += 1
 
         return individual
-
-
-
-
 
     def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch):
         """
@@ -170,7 +158,7 @@ class GradientOptimization:
             - tf.Tensor: The simulated output (y_hat) representing the diffusion pattern.
         """
 
-        y_hat = tensor_simulation_(
+        y_hat = tensor_simulation(
             individual=individual,
             parameters=parameters,
             num_species=num_species,
@@ -181,9 +169,6 @@ class GradientOptimization:
         )
 
         return y_hat
-
-
-
 
     def compute_cost_(self, y_hat, target):
         """
@@ -201,9 +186,6 @@ class GradientOptimization:
 
         return cost
 
-
-
-
     def gradient_optimization(self, individual):
         """
         Performs gradient-based optimization on the individual using the Adam optimizer.
@@ -220,7 +202,6 @@ class GradientOptimization:
         costs = []
         parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
             individual=individual,
-            param_opt=self.param_opt,
             compartment_opt=self.compartment_opt
         )
         optimizer = tf.keras.optimizers.Adam(
@@ -230,7 +211,6 @@ class GradientOptimization:
 
         for i in range(self.epochs):
             with tf.GradientTape() as tape:
-
                 y_hat = self.simulation(
                     individual=individual,
                     parameters=parameters,
@@ -240,7 +220,7 @@ class GradientOptimization:
                     time_step=time_step,
                     max_epoch=max_epoch
                 )
-                
+
                 cost = self.compute_cost_(
                     y_hat=y_hat,
                     target=self.target
@@ -261,6 +241,7 @@ class GradientOptimization:
         )
 
         return individual, costs
+
 
 
 

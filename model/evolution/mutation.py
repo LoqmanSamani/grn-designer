@@ -148,9 +148,9 @@ def apply_simulation_parameters_mutation(individual, mutation_rate, means, std_d
         individual[-1, -1, i + 3] = max(min_vals[i], min(max_vals[i], individual[-1, -1, i + 3]))
 
     individual[-1, -1, 3:5] = np.maximum(individual[-1, -1, 3:5], 0)
-    if individual[-1, -1, 3] / individual[-1, -1, 4] > 1000 or individual[-1, -1, 3] / individual[-1, -1, 4] < 100:
+    if individual[-1, -1, 3] / individual[-1, -1, 4] > 200 or individual[-1, -1, 3] / individual[-1, -1, 4] < 50:
         individual[-1, -1, 3] = 20
-        individual[-1, -1, 4] = 0.1
+        individual[-1, -1, 4] = 0.2
 
     return individual
 

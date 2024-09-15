@@ -35,7 +35,7 @@ class GradientOptimization:
         Initializes the GradientOptimization class with the specified parameters.
         """
 
-    def parameter_extraction(self, individual, param_opt, compartment_opt):
+    def parameter_extraction(self, individual, compartment_opt):
         """
         Extracts the parameters of species, pairs and initial condition compartments from the given individual tensor.
 
@@ -63,17 +63,15 @@ class GradientOptimization:
         pair_start = int(num_species * 2)
         pair_stop = int(pair_start + (num_pairs * 2))
 
-        if param_opt:
+        species = 1
+        for i in range(0, num_species * 2, 2):
+            parameters[f"species_{species}"] = tf.Variable(individual[-1, i, 0:3], trainable=True)
+            species += 1
 
-            species = 1
-            for i in range(0, num_species * 2, 2):
-                parameters[f"species_{species}"] = tf.Variable(individual[-1, i, 0:3], trainable=True)
-                species += 1
-
-            pair = 1
-            for j in range(pair_start + 1, pair_stop + 1, 2):
-                parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
-                pair += 1
+        pair = 1
+        for j in range(pair_start + 1, pair_stop + 1, 2):
+            parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
+            pair += 1
 
         if compartment_opt:
             sp = 1
@@ -204,7 +202,6 @@ class GradientOptimization:
         costs = []
         parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
             individual=individual,
-            param_opt=self.param_opt,
             compartment_opt=self.compartment_opt
         )
         optimizer = tf.keras.optimizers.Adam(

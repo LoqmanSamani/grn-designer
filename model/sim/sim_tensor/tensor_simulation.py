@@ -21,7 +21,7 @@ def tensor_simulation_(individual, parameters, num_species, num_pairs, stop, tim
                                 represents the spatial dimensions of the compartment.
         parameters (dict): A dictionary of TensorFlow variables containing the parameters for the
                             simulation. Includes production rates, collision rates, degradation rates,
-                            and diffusion rates for species and pairs.
+                            and diffusion rates for species and pairs. (e.g., {"species_1":(.8, .2, .3), "species_2":(.2, .1, .4), "pair_1":(1.2, .4, .5, .6)})
         num_species (int): The number of distinct species in the simulation.
         num_pairs (int): The number of distinct pairs (complexes) in the simulation.
         stop (float): The total simulation time.
