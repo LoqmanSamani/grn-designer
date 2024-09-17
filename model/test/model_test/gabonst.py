@@ -7,7 +7,7 @@ from simulation import *
 
 
 def evolutionary_optimization(
-        population, target, cost_alpha, cost_beta, cost_kernel_size, cost_method, sim_mutation_rate,
+        population, target, cost_alpha, cost_beta, max_val, cost_kernel_size, cost_method, sim_mutation_rate,
         compartment_mutation_rate, parameter_mutation_rate, insertion_mutation_rate, deletion_mutation_rate,
         sim_means, sim_std_devs, sim_min_vals, sim_max_vals, compartment_mean, compartment_std, compartment_min_val,
         compartment_max_val, sim_distribution, compartment_distribution, species_param_means, species_param_stds,
@@ -93,6 +93,7 @@ def evolutionary_optimization(
         delta_D=delta_D,
         alpha=cost_alpha,
         beta=cost_beta,
+        max_val=max_val,
         kernel_size=cost_kernel_size,
         method=cost_method
     )
@@ -172,6 +173,7 @@ def evolutionary_optimization(
         delta_D=delta_D1,
         alpha=cost_alpha,
         beta=cost_beta,
+        max_val=max_val,
         kernel_size=cost_kernel_size,
         method=cost_method
     )
@@ -232,6 +234,7 @@ def evolutionary_optimization(
         delta_D=delta_D2,
         alpha=cost_alpha,
         beta=cost_beta,
+        max_val=max_val,
         kernel_size=cost_kernel_size,
         method=cost_method
     )

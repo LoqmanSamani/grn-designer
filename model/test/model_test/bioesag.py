@@ -14,14 +14,14 @@ class BioEsAg:
     def __init__(self,
                  target, population_size, individual_shape, individual_parameters, simulation_parameters, store_path=None,
                  optimization_epochs=50, evolution_one_epochs=100, evolution_two_epochs=50,
-                 cost_method="MSE", learning_rate=0.001, weight_decay=0.01,
+                 cost_method="MSE", learning_rate=0.001, weight_decay=None,
                  sim_mutation_rate=0.05, compartment_mutation_rate=0.8, parameter_mutation_rate=0.05,
                  insertion_mutation_rate=0.2, deletion_mutation_rate=0.25, crossover_alpha=0.5,
                  gradient_optimization=False, parameter_optimization=False, condition_optimization=False,
                  sim_mutation=True, compartment_mutation=True, param_mutation=False, species_insertion_mutation_one=False,
                  species_deletion_mutation_one=False, species_insertion_mutation_two=False, species_deletion_mutation_two=False,
                  compartment_crossover=True, param_crossover=False, sim_crossover=True,
-                 individual_fix_shape=False, cost_alpha=0.01, cost_beta=0.1, cost_kernel_size=3,
+                 individual_fix_shape=False, cost_alpha=0.6, cost_beta=0.4, cost_max_val=1000, cost_kernel_size=3,
                  num_gradient_optimization=3, num_saved_individuals=3,
                  evolution_two_ratio=0.2, zoom_=False, zoom_in_factor=0.5, zoom_out_factor=2, zoom_order=1, zoom_mode="constant",
                  zoom_cval=0.0, zoom_grid_mode=False, num_elite_individuals=5,  sim_means=(5.0, 0.5),
@@ -155,6 +155,7 @@ class BioEsAg:
         # Cost function parameters
         self.cost_alpha = cost_alpha
         self.cost_beta = cost_beta
+        self.cost_max_val = cost_max_val
         self.cost_kernel_size = cost_kernel_size
         self.cost_method = cost_method
 
@@ -244,6 +245,7 @@ class BioEsAg:
             compartment_opt=self.condition_optimization,
             cost_alpha=self.cost_alpha,
             cost_beta=self.cost_beta,
+            max_val=self.cost_max_val,
             cost_kernel_size=self.cost_kernel_size,
             weight_decay=self.weight_decay
         )
@@ -274,6 +276,7 @@ class BioEsAg:
             "store_path": self.store_path,
             "cost_alpha": self.cost_alpha,
             "cost_beta": self.cost_beta,
+            "cost_max_val": self.cost_max_val,
             "cost_kernel_size": self.cost_kernel_size,
             "cost_method": self.cost_method,
             "learning_rate": self.learning_rate,
@@ -472,6 +475,7 @@ class BioEsAg:
                 target=target_,
                 cost_alpha=self.cost_alpha,
                 cost_beta=self.cost_beta,
+                max_val=self.cost_max_val,
                 cost_kernel_size=self.cost_kernel_size,
                 cost_method=self.cost_method,
                 sim_mutation_rate=self.sim_mutation_rate,
@@ -564,6 +568,7 @@ class BioEsAg:
                     target=self.target,
                     cost_alpha=self.cost_alpha,
                     cost_beta=self.cost_beta,
+                    max_val=self.cost_max_val,
                     cost_kernel_size=self.cost_kernel_size,
                     cost_method=self.cost_method,
                     sim_mutation_rate=self.sim_mutation_rate,

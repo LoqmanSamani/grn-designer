@@ -1,8 +1,13 @@
 import numpy as np
 from scipy.ndimage import convolve
+import tensorflow as tf
 
 
-def compute_cost(predictions, target, delta_D, alpha, beta, kernel_size, method):
+
+
+
+
+def compute_cost(predictions, target, delta_D, alpha, beta, max_val, kernel_size, method):
     """
     Compute the cost between predicted and target matrices based on the chosen method.
 
@@ -22,9 +27,12 @@ def compute_cost(predictions, target, delta_D, alpha, beta, kernel_size, method)
     costs = np.zeros(num_predictions)
 
     if method == "MSE":
-        costs = compute_mean_squared_error(
+        costs = compute_combined_loss(
             predictions=predictions,
-            target=target
+            target=target,
+            alpha=alpha,
+            beta=beta,
+            ssim_max_val=max_val
         )
 
     elif method == "NCC":
@@ -45,6 +53,78 @@ def compute_cost(predictions, target, delta_D, alpha, beta, kernel_size, method)
 
     return costs
 
+
+
+
+
+
+def compute_combined_loss(predictions, target, alpha, beta, ssim_max_val):
+    """
+    Compute a combined loss between Mean Squared Error (MSE) and Structural Similarity Index (SSIM) for each prediction.
+
+    This loss function computes the combined loss for each predicted matrix in a batch against a single target matrix.
+    The combined loss is a weighted sum of MSE and SSIM, where `alpha` controls the weight of the MSE, and `beta` controls
+    the weight of the SSIM.
+
+    Parameters:
+    - predictions (np.ndarray): A 3D array of predicted matrices with shape (m, y, x), where `m` is the number of
+      predicted matrices, and `y`, `x` are the dimensions of each matrix.
+    - target (np.ndarray): A 2D target matrix with shape (y, x), representing the ground truth.
+    - alpha (float, optional): The weight assigned to the MSE part of the combined loss.
+    - beta (float, optional): The weight assigned to the SSIM part of the combined loss.
+    - ssim_max_val (float, optional): The maximum value for SSIM calculations, representing the dynamic range of the input.
+
+    Returns:
+    - np.ndarray: A 1D array of loss values with shape (m,), where each value is the combined loss (MSE + SSIM) for
+      each prediction in the batch.
+    """
+    num_predictions, height, width = predictions.shape
+    losses = np.zeros(num_predictions)
+
+    for i in range(num_predictions):
+        # Convert the prediction and target to tensors for SSIM calculation
+        prediction_tensor = tf.convert_to_tensor(predictions[i, :, :], dtype=tf.float32)
+        target_tensor = tf.convert_to_tensor(target, dtype=tf.float32)
+
+        # Compute SSIM loss
+        ssim_loss_value = ssim_loss(prediction_tensor, target_tensor, max_val=ssim_max_val)
+
+        # Compute MSE loss
+        mse_loss_value = np.mean((target - predictions[i, :, :]) ** 2)
+
+        # Calculate the combined loss
+        losses[i] = alpha * mse_loss_value + beta * ssim_loss_value
+
+    return losses
+
+
+def ssim_loss(y_hat, target, max_val=1.0):
+    """
+    Compute the Structural Similarity Index (SSIM) loss between two matrices.
+
+    SSIM is used to measure the perceptual similarity between two images or matrices. A higher SSIM score indicates
+    higher similarity. The SSIM loss is calculated as `1 - SSIM score`, so a lower SSIM loss indicates more perceptual
+    similarity.
+
+    Parameters:
+    - y_hat (tf.Tensor): A 2D tensor representing the predicted matrix or image. Shape: (y, x).
+    - target (tf.Tensor): A 2D tensor representing the target matrix or image. Shape: (y, x).
+    - max_val (float, optional): The dynamic range of the input values, typically the maximum value of the pixel
+      intensity. Default is 1.0.
+
+    Returns:
+    - float: The SSIM loss, computed as `1 - SSIM score`, where the SSIM score is between 0 and 1. A lower
+      loss indicates more perceptual similarity between `y_hat` and `target`.
+    """
+    # Add a third dimension to y_hat and target to make them compatible with tf.image.ssim (expects at least 3D tensors)
+    y_hat = tf.expand_dims(y_hat, axis=-1)
+    target = tf.expand_dims(target, axis=-1)
+
+    # Compute SSIM between y_hat and target
+    ssim_score = tf.image.ssim(y_hat, target, max_val=max_val)
+
+    # Calculate SSIM loss (1 - SSIM score)
+    return (1 - tf.reduce_mean(ssim_score)).numpy()
 
 
 def compute_grm_fitness_error(predictions, target, kernel_size, alpha, beta, delta_D):
@@ -78,25 +158,6 @@ def compute_grm_fitness_error(predictions, target, kernel_size, alpha, beta, del
 
     return costs
 
-
-
-def compute_mean_squared_error(predictions, target):
-    """
-    Compute the Mean Squared Error (MSE) between predicted and target matrices.
-
-    Parameters:
-    - predictions (np.ndarray): An array of predicted matrices with shape (m, y, x).
-    - targets (np.ndarray): A target matrix with shape (y, x).
-
-    Returns:
-    - np.ndarray: An array of MSE values with shape (m,).
-    """
-    num_predictions, height, width = predictions.shape
-    costs = np.zeros(num_predictions)
-
-    for i in range(num_predictions):
-        costs[i] = np.mean((target - predictions[i, :, :]) ** 2) #  / (height * width)
-    return costs
 
 
 def compute_normalized_cross_correlation(predictions, target):
@@ -141,6 +202,3 @@ def create_box_blur_kernel(size):
     - np.ndarray: A box blur kernel with shape (size, size).
     """
     return np.ones((size, size)) / (size * size)
-
-
-

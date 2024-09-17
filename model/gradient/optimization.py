@@ -19,7 +19,7 @@ class GradientOptimization:
         - weight_decay (float): The weight decay (regularization) factor for the Adam optimizer.
     """
 
-    def __init__(self, epochs, learning_rate, target, param_opt, compartment_opt, cost_alpha, cost_beta,
+    def __init__(self, epochs, learning_rate, target, param_opt, compartment_opt, cost_alpha, cost_beta, max_val,
                  cost_kernel_size, weight_decay):
 
         self.epochs = epochs
@@ -29,6 +29,7 @@ class GradientOptimization:
         self.compartment_opt = compartment_opt
         self.cost_alpha = cost_alpha
         self.cost_beta = cost_beta
+        self.max_val = max_val
         self.cost_kernel_size = cost_kernel_size
         self.weight_decay = weight_decay
         """
@@ -170,7 +171,8 @@ class GradientOptimization:
 
         return y_hat
 
-    def compute_cost_(self, y_hat, target):
+    def compute_cost_(self, y_hat, target, alpha, beta, max_val):
+
         """
         Computes the cost (loss) between the simulated output and the target.
 
@@ -181,10 +183,39 @@ class GradientOptimization:
         Returns:
             - tf.Tensor: The computed cost (loss) value.
         """
+        mse_loss = tf.reduce_mean(tf.square(y_hat - target))
+        ssim_loss_value = self.ssim_loss(y_hat, target, max_val)
+        total_loss = alpha * mse_loss + beta * ssim_loss_value
 
-        cost = tf.reduce_mean(tf.square(y_hat - target))
+        return total_loss
 
-        return cost
+    def ssim_loss(self, y_hat, target, max_val):
+        """
+        Compute the Structural Similarity Index (SSIM) loss between two matrices.
+
+        SSIM is used to measure the perceptual similarity between two images or matrices. A higher SSIM score indicates
+        higher similarity. The SSIM loss is calculated as `1 - SSIM score`, so a lower SSIM loss indicates more perceptual
+        similarity.
+
+        Parameters:
+        - y_hat (tf.Tensor): A 2D tensor representing the predicted matrix or image. Shape: (y, x).
+        - target (tf.Tensor): A 2D tensor representing the target matrix or image. Shape: (y, x).
+        - max_val (float, optional): The dynamic range of the input values, typically the maximum value of the pixel
+          intensity. Default is 1.0.
+
+        Returns:
+        - float: The SSIM loss, computed as `1 - SSIM score`, where the SSIM score is between 0 and 1. A lower
+          loss indicates more perceptual similarity between `y_hat` and `target`.
+        """
+        y_hat = tf.expand_dims(y_hat, axis=-1)
+        target = tf.expand_dims(target, axis=-1)
+        ssim_score = tf.image.ssim(y_hat, target, max_val=max_val)
+
+        return (1 - tf.reduce_mean(ssim_score)).numpy()
+
+
+
+
 
     def gradient_optimization(self, individual):
         """
@@ -223,7 +254,10 @@ class GradientOptimization:
 
                 cost = self.compute_cost_(
                     y_hat=y_hat,
-                    target=self.target
+                    target=self.target,
+                    alpha=self.cost_alpha,
+                    beta=self.cost_beta,
+                    max_val=self.max_val
                 )
 
                 costs.append(cost.numpy())
