@@ -25,29 +25,28 @@ def apply_crossover(elite_individuals, individual, crossover_alpha, sim_crossove
     Returns:
         - numpy.ndarray: The updated individual after applying the specified crossover operations.
     """
+    if len(elite_individuals) > 0:
+        elite_individual = random.choice(elite_individuals)
+        if sim_crossover:
+            individual = apply_simulation_variable_crossover(
+                elite_individual=elite_individual,
+                individual=individual,
+                alpha=crossover_alpha
+            )
 
-    elite_individual = random.choice(elite_individuals)
+        if compartment_crossover:
+            individual = apply_compartment_crossover(
+                elite_individual=elite_individual,
+                individual=individual,
+                alpha=crossover_alpha
+            )
 
-
-    if sim_crossover:
-        individual = apply_simulation_variable_crossover(
-            elite_individual=elite_individual,
-            individual=individual,
-            alpha=crossover_alpha
-        )
-    if compartment_crossover:
-        individual = apply_compartment_crossover(
-            elite_individual=elite_individual,
-            individual=individual,
-            alpha=crossover_alpha
-        )
-
-    if param_crossover:
-        individual = apply_parameter_crossover(
-            elite_individual=elite_individual,
-            individual=individual,
-            alpha=crossover_alpha
-        )
+        if param_crossover:
+            individual = apply_parameter_crossover(
+                elite_individual=elite_individual,
+                individual=individual,
+                alpha=crossover_alpha
+            )
 
     return individual
 
@@ -156,6 +155,7 @@ def filter_elite_individuals(low_cost_individuals, elite_individuals, high_cost_
     filtered_elite_individuals = [ind for ind in elite_individuals if ind.shape[0] == high_cost_individual.shape[0]]
     if len(filtered_elite_individuals) == 0:
         filtered_elite_individuals = [ind for ind in low_cost_individuals if ind.shape[0] == high_cost_individual.shape[0]]
+        filtered_elite_individuals = filtered_elite_individuals[: len(elite_individuals)]
 
     return filtered_elite_individuals
 

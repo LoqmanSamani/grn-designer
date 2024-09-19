@@ -2,12 +2,12 @@ from cost import *
 from crossover import *
 from initialization import *
 from mutation import *
-from reactions import *
 from simulation import *
+import math
 
 
 def evolutionary_optimization(
-        population, target, cost_alpha, cost_beta, max_val, cost_kernel_size, cost_method, sim_mutation_rate,
+        population, target, population_size, cost_alpha, cost_beta, max_val, cost_kernel_size, cost_method, sim_mutation_rate,
         compartment_mutation_rate, parameter_mutation_rate, insertion_mutation_rate, deletion_mutation_rate,
         sim_means, sim_std_devs, sim_min_vals, sim_max_vals, compartment_mean, compartment_std, compartment_min_val,
         compartment_max_val, sim_distribution, compartment_distribution, species_param_means, species_param_stds,
@@ -97,6 +97,16 @@ def evolutionary_optimization(
         kernel_size=cost_kernel_size,
         method=cost_method
     )
+    costs = list(costs)
+    filtered_data = [(ind, cost) for ind, cost in zip(population, costs) if not math.isnan(cost)]
+    if not filtered_data:
+
+        population = []
+        costs = np.array([])
+    else:
+        population, costs = zip(*filtered_data)
+        population = list(population)
+        costs = np.array(costs)
 
     mean_cost = np.mean(costs)
     sorted_indices = np.argsort(costs)
@@ -178,11 +188,27 @@ def evolutionary_optimization(
         method=cost_method
     )
 
+    costs1 = list(costs1)
+    filtered_data1 = [(ind, cost) for ind, cost in zip(high_cost_individuals, costs1) if not math.isnan(cost)]
+    if not filtered_data1:
+
+        high_cost_individuals = []
+        costs1 = np.array([])
+    else:
+        high_cost_individuals, costs1 = zip(*filtered_data1)
+        high_cost_individuals = list(high_cost_individuals)
+        costs1 = np.array(costs1)
+
     # Filter out individuals that improved after crossover
+    inxs = []
     for i in range(len(costs1)):
         if costs1[i] < mean_cost:
             low_cost_individuals.append(high_cost_individuals[i])
-            del high_cost_individuals[i]
+            inxs.append(i)
+
+    for inx in sorted(inxs, reverse=True):
+        del high_cost_individuals[inx]
+
 
     # Apply mutation to remaining high-cost individuals
     if len(high_cost_individuals) > 0:
@@ -239,24 +265,40 @@ def evolutionary_optimization(
         method=cost_method
     )
 
+    costs2 = list(costs2)
+    filtered_data2 = [(ind, cost) for ind, cost in zip(high_cost_individuals, costs2) if not math.isnan(cost)]
+    if not filtered_data2:
+
+        high_cost_individuals = []
+        costs2 = np.array([])
+    else:
+        high_cost_individuals, costs2 = zip(*filtered_data2)
+        high_cost_individuals = list(high_cost_individuals)
+        costs2 = np.array(costs2)
+
     # Filter out individuals that improved after mutation
+    inxs2 = []
     for i in range(len(costs2)):
         if costs2[i] < mean_cost:
             low_cost_individuals.append(high_cost_individuals[i])
-            del high_cost_individuals[i]
+            inxs2.append(i)
 
+    for inx in sorted(inxs2, reverse=True):
+        del high_cost_individuals[inx]
+
+    nan_costs = population_size - (len(low_cost_individuals) + len(high_cost_individuals))
     # Reinitialize remaining high-cost individuals if any
-    if len(high_cost_individuals) > 0:
+    if len(high_cost_individuals) > 0 or nan_costs > 0:
         high_cost_individuals = population_initialization(
-            population_size=len(high_cost_individuals),
-            individual_shape=high_cost_individuals[0].shape,
+            population_size=len(high_cost_individuals) + nan_costs,
+            individual_shape=low_cost_individuals[0].shape,
             species_parameters=species_parameters,
             complex_parameters=complex_parameters,
-            num_species=high_cost_individuals[0][-1, -1, 0],
-            num_pairs=high_cost_individuals[0][-1, -1, 1],
-            max_sim_epochs=high_cost_individuals[0][-1, -1, 2],
-            sim_stop_time=high_cost_individuals[0][-1, -1, 3],
-            time_step=high_cost_individuals[0][-1, -1, 4],
+            num_species=low_cost_individuals[0][-1, -1, 0],
+            num_pairs=low_cost_individuals[0][-1, -1, 1],
+            max_sim_epochs=low_cost_individuals[0][-1, -1, 2],
+            sim_stop_time=low_cost_individuals[0][-1, -1, 3],
+            time_step=low_cost_individuals[0][-1, -1, 4],
             individual_fix_size=individual_fix_size
         )
 

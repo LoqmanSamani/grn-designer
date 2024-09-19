@@ -23,7 +23,7 @@ class BioEsAg:
                  sim_mutation=True, compartment_mutation=True, param_mutation=False, species_insertion_mutation_one=False,
                  species_deletion_mutation_one=False, species_insertion_mutation_two=False, species_deletion_mutation_two=False,
                  compartment_crossover=True, param_crossover=False, sim_crossover=True,
-                 individual_fix_shape=False, cost_alpha=0.8, cost_beta=0.2, cost_max_val=1000, cost_kernel_size=3,
+                 individual_fix_shape=False, cost_alpha=0.6, cost_beta=0.4, cost_max_val=1000, cost_kernel_size=3,
                  num_gradient_optimization=3, num_saved_individuals=3,
                  evolution_two_ratio=0.2, zoom_=False, zoom_in_factor=0.5, zoom_out_factor=2, zoom_order=1, zoom_mode="constant",
                  zoom_cval=0.0, zoom_grid_mode=False, num_elite_individuals=5,  sim_means=(5.0, 0.5),
@@ -32,7 +32,7 @@ class BioEsAg:
                  species_param_stds=(10.0, 5.0, 10.0), species_param_min_vals=(-5, -2, -10), species_param_max_vals=(5.0, 2.0, 10.0),
                  complex_param_means=(0.0, 0.0, 0.0, 0.0), complex_param_stds=(100.0, 10.0, 5.0, 10.0),
                  complex_param_min_vals=(-100, -10, -10, -10), complex_param_max_vals=(100, 10, 10, 10),
-                 param_distribution="uniform",  compartment_distribution="normal", sim_distribution="uniform",
+                 param_distribution="uniform",  compartment_distribution="normal", sim_distribution="uniform"
                  ):
         """
         BioEsAg (Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Optimization) is an
@@ -239,7 +239,7 @@ class BioEsAg:
         )
 
         # Initialize Gradient Optimization
-        self.gradient_optimization = GradientOptimization(
+        self.gradient_optimization_ = GradientOptimization(
             epochs=self.optimization_epochs,
             learning_rate=self.learning_rate,
             target=tf.convert_to_tensor(self.target),  # Convert target array to tf.tensor
@@ -380,7 +380,7 @@ class BioEsAg:
 
 
 
-    def fit(self, start_point="Zoom_in"):
+    def fit(self):
         """
         Execute the multiphase evolutionary algorithm to optimize the population.
 
@@ -463,11 +463,10 @@ class BioEsAg:
         # Phase 1 of Evolutionary Optimization
         evolution_costs_one = np.zeros(shape=(self.evolution_one_epochs, self.num_saved_individuals+2)) # array to save the cost of elite chromosomes
 
-        print("----------------------------------------------------------------")
-        print("                         BioEsAg Algorithm                      ")
-        print("----------------------------------------------------------------")
-        print()
-        print("                   Evolutionary Optimization I                  ")
+        print("--------------------------------------------------------")
+        print("                   BioEsAg Algorithm                    ")
+        print("--------------------------------------------------------")
+        print("              Evolutionary Optimization I               ")
         print()
 
         for i in range(self.evolution_one_epochs):
@@ -475,6 +474,7 @@ class BioEsAg:
             population, cost, mean_cost = evolutionary_optimization(
                 population=population,
                 target=target_,
+                population_size=self.population_size,
                 cost_alpha=self.cost_alpha,
                 cost_beta=self.cost_beta,
                 max_val=self.cost_max_val,
@@ -530,8 +530,10 @@ class BioEsAg:
             if i == self.evolution_one_epochs - 1:
                 new_population_size = int(self.population_size * self.evolution_two_ratio)
                 sorted_cost_indices = np.argsort(cost)[:new_population_size]
-                population = [population[idx] for idx in sorted_cost_indices]
+
                 elite_individuals = [population[idx] for idx in sorted_cost_indices[:self.num_saved_individuals]]
+                population = [population[idx] for idx in sorted_cost_indices]
+
                 for d, elite in enumerate(elite_individuals):
                     self.save_to_h5py(
                         dataset_name=f"elite_individual_{d + 1}_evolution_one",
@@ -560,14 +562,15 @@ class BioEsAg:
             # Phase 2 of Evolutionary Optimization
             evolution_costs_two = np.zeros(shape=(self.evolution_two_epochs, self.num_saved_individuals+2))  # array to save the cost of elite chromosomes
 
-            print()
-            print("                   Evolutionary Optimization II                 ")
+            print("              Evolutionary Optimization II              ")
             print()
 
+            pop_size = len(population)
             for j in range(self.evolution_two_epochs):
                 population, cost, mean_cost = evolutionary_optimization(
                     population=population,
                     target=self.target,
+                    population_size=pop_size,
                     cost_alpha=self.cost_alpha,
                     cost_beta=self.cost_beta,
                     max_val=self.cost_max_val,
@@ -622,8 +625,9 @@ class BioEsAg:
                 # Shrink the population size at the end of Phase 2
                 if j == self.evolution_two_epochs - 1:
                     sorted_cost_indices = np.argsort(cost)[:self.num_gradient_optimization]
-                    population = [population[idx] for idx in sorted_cost_indices]
                     elite_individuals = [population[idx] for idx in sorted_cost_indices[:self.num_saved_individuals]]
+                    population = [population[idx] for idx in sorted_cost_indices]
+
                     for d, elite in enumerate(elite_individuals):
                         self.save_to_h5py(
                             dataset_name=f"elite_individual_{d + 1}_evolution_two",
@@ -642,16 +646,14 @@ class BioEsAg:
         if self.gradient_optimization:
             optimization_costs = np.zeros(shape=(self.optimization_epochs, self.num_gradient_optimization))
 
-            print()
             print("                   Adam Optimization                 ")
-            print()
 
             for k, individual in enumerate(population):
 
-                print(f"                Individual {k}                  ")
+                print(f"           Individual {k+1}             ")
                 print()
 
-                optimized_individual, costs = self.gradient_optimization.gradient_optimization(
+                optimized_individual, costs = self.gradient_optimization_.gradient_optimization(
                     individual=tf.convert_to_tensor(individual)
                 )
 
@@ -659,7 +661,7 @@ class BioEsAg:
                 optimization_costs[k, :] = costs
 
                 self.save_to_h5py(
-                    dataset_name=f"elite_individual_{k + 1}_gradient_optimization",
+                    dataset_name=f"elite_individual_{k+1}_gradient_optimization",
                     data_array=population[k]
                 )
 
@@ -674,3 +676,4 @@ class BioEsAg:
             dataset_name="run_time",
             data_array=run_time
         )
+
