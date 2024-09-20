@@ -74,6 +74,9 @@ def apply_simulation_variable_crossover(elite_individual, individual, alpha):
     """
 
     individual[-1, -1, 3:5] = (alpha * individual[-1, -1, 3:5]) + ((1 - alpha) * elite_individual[-1, -1, 3:5])
+    if individual[-1, -1, 3] / individual[-1, -1, 4] > 200 or individual[-1, -1, 3] / individual[-1, -1, 4] < 50:
+        individual[-1, -1, 3] = 20
+        individual[-1, -1, 4] = 0.2
 
     return individual
 
