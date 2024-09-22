@@ -14,7 +14,7 @@ def evolutionary_optimization(
         species_param_min_vals, species_param_max_vals, complex_param_means, complex_param_stds, complex_param_min_vals,
         complex_param_max_vals, param_distribution, sim_mutation, compartment_mutation, param_mutation,
         species_insertion_mutation, species_deletion_mutation, crossover_alpha, sim_crossover, compartment_crossover,
-        param_crossover, num_elite_individuals, individual_fix_size, species_parameters, complex_parameters
+        param_crossover, num_elite_individuals, individual_fix_size, species_parameters, complex_parameters, simulation_parameters
 ):
     """
         Performs an evolutionary optimization process on a population of individuals, applying mutation and crossover
@@ -100,9 +100,9 @@ def evolutionary_optimization(
 
     # delete NaN cost individuals from the population
     costs = list(costs)
-    filtered_data = [(ind, cost) for ind, cost in zip(population, costs) if not math.isnan(cost)]
-    if not filtered_data:
 
+    filtered_data = [(ind, cost) for ind, cost in zip(population, costs) if not math.isnan(cost) and cost != float('inf')]
+    if not filtered_data:
         population = []
         costs = np.array([])
     else:
@@ -111,12 +111,20 @@ def evolutionary_optimization(
         costs = np.array(costs)
 
     mean_cost = np.mean(costs)
+
+    # Sort the costs and get the indices of the elite individuals
     sorted_indices = np.argsort(costs)
     lowest_indices = sorted_indices[:num_elite_individuals]
 
-    # Separate individuals into low-cost and high-cost groups
+    # Separate individuals and costs into low-cost and high-cost groups
     low_cost_individuals = [population[i] for i in range(len(costs)) if costs[i] < mean_cost]
     high_cost_individuals = [population[i] for i in range(len(costs)) if costs[i] >= mean_cost]
+
+    # Separate the costs in the same way
+    low_costs = [costs[i] for i in range(len(costs)) if costs[i] < mean_cost]
+    high_costs = [costs[i] for i in range(len(costs)) if costs[i] >= mean_cost]
+
+    # Elite individuals based on the lowest costs
     elite_individuals = [population[i] for i in lowest_indices]
 
     # Apply mutations to low-cost individuals
@@ -191,7 +199,8 @@ def evolutionary_optimization(
     )
 
     costs1 = list(costs1)
-    filtered_data1 = [(ind, cost) for ind, cost in zip(high_cost_individuals, costs1) if not math.isnan(cost)]
+    filtered_data1 = [(ind, cost) for ind, cost in zip(high_cost_individuals, costs1) if not math.isnan(cost) and cost != float('inf')]
+
     if not filtered_data1:
 
         high_cost_individuals = []
@@ -206,6 +215,7 @@ def evolutionary_optimization(
     for i in range(len(costs1)):
         if costs1[i] < mean_cost:
             low_cost_individuals.append(high_cost_individuals[i])
+            low_costs.append(costs1[i])
             inxs.append(i)
 
     for inx in sorted(inxs, reverse=True):
@@ -268,7 +278,7 @@ def evolutionary_optimization(
     )
 
     costs2 = list(costs2)
-    filtered_data2 = [(ind, cost) for ind, cost in zip(high_cost_individuals, costs2) if not math.isnan(cost)]
+    filtered_data2 = [(ind, cost) for ind, cost in zip(high_cost_individuals, costs2) if not math.isnan(cost) and cost != float('inf')]
     if not filtered_data2:
 
         high_cost_individuals = []
@@ -283,14 +293,14 @@ def evolutionary_optimization(
     for i in range(len(costs2)):
         if costs2[i] < mean_cost:
             low_cost_individuals.append(high_cost_individuals[i])
+            low_costs.append(costs2[i])
             inxs2.append(i)
 
     for inx in sorted(inxs2, reverse=True):
         del high_cost_individuals[inx]
 
-    # nan_costs = population_size - (len(low_cost_individuals) + len(high_cost_individuals))
-    # Reinitialize remaining high-cost individuals if any
-    pop_size = population_size - low_cost_individuals
+
+    pop_size = population_size - len(low_cost_individuals)
     if pop_size > 0:
         initialized_individuals = population_initialization(
             population_size=pop_size,
@@ -299,15 +309,35 @@ def evolutionary_optimization(
             complex_parameters=complex_parameters,
             num_species=low_cost_individuals[0][-1, -1, 0],
             num_pairs=low_cost_individuals[0][-1, -1, 1],
-            max_sim_epochs=low_cost_individuals[0][-1, -1, 2],
-            sim_stop_time=low_cost_individuals[0][-1, -1, 3],
-            time_step=low_cost_individuals[0][-1, -1, 4],
+            max_sim_epochs=simulation_parameters["max_simulation_epoch"],
+            sim_stop_time=simulation_parameters["simulation_stop_time"],
+            time_step=simulation_parameters["time_step"],
             individual_fix_size=individual_fix_size
         )
 
-        low_cost_individuals = low_cost_individuals + initialized_individuals
+        # Recompute costs after initialization
+        predictions3 = np.zeros((len(initialized_individuals), y, x))
+        delta_D3 = []
 
-    return low_cost_individuals, costs, mean_cost
+        for i in range(len(initialized_individuals)):
+            predictions3[i, :, :], dd2 = individual_simulation(individual=initialized_individuals[i])
+            delta_D3.append(dd2)
+
+        costs3 = compute_cost(
+            predictions=predictions3,
+            target=target,
+            delta_D=delta_D3,
+            alpha=cost_alpha,
+            beta=cost_beta,
+            max_val=max_val,
+            kernel_size=cost_kernel_size,
+            method=cost_method
+        )
+        costs3 = [1000 if math.isnan(cost) or cost == float('inf') else cost for cost in costs3]
+        low_cost_individuals = low_cost_individuals + initialized_individuals
+        low_costs = low_costs + costs3
+
+    return low_cost_individuals, low_costs, mean_cost
 
 
 

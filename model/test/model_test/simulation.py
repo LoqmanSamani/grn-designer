@@ -1,8 +1,9 @@
 from reactions import *
 from diffusion import *
+from numba import jit
 
 
-
+@jit(nopython=True)
 def individual_simulation(individual):
     """
     Simulate the dynamics of a single individual within a specified compartmental system.

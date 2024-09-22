@@ -1,6 +1,5 @@
 import numpy as np
-from numba import jit
-import itertools
+
 
 
 
@@ -42,12 +41,10 @@ def population_initialization(population_size, individual_shape, species_paramet
         population = [np.zeros(individual_shape) for _ in range(population_size)]
 
         for i in range(0, len(species_parameters) * 2, 2):
-            print(i//2)
             for ind in population:
                 ind[-1, i, :3] = species_parameters[int(i // 2)]
 
         for i in range(pair_start + 1, pair_stop + 1, 2):
-            print(int((i-(pair_start+1))//2))
             for ind in population:
                 ind[i, 0, :2] = complex_parameters[int((i-(pair_start+1))//2)][0]
                 ind[i, 1, :4] = complex_parameters[int((i-(pair_start+1))//2)][1]

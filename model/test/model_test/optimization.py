@@ -43,7 +43,7 @@ class GradientOptimization:
 
 
 
-    def parameter_extraction(self, individual, compartment_opt):
+    def parameter_extraction(self, individual):
         """
         Extracts the parameters of species, pairs and initial condition compartments from the given individual tensor.
 
@@ -81,12 +81,12 @@ class GradientOptimization:
             parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
             pair += 1
 
-        if compartment_opt:
-            sp = 1
-            for k in range(1, num_species * 2, 2):
-                compartment = tf.Variable(individual[k, :, :], trainable=True)
-                parameters[f'compartment_{sp}'] = compartment
-                sp += 1
+
+        sp = 1
+        for k in range(1, num_species * 2, 2):
+            compartment = tf.Variable(individual[k, :, :], trainable=True)
+            parameters[f'compartment_{sp}'] = compartment
+            sp += 1
 
         return parameters, num_species, num_pairs, max_epoch, stop, time_step
 
@@ -156,7 +156,7 @@ class GradientOptimization:
 
 
 
-    def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch):
+    def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, param_opt, compartment_opt):
         """
         Runs a simulation using the given individual and parameters.
 
@@ -180,7 +180,9 @@ class GradientOptimization:
             num_pairs=num_pairs,
             stop=stop,
             time_step=time_step,
-            max_epoch=max_epoch
+            max_epoch=max_epoch,
+            param_opt=param_opt,
+            compartment_opt=compartment_opt
         )
 
         return y_hat
@@ -252,9 +254,10 @@ class GradientOptimization:
 
         costs = []
         parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
-            individual=individual,
-            compartment_opt=self.compartment_opt
+            individual=individual
         )
+
+
         optimizer = tf.keras.optimizers.Adam(
             learning_rate=self.learning_rate,
             weight_decay=self.weight_decay
@@ -269,7 +272,9 @@ class GradientOptimization:
                     num_pairs=num_pairs,
                     stop=stop,
                     time_step=time_step,
-                    max_epoch=max_epoch
+                    max_epoch=max_epoch,
+                    param_opt=self.param_opt,
+                    compartment_opt=self.compartment_opt
                 )
 
                 cost = self.compute_cost_(
@@ -282,7 +287,7 @@ class GradientOptimization:
 
                 costs.append(cost.numpy())
 
-            print(f"Epoch {i + 1}/{self.epochs}, Cost: {cost.numpy()}")
+            print(f"Epoch {i + 1}/{self.epochs}, Cost: {round(cost.numpy()), 5}")
             variables = list(parameters.values())
             gradients = tape.gradient(cost, variables)
             optimizer.apply_gradients(zip(gradients, variables))

@@ -3,7 +3,7 @@ from tensor_diffusion import *
 
 
 
-def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time_step, max_epoch):
+def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, param_opt, compartment_opt):
     """
     Simulates the evolution of species and complexes in a spatial compartment over time.
 
@@ -49,18 +49,65 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
         for i in range(num_iters):
 
             # Update species production
-            for j in range(0, num_species * 2, 2):
+            if compartment_opt and param_opt:
 
-                individual = tf.tensor_scatter_nd_update(
-                    tensor=individual,
-                    indices=list([j, k, i] for k in range(y)),
-                    updates=apply_component_production(
-                        initial_concentration=individual[j, :, i],
-                        production_pattern=individual[j + 1, :, i],
-                        production_rate=parameters[f"species_{int((j / 2) + 1)}"][0],
-                        time_step=time_step
+                s = 1
+                for j in range(0, num_species * 2, 2):
+
+                    individual = tf.tensor_scatter_nd_update(
+                        tensor=individual,
+                        indices=list([j, k, i] for k in range(y)),
+                        updates=apply_component_production(
+                            initial_concentration=individual[j, :, i],
+                            production_pattern=parameters[f"compartment_{s}"][:, i],
+                            production_rate=parameters[f"species_{int((j / 2) + 1)}"][0],
+                            time_step=time_step
+                        )
                     )
-                )
+                    s += 1
+
+            if compartment_opt and not param_opt:
+                s = 1
+                for j in range(0, num_species * 2, 2):
+                    individual = tf.tensor_scatter_nd_update(
+                        tensor=individual,
+                        indices=list([j, k, i] for k in range(y)),
+                        updates=apply_component_production(
+                            initial_concentration=individual[j, :, i],
+                            production_pattern=parameters[f"compartment_{s}"][:, i],
+                            production_rate=individual[-1, j, 0],
+                            time_step=time_step
+                        )
+                    )
+                    s += 1
+
+            if not compartment_opt and param_opt:
+
+                for j in range(0, num_species * 2, 2):
+                    individual = tf.tensor_scatter_nd_update(
+                        tensor=individual,
+                        indices=list([j, k, i] for k in range(y)),
+                        updates=apply_component_production(
+                            initial_concentration=individual[j, :, i],
+                            production_pattern=individual[j + 1, :, i],
+                            production_rate=parameters[f"species_{int((j / 2) + 1)}"][0],
+                            time_step=time_step
+                        )
+                    )
+
+            if not compartment_opt and not param_opt:
+
+                for j in range(0, num_species * 2, 2):
+                    individual = tf.tensor_scatter_nd_update(
+                        tensor=individual,
+                        indices=list([j, k, i] for k in range(y)),
+                        updates=apply_component_production(
+                            initial_concentration=individual[j, :, i],
+                            production_pattern=individual[j + 1, :, i],
+                            production_rate=individual[-1, j, 0],
+                            time_step=time_step
+                        )
+                    )
 
             # Handle species collision
             for j in range(pair_start, pair_stop, 2):

@@ -243,37 +243,44 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
     pair_start = num_species * 2
     pair_stop = pair_start + (num_pairs * 2)
 
-    count = 0
     for i in range(0, num_species * 2, 2):
         mut_mask = np.random.rand(3) < mutation_rate
         if distribution == "normal":
             for j in range(3):
+                count = 0
                 individual[-1, i, j] += np.random.normal(loc=species_means[count], scale=species_std_devs[count]) * \
                                         mut_mask[j]
+                count += 1
+
+
         elif distribution == "uniform":
             for j in range(3):
+                count = 0
                 individual[-1, i, j] += (np.random.uniform(low=species_min_vals[count], high=species_max_vals[count]) -
                                          individual[-1, i, j]) * mut_mask[j]
+                count += 1
 
         individual[-1, i, :3] = np.minimum(individual[-1, i, :3], 1)
         individual[-1, i, :3] = np.maximum(individual[-1, i, :3], np.random.rand())
-        count += 1
 
-    count = 0
     for i in range(pair_start + 1, pair_stop, 2):
         mut_mask = np.random.rand(4) < mutation_rate
         if distribution == "normal":
             for j in range(4):
+                count = 0
                 individual[i, 1, j] += np.random.normal(loc=complex_means[count], scale=complex_std_devs[count]) * \
                                        mut_mask[j]
+                count += 1
+
         elif distribution == "uniform":
             for j in range(4):
+                count = 0
                 individual[i, 1, j] += (np.random.uniform(low=complex_min_vals[count], high=complex_max_vals[count]) -
                                         individual[i, 1, j]) * mut_mask[j]
+                count += 1
 
         individual[i, 1, :4] = np.minimum(individual[i, 1, :4], 1)
         individual[i, 1, :4] = np.maximum(individual[i, 1, :4], np.random.rand())
-        count += 1
 
     return individual
 

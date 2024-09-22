@@ -1,9 +1,8 @@
 import numpy as np
 from numba import jit
-import copy
 
 
-
+@jit(nopython=True)
 def apply_diffusion(current_concentration, compartment, column_position, diffusion_rate, time_step):
     """
     Apply diffusion to update the concentration of species in a specific column of a 2D compartment for all individual in population.
@@ -115,7 +114,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
     return updated_concentration
 
 
-
+@jit(nopython=True)
 def update_lower_left_corner_concentration(
     cell_concentration,
     upper_cell_concentration,
@@ -145,7 +144,7 @@ def update_lower_left_corner_concentration(
     return updated_concentration
 
 
-
+@jit(nopython=True)
 def update_lower_right_corner_concentration(
     cell_concentration,
     upper_cell_concentration,
@@ -175,7 +174,7 @@ def update_lower_right_corner_concentration(
     return updated_concentration
 
 
-
+@jit(nopython=True)
 def update_upper_left_corner_concentration(
     cell_concentration,
     lower_cell_concentration,
@@ -205,7 +204,7 @@ def update_upper_left_corner_concentration(
     return updated_concentration
 
 
-
+@jit(nopython=True)
 def update_upper_right_corner_concentration(
     cell_concentration,
     lower_cell_concentration,
@@ -236,7 +235,7 @@ def update_upper_right_corner_concentration(
 
 
 
-
+@jit(nopython=True)
 def update_left_side_concentration(
     cell_concentration,
     upper_cell_concentration,
@@ -272,7 +271,7 @@ def update_left_side_concentration(
 
 
 
-
+@jit(nopython=True)
 def update_right_side_concentration(
         cell_concentration,
         upper_cell_concentration,
@@ -308,7 +307,7 @@ def update_right_side_concentration(
 
 
 
-
+@jit(nopython=True)
 def update_central_concentration_middle(
         cell_concentration,
         upper_cell_concentration,
@@ -348,7 +347,7 @@ def update_central_concentration_middle(
 
 
 
-
+@jit(nopython=True)
 def update_central_concentration_upper(
         cell_concentration,
         lower_cell_concentration,
@@ -384,7 +383,7 @@ def update_central_concentration_upper(
 
 
 
-
+@jit(nopython=True)
 def update_central_concentration_lower(
         cell_concentration,
         upper_cell_concentration,

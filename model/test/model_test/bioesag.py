@@ -77,8 +77,10 @@ class BioEsAg:
             - population_size (int): The number of individuals in the population.
             - individual_shape (tuple of int): The shape of each individual, represented as a 3D array (z, y, x).
             - individual_parameters (dict): Contains species_parameters and pair_parameters.
-                - species_parameters (tuple): A list of parameter sets for each species in the individual, each with production rate, degradation rate, and diffusion rate.
-                - pair_parameters (tuple): A list of parameter sets for each complex, each with a list of species and corresponding rates.
+                - species_parameters (tuple): A list of parameter sets for each species in the individual, each with production rate, degradation rate,
+                  and diffusion rate.(e.g., {"species_parameters_1":(.1, .3, .5)}).
+                - pair_parameters (tuple): A list of parameter sets for each complex (index 1) and also species indices which built the complex(index 0)
+                  each with a list of species and corresponding rates.(e.g., {"pair_parameters_1":[(1, 2), (.1, .2, .1, .8)]}).
             - simulation_parameters (dict): Contains max_simulation_epoch (int), sim_stop_time (int/float), and time_step (float).
             - store_path (str, optional): The path where data files will be stored. If None, defaults to the user's home directory.
             - cost_alpha (float): Weighting factor for the primary component of the cost function.
@@ -399,9 +401,9 @@ class BioEsAg:
 
         The optimization process is divided into three main phases:
 
-            - **Phase 1**: Evolutionary optimization with or without pooling to reduce the target size.
-            - **Phase 2**: Evolutionary optimization on the original target size.
-            - **Phase 3**: Gradient-based optimization for fine-tuning the best individuals from Phase 2.
+            - Phase 1: Evolutionary optimization with or without pooling to reduce the target size.
+            - Phase 2: Evolutionary optimization on the original target size.
+            - Phase 3: Gradient-based optimization for fine-tuning the best individuals from Phase 2.
 
         Key Steps:
 
@@ -430,7 +432,7 @@ class BioEsAg:
         num_species = len(self.individual_parameters["species_parameters"])
         num_pairs = len(self.individual_parameters["pair_parameters"])
 
-        # Phase 1: Pooling the Target to reduce the computational cost
+        # Phase 1:  zoom the Target to reduce the computational cost
         if self.zoom_:
             target_ = self.reshape_.zoom_in(
                 target=self.target,
@@ -440,9 +442,9 @@ class BioEsAg:
             target_ = self.target
 
         self.save_to_h5py(
-            dataset_name="down_sampled_target",
+            dataset_name="zoomed_in_target",
             data_array=target_
-        )  # store the down-sampled target into the already created HDF5 file
+        )  # store the zoomed target into the already created HDF5 file
 
 
         # Initialize the population based on the reduced target shape
@@ -518,15 +520,16 @@ class BioEsAg:
                 num_elite_individuals=self.num_elite_individuals,
                 individual_fix_size=self.individual_fix_shape,
                 species_parameters=self.individual_parameters["species_parameters"],
-                complex_parameters=self.individual_parameters["pair_parameters"]
+                complex_parameters=self.individual_parameters["pair_parameters"],
+                simulation_parameters=self.simulation_parameters
             )
-
-            print(f"Epoch {i+1}/{self.evolution_one_epochs}, Avg/Min Population Cost: {mean_cost}/{np.min(cost)}")
-
+            # save the cost data
             sorted_cost = np.sort(cost)
-            evolution_costs_one[i, :-2] = sorted_cost[:self.num_saved_individuals]
-            evolution_costs_one[i, -2] = mean_cost
-            evolution_costs_one[i, -1] = sorted_cost[-1]
+            evolution_costs_one[i, :-2] = sorted_cost[:self.num_saved_individuals] # the best costs
+            evolution_costs_one[i, -2] = mean_cost # the population mean cost
+            evolution_costs_one[i, -1] = sorted_cost[-1] # the highest (worst) cost
+
+            print(f"Epoch {i+1}/{self.evolution_one_epochs}, Avg/Min Population Cost: {round(mean_cost, 5)}/{round(float(sorted_cost[0]), 5)}")
 
             # Shrink the population size based on a ratio (self.evolution_two_ratio) at the end of Phase 1
             if i == self.evolution_one_epochs - 1:
@@ -550,7 +553,7 @@ class BioEsAg:
         run_time[1] = evo1_stop - evo1_start
 
         evo2_start = time.time()
-        # Phase 2: Up-sampling the population (resize it to the original size)
+        # Phase 2: zoom out the population (resize it to the original size)
         if self.zoom_:
             population = self.reshape_.zoom_out(
                 population=population,
@@ -615,21 +618,22 @@ class BioEsAg:
                     num_elite_individuals=self.num_elite_individuals,
                     individual_fix_size=self.individual_fix_shape,
                     species_parameters=self.individual_parameters["species_parameters"],
-                    complex_parameters=self.individual_parameters["pair_parameters"]
+                    complex_parameters=self.individual_parameters["pair_parameters"],
+                    simulation_parameters=self.simulation_parameters
                 )
-
-                print(f"Epoch {j+1}/{self.evolution_two_epochs}, Avg/Min Population Cost: {mean_cost}/{np.min(cost)}")
 
                 sorted_cost = np.sort(cost)
                 evolution_costs_two[j, :-2] = sorted_cost[:self.num_saved_individuals]
                 evolution_costs_two[j, -2] = mean_cost
                 evolution_costs_two[j, -1] = sorted_cost[-1]
+                print(f"Epoch {j + 1}/{self.evolution_two_epochs}, Avg/Min Population Cost: {round(mean_cost, 5)}/{round(float(sorted_cost[0]), 5)}")
 
                 # Shrink the population size at the end of Phase 2
                 if j == self.evolution_two_epochs - 1:
-                    sorted_cost_indices = np.argsort(cost)[:self.num_gradient_optimization]
+                    sorted_cost_indices = np.argsort(cost)
                     elite_individuals = [population[idx] for idx in sorted_cost_indices[:self.num_saved_individuals]]
                     population = [population[idx] for idx in sorted_cost_indices]
+                    population = population[:self.num_gradient_optimization]
 
                     for d, elite in enumerate(elite_individuals):
                         self.save_to_h5py(
@@ -653,8 +657,6 @@ class BioEsAg:
             print("                   Adam Optimization                 ")
 
             for k, individual in enumerate(population):
-
-                print(f"               Individual {k+1}             ")
                 print()
 
                 optimized_individual, costs = self.gradient_optimization_.gradient_optimization(
@@ -662,7 +664,7 @@ class BioEsAg:
                 )
 
                 population[k] = optimized_individual.numpy()
-                optimization_costs[k, :] = costs
+                optimization_costs[:, k] = costs
 
                 self.save_to_h5py(
                     dataset_name=f"elite_individual_{k+1}_gradient_optimization",
@@ -680,4 +682,3 @@ class BioEsAg:
             dataset_name="run_time",
             data_array=run_time
         )
-
