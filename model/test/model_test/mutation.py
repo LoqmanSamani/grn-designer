@@ -203,7 +203,7 @@ def apply_compartment_mutation(individual, mutation_rate, mean, std_dev, min_val
 
         individual[i, :, :] += np.where(mut_mask, noise, 0)
         individual[i, :, :] = np.maximum(individual[i, :, :], 0)
-        individual[i, :, :] = np.minimum(individual[i, :, :], 100)
+        individual[i, :, :] = np.minimum(individual[i, :, :], 1)
 
     return individual
 
@@ -255,8 +255,7 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
                 individual[-1, i, j] += (np.random.uniform(low=species_min_vals[count], high=species_max_vals[count]) -
                                          individual[-1, i, j]) * mut_mask[j]
 
-        individual[-1, i, 2] = np.minimum(individual[-1, i, 2], 30)
-        individual[-1, i, 0:2] = np.minimum(individual[-1, i, 0:2], 10)
+        individual[-1, i, :3] = np.minimum(individual[-1, i, :3], 1)
         individual[-1, i, :3] = np.maximum(individual[-1, i, :3], np.random.rand())
         count += 1
 
@@ -272,9 +271,7 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
                 individual[i, 1, j] += (np.random.uniform(low=complex_min_vals[count], high=complex_max_vals[count]) -
                                         individual[i, 1, j]) * mut_mask[j]
 
-        individual[i, 1, 1:3] = np.minimum(individual[i, 1, 1:3], 10)
-        individual[i, 1, 0] = np.minimum(individual[i, 1, 0], 200)
-        individual[i, 1, 3] = np.minimum(individual[i, 1, 3], 50)
+        individual[i, 1, :4] = np.minimum(individual[i, 1, :4], 1)
         individual[i, 1, :4] = np.maximum(individual[i, 1, :4], np.random.rand())
         count += 1
 

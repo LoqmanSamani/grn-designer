@@ -25,16 +25,16 @@ class BioEsAg:
                  sim_mutation=True, compartment_mutation=True, param_mutation=False, species_insertion_mutation_one=False,
                  species_deletion_mutation_one=False, species_insertion_mutation_two=False, species_deletion_mutation_two=False,
                  compartment_crossover=True, param_crossover=False, sim_crossover=True,
-                 individual_fix_shape=False, cost_alpha=0.6, cost_beta=0.4, cost_max_val=1000, cost_kernel_size=3,
+                 individual_fix_shape=False, cost_alpha=0.6, cost_beta=0.4, cost_max_val=1.0, cost_kernel_size=3,
                  num_gradient_optimization=3, num_saved_individuals=3,
                  evolution_two_ratio=0.2, zoom_=False, zoom_in_factor=0.5, zoom_out_factor=2, zoom_order=1, zoom_mode="constant",
                  zoom_cval=0.0, zoom_grid_mode=False, num_elite_individuals=5,  sim_means=(5.0, 0.5),
                  sim_std_devs=(100.0, 2.0), sim_min_vals=(5.0, 0.1), sim_max_vals=(100.0, 1.0), compartment_mean=0.0,
-                 compartment_std=100.0, compartment_min_val=-100.0, compartment_max_val=100.0, species_param_means=(0.0, 0.0, 0.0),
-                 species_param_stds=(10.0, 5.0, 10.0), species_param_min_vals=(-5, -2, -10), species_param_max_vals=(5.0, 2.0, 10.0),
+                 compartment_std=100.0, compartment_min_val=-1.0, compartment_max_val=1.0, species_param_means=(0.0, 0.0, 0.0),
+                 species_param_stds=(10.0, 5.0, 10.0), species_param_min_vals=(-2.0, -2.0, -1.0), species_param_max_vals=(1.0, 1.0, 1.0),
                  complex_param_means=(0.0, 0.0, 0.0, 0.0), complex_param_stds=(100.0, 10.0, 5.0, 10.0),
-                 complex_param_min_vals=(-100, -10, -10, -10), complex_param_max_vals=(100, 10, 10, 10),
-                 param_distribution="uniform",  compartment_distribution="normal", sim_distribution="uniform"
+                 complex_param_min_vals=(-1, -2, -2, -2), complex_param_max_vals=(1, 1, 1, 1),
+                 param_distribution="uniform",  compartment_distribution="uniform", sim_distribution="uniform"
                  ):
         """
         BioEsAg (Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Optimization) is an
@@ -408,7 +408,7 @@ class BioEsAg:
             1. Save initial inputs and targets.
             2. Pool the target (zoom in) if enabled and perform the first phase of evolutionary optimization.
             3. Save the elite individuals and their costs from Phase 1.
-            4. Upsample the population (zoom out) and perform the second phase of evolutionary optimization.
+            4. Up sample the population (zoom out) and perform the second phase of evolutionary optimization.
             5. Optionally, perform gradient-based optimization on the top individuals from Phase 2.
 
         Parameters:
@@ -521,7 +521,7 @@ class BioEsAg:
                 complex_parameters=self.individual_parameters["pair_parameters"]
             )
 
-            print(f"Epoch {i+1}/{self.evolution_one_epochs}, Average Population Cost: {mean_cost}")
+            print(f"Epoch {i+1}/{self.evolution_one_epochs}, Avg/Min Population Cost: {mean_cost}/{np.min(cost)}")
 
             sorted_cost = np.sort(cost)
             evolution_costs_one[i, :-2] = sorted_cost[:self.num_saved_individuals]
@@ -618,7 +618,7 @@ class BioEsAg:
                     complex_parameters=self.individual_parameters["pair_parameters"]
                 )
 
-                print(f"Epoch {j+1}/{self.evolution_two_epochs}, Average Population Cost: {mean_cost}")
+                print(f"Epoch {j+1}/{self.evolution_two_epochs}, Avg/Min Population Cost: {mean_cost}/{np.min(cost)}")
 
                 sorted_cost = np.sort(cost)
                 evolution_costs_two[j, :-2] = sorted_cost[:self.num_saved_individuals]

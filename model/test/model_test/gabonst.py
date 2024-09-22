@@ -97,6 +97,8 @@ def evolutionary_optimization(
         kernel_size=cost_kernel_size,
         method=cost_method
     )
+
+    # delete NaN cost individuals from the population
     costs = list(costs)
     filtered_data = [(ind, cost) for ind, cost in zip(population, costs) if not math.isnan(cost)]
     if not filtered_data:
@@ -286,11 +288,12 @@ def evolutionary_optimization(
     for inx in sorted(inxs2, reverse=True):
         del high_cost_individuals[inx]
 
-    nan_costs = population_size - (len(low_cost_individuals) + len(high_cost_individuals))
+    # nan_costs = population_size - (len(low_cost_individuals) + len(high_cost_individuals))
     # Reinitialize remaining high-cost individuals if any
-    if len(high_cost_individuals) > 0 or nan_costs > 0:
-        high_cost_individuals = population_initialization(
-            population_size=len(high_cost_individuals) + nan_costs,
+    pop_size = population_size - low_cost_individuals
+    if pop_size > 0:
+        initialized_individuals = population_initialization(
+            population_size=pop_size,
             individual_shape=low_cost_individuals[0].shape,
             species_parameters=species_parameters,
             complex_parameters=complex_parameters,
@@ -302,7 +305,7 @@ def evolutionary_optimization(
             individual_fix_size=individual_fix_size
         )
 
-        low_cost_individuals = low_cost_individuals + high_cost_individuals
+        low_cost_individuals = low_cost_individuals + initialized_individuals
 
     return low_cost_individuals, costs, mean_cost
 

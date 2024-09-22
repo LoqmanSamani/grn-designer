@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.ndimage import convolve
-import tensorflow as tf
-
+from skimage.metrics import structural_similarity as ssim
 
 
 
@@ -58,6 +57,7 @@ def compute_cost(predictions, target, delta_D, alpha, beta, max_val, kernel_size
 
 
 
+# Combined loss calculation using NumPy
 def compute_combined_loss(predictions, target, alpha, beta, ssim_max_val):
     """
     Compute a combined loss between Mean Squared Error (MSE) and Structural Similarity Index (SSIM) for each prediction.
@@ -67,38 +67,35 @@ def compute_combined_loss(predictions, target, alpha, beta, ssim_max_val):
     the weight of the SSIM.
 
     Parameters:
-    - predictions (np.ndarray): A 3D array of predicted matrices with shape (m, y, x), where `m` is the number of
-      predicted matrices, and `y`, `x` are the dimensions of each matrix.
-    - target (np.ndarray): A 2D target matrix with shape (y, x), representing the ground truth.
-    - alpha (float, optional): The weight assigned to the MSE part of the combined loss.
-    - beta (float, optional): The weight assigned to the SSIM part of the combined loss.
-    - ssim_max_val (float, optional): The maximum value for SSIM calculations, representing the dynamic range of the input.
+        - predictions (np.ndarray): A 3D array of predicted matrices with shape (m, y, x), where `m` is the number of
+          predicted matrices, and `y`, `x` are the dimensions of each matrix.
+        - target (np.ndarray): A 2D target matrix with shape (y, x), representing the ground truth.
+        - alpha (float, optional): The weight assigned to the MSE part of the combined loss.
+        - beta (float, optional): The weight assigned to the SSIM part of the combined loss.
+        - ssim_max_val (float, optional): The maximum value for SSIM calculations, representing the dynamic range of the input.
 
     Returns:
-    - np.ndarray: A 1D array of loss values with shape (m,), where each value is the combined loss (MSE + SSIM) for
-      each prediction in the batch.
+        - np.ndarray: A 1D array of loss values with shape (m,), where each value is the combined loss (MSE + SSIM) for
+          each prediction in the batch.
     """
     num_predictions, height, width = predictions.shape
     losses = np.zeros(num_predictions)
 
     for i in range(num_predictions):
-        # Convert the prediction and target to tensors for SSIM calculation
-        prediction_tensor = tf.convert_to_tensor(predictions[i, :, :], dtype=tf.float32)
-        target_tensor = tf.convert_to_tensor(target, dtype=tf.float32)
-
         # Compute SSIM loss
-        ssim_loss_value = ssim_loss(prediction_tensor, target_tensor, max_val=ssim_max_val)
-
+        ssim_loss_value = ssim_loss_(y_hat=predictions[i], target=target, data_range=ssim_max_val)
         # Compute MSE loss
         mse_loss_value = np.mean((target - predictions[i, :, :]) ** 2)
-
         # Calculate the combined loss
         losses[i] = alpha * mse_loss_value + beta * ssim_loss_value
 
     return losses
 
 
-def ssim_loss(y_hat, target, max_val=1.0):
+
+
+
+def ssim_loss_(y_hat, target, data_range):
     """
     Compute the Structural Similarity Index (SSIM) loss between two matrices.
 
@@ -107,24 +104,19 @@ def ssim_loss(y_hat, target, max_val=1.0):
     similarity.
 
     Parameters:
-    - y_hat (tf.Tensor): A 2D tensor representing the predicted matrix or image. Shape: (y, x).
-    - target (tf.Tensor): A 2D tensor representing the target matrix or image. Shape: (y, x).
-    - max_val (float, optional): The dynamic range of the input values, typically the maximum value of the pixel
-      intensity. Default is 1.0.
+            - y_hat (tf.Tensor): A 2D tensor representing the predicted matrix or image. Shape: (y, x).
+            - target (tf.Tensor): A 2D tensor representing the target matrix or image. Shape: (y, x).
+            - max_val (float, optional): The dynamic range of the input values, typically the maximum value of the pixel
+              intensity. Default is 1.0.
 
     Returns:
-    - float: The SSIM loss, computed as `1 - SSIM score`, where the SSIM score is between 0 and 1. A lower
-      loss indicates more perceptual similarity between `y_hat` and `target`.
+            - float: The SSIM loss, computed as `1 - SSIM score`, where the SSIM score is between 0 and 1. A lower
+              loss indicates more perceptual similarity between `y_hat` and `target`.
     """
-    # Add a third dimension to y_hat and target to make them compatible with tf.image.ssim (expects at least 3D tensors)
-    y_hat = tf.expand_dims(y_hat, axis=-1)
-    target = tf.expand_dims(target, axis=-1)
-
-    # Compute SSIM between y_hat and target
-    ssim_score = tf.image.ssim(y_hat, target, max_val=max_val)
-
-    # Calculate SSIM loss (1 - SSIM score)
-    return (1 - tf.reduce_mean(ssim_score)).numpy()
+    # Compute SSIM score between y_hat and target
+    ssim_score, _ = ssim(y_hat, target, full=True, data_range=data_range)
+    # SSIM loss is 1 - SSIM score
+    return 1 - ssim_score
 
 
 def compute_grm_fitness_error(predictions, target, kernel_size, alpha, beta, delta_D):

@@ -519,7 +519,7 @@ class BioEsAg:
                 complex_parameters=self.individual_parameters["pair_parameters"]
             )
 
-            print(f"Epoch {i+1}/{self.evolution_one_epochs}, Average Population Cost: {mean_cost}")
+            print(f"Epoch {i+1}/{self.evolution_one_epochs}, Avg/Min Population Cost: {mean_cost}/{np.min(cost)}")
 
             sorted_cost = np.sort(cost)
             evolution_costs_one[i, :-2] = sorted_cost[:self.num_saved_individuals]
@@ -615,7 +615,7 @@ class BioEsAg:
                     complex_parameters=self.individual_parameters["pair_parameters"]
                 )
 
-                print(f"Epoch {j+1}/{self.evolution_two_epochs}, Average Population Cost: {mean_cost}")
+                print(f"Epoch {j+1}/{self.evolution_two_epochs}, Avg/Min Population Cost: {mean_cost}/{np.min(cost)}")
 
                 sorted_cost = np.sort(cost)
                 evolution_costs_two[j, :-2] = sorted_cost[:self.num_saved_individuals]
