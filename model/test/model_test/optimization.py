@@ -257,9 +257,15 @@ class GradientOptimization:
             individual=individual
         )
 
+        # defining a learning rate decay for a better convergence in the last steps of the optimization
+        lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+            initial_learning_rate=1e-2,
+            decay_steps=10000,
+            decay_rate=0.9
+        )
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate=self.learning_rate,
+            learning_rate=lr_schedule,
             weight_decay=self.weight_decay
         )
 
