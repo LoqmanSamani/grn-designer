@@ -258,8 +258,8 @@ class GradientOptimization:
         )
 
         # defining a learning rate decay for a better convergence in the last steps of the optimization
-        lr_schedule = keras.optimizers.schedules.ExponentialDecay(
-            initial_learning_rate=1e-2,
+        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+            initial_learning_rate=self.learning_rate,
             decay_steps=10000,
             decay_rate=0.9
         )
