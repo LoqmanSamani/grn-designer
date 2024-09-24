@@ -148,7 +148,7 @@ def apply_simulation_parameters_mutation(individual, mutation_rate, means, std_d
         individual[-1, -1, i + 3] = max(min_vals[i], min(max_vals[i], individual[-1, -1, i + 3]))
 
     individual[-1, -1, 3:5] = np.maximum(individual[-1, -1, 3:5], 0)
-    if individual[-1, -1, 3] / individual[-1, -1, 4] > 1000 or individual[-1, -1, 3] / individual[-1, -1, 4] < 100:
+    if individual[-1, -1, 3] / individual[-1, -1, 4] > 300 or individual[-1, -1, 3] / individual[-1, -1, 4] < 100:
         individual[-1, -1, 3] = 20
         individual[-1, -1, 4] = 0.1
 
@@ -203,7 +203,7 @@ def apply_compartment_mutation(individual, mutation_rate, mean, std_dev, min_val
 
         individual[i, :, :] += np.where(mut_mask, noise, 0)
         individual[i, :, :] = np.maximum(individual[i, :, :], 0)
-        individual[i, :, :] = np.minimum(individual[i, :, :], 1)
+        individual[i, :, :] = np.minimum(individual[i, :, :], 100)
 
     return individual
 
@@ -260,8 +260,8 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
                                          individual[-1, i, j]) * mut_mask[j]
                 count += 1
 
-        individual[-1, i, :3] = np.minimum(individual[-1, i, :3], 1)
-        individual[-1, i, :3] = np.maximum(individual[-1, i, :3], np.random.rand())
+        individual[-1, i, :3] = np.minimum(individual[-1, i, :3], 10)
+        individual[-1, i, :3] = np.maximum(individual[-1, i, :3], 0)
 
     for i in range(pair_start + 1, pair_stop, 2):
         mut_mask = np.random.rand(4) < mutation_rate
@@ -279,8 +279,8 @@ def apply_parameters_mutation(individual, mutation_rate, species_means, species_
                                         individual[i, 1, j]) * mut_mask[j]
                 count += 1
 
-        individual[i, 1, :4] = np.minimum(individual[i, 1, :4], 1)
-        individual[i, 1, :4] = np.maximum(individual[i, 1, :4], np.random.rand())
+        individual[i, 1, :4] = np.minimum(individual[i, 1, :4], 10)
+        individual[i, 1, :4] = np.maximum(individual[i, 1, :4], 0)
 
     return individual
 

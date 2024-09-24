@@ -1,5 +1,5 @@
 from tensor_simulation import *
-
+import numpy as np
 
 
 
@@ -269,6 +269,7 @@ class GradientOptimization:
             weight_decay=self.weight_decay
         )
 
+        results_ = np.array((self.epochs, individual.shape[1], individual.shape[2]))
         for i in range(self.epochs):
             with tf.GradientTape() as tape:
                 y_hat = self.simulation(
@@ -292,6 +293,7 @@ class GradientOptimization:
                 )
 
                 costs.append(cost.numpy())
+                results_[i, :, :] = y_hat.numpy()
 
             print(f"Epoch {i + 1}/{self.epochs}, Cost: {round(cost.numpy()), 5}")
             variables = list(parameters.values())
@@ -305,4 +307,4 @@ class GradientOptimization:
             compartment_opt=self.compartment_opt
         )
 
-        return individual, costs
+        return individual, costs, results_

@@ -30,10 +30,10 @@ class BioEsAg:
                  evolution_two_ratio=0.2, zoom_=False, zoom_in_factor=0.5, zoom_out_factor=2, zoom_order=1, zoom_mode="constant",
                  zoom_cval=0.0, zoom_grid_mode=False, num_elite_individuals=5,  sim_means=(5.0, 0.5),
                  sim_std_devs=(100.0, 2.0), sim_min_vals=(5.0, 0.1), sim_max_vals=(100.0, 1.0), compartment_mean=0.0,
-                 compartment_std=100.0, compartment_min_val=-1.0, compartment_max_val=1.0, species_param_means=(0.0, 0.0, 0.0),
-                 species_param_stds=(10.0, 5.0, 10.0), species_param_min_vals=(-2.0, -2.0, -1.0), species_param_max_vals=(1.0, 1.0, 1.0),
+                 compartment_std=100.0, compartment_min_val=-5.0, compartment_max_val=5.0, species_param_means=(0.0, 0.0, 0.0),
+                 species_param_stds=(10.0, 5.0, 10.0), species_param_min_vals=(-1.0, -1.0, -1.0), species_param_max_vals=(2.0, 2.0, 2.0),
                  complex_param_means=(0.0, 0.0, 0.0, 0.0), complex_param_stds=(100.0, 10.0, 5.0, 10.0),
-                 complex_param_min_vals=(-1, -2, -2, -2), complex_param_max_vals=(1, 1, 1, 1),
+                 complex_param_min_vals=(-1.0, -1.0, -1.0, -1.0), complex_param_max_vals=(2.0, 2.0, 2.0, 2.0),
                  param_distribution="uniform",  compartment_distribution="uniform", sim_distribution="uniform"
                  ):
         """
@@ -380,7 +380,12 @@ class BioEsAg:
             path = os.path.join(os.path.expanduser("~"), "output_data.h5")
 
         with h5py.File(path, 'a') as h5file:
-            h5file[dataset_name] = data_array
+            if dataset_name in h5file:
+                # If the dataset already exists, delete it
+                del h5file[dataset_name]
+            # Now create the new dataset with the updated data
+            h5file.create_dataset(dataset_name, data=data_array)
+
 
 
 
@@ -466,6 +471,8 @@ class BioEsAg:
         evo1_start = time.time()
         # Phase 1 of Evolutionary Optimization
         evolution_costs_one = np.zeros(shape=(self.evolution_one_epochs, self.num_saved_individuals+2)) # array to save the cost of elite chromosomes
+        results_ = np.zeros((self.evolution_one_epochs, target_.shape[0], target_.shape[1]))
+        costs_ = None
 
         print("--------------------------------------------------------")
         print("                   BioEsAg Algorithm                    ")
@@ -475,7 +482,7 @@ class BioEsAg:
 
         for i in range(self.evolution_one_epochs):
 
-            population, cost, mean_cost = evolutionary_optimization(
+            population, cost, mean_cost, y_hat11 = evolutionary_optimization(
                 population=population,
                 target=target_,
                 population_size=self.population_size,
@@ -523,6 +530,8 @@ class BioEsAg:
                 complex_parameters=self.individual_parameters["pair_parameters"],
                 simulation_parameters=self.simulation_parameters
             )
+            results_[i, :, :] = y_hat11
+            costs_ = cost
             # save the cost data
             sorted_cost = np.sort(cost)
             evolution_costs_one[i, :-2] = sorted_cost[:self.num_saved_individuals] # the best costs
@@ -531,19 +540,24 @@ class BioEsAg:
 
             print(f"Epoch {i+1}/{self.evolution_one_epochs}, Avg/Min Population Cost: {round(mean_cost, 5)}/{round(float(sorted_cost[0]), 5)}")
 
-            # Shrink the population size based on a ratio (self.evolution_two_ratio) at the end of Phase 1
-            if i == self.evolution_one_epochs - 1:
-                new_population_size = int(self.population_size * self.evolution_two_ratio)
-                sorted_cost_indices = np.argsort(cost)[:new_population_size]
+        # Shrink the population size based on a ratio (self.evolution_two_ratio) at the end of Phase 1
+        # if i == self.evolution_one_epochs - 1:
+        new_population_size = int(self.population_size * self.evolution_two_ratio)
+        sorted_cost_indices = np.argsort(costs_)[:new_population_size]
 
-                elite_individuals = [population[idx] for idx in sorted_cost_indices[:self.num_saved_individuals]]
-                population = [population[idx] for idx in sorted_cost_indices]
+        elite_individuals = [population[idx] for idx in sorted_cost_indices[:self.num_saved_individuals]]
+        population = [population[idx] for idx in sorted_cost_indices]
 
-                for d, elite in enumerate(elite_individuals):
-                    self.save_to_h5py(
-                        dataset_name=f"elite_individual_{d + 1}_evolution_one",
-                        data_array=elite
-                    )
+        for d, elite in enumerate(elite_individuals):
+            self.save_to_h5py(
+                dataset_name=f"elite_individual_{d+1}_evolution_one",
+                data_array=elite
+            )
+
+        self.save_to_h5py(
+            dataset_name="evolution_one_results",
+            data_array=results_
+        )
 
         self.save_to_h5py(
             dataset_name="evolution_costs_one",
@@ -566,14 +580,17 @@ class BioEsAg:
 
             # Phase 2 of Evolutionary Optimization
             evolution_costs_two = np.zeros(shape=(self.evolution_two_epochs, self.num_saved_individuals+2))  # array to save the cost of elite chromosomes
+            results_ = np.zeros((self.evolution_two_epochs, self.target.shape[0], self.target.shape[1]))
+            costs_ = None
+            pop_size = len(population)
+
 
             print()
             print("              Evolutionary Optimization II              ")
             print()
 
-            pop_size = len(population)
             for j in range(self.evolution_two_epochs):
-                population, cost, mean_cost = evolutionary_optimization(
+                population, cost, mean_cost, y_hat11 = evolutionary_optimization(
                     population=population,
                     target=self.target,
                     population_size=pop_size,
@@ -621,6 +638,8 @@ class BioEsAg:
                     complex_parameters=self.individual_parameters["pair_parameters"],
                     simulation_parameters=self.simulation_parameters
                 )
+                results_[j, :, :] = y_hat11
+                costs_ = cost
 
                 sorted_cost = np.sort(cost)
                 evolution_costs_two[j, :-2] = sorted_cost[:self.num_saved_individuals]
@@ -628,18 +647,23 @@ class BioEsAg:
                 evolution_costs_two[j, -1] = sorted_cost[-1]
                 print(f"Epoch {j + 1}/{self.evolution_two_epochs}, Avg/Min Population Cost: {round(mean_cost, 5)}/{round(float(sorted_cost[0]), 5)}")
 
-                # Shrink the population size at the end of Phase 2
-                if j == self.evolution_two_epochs - 1:
-                    sorted_cost_indices = np.argsort(cost)
-                    elite_individuals = [population[idx] for idx in sorted_cost_indices[:self.num_saved_individuals]]
-                    population = [population[idx] for idx in sorted_cost_indices]
-                    population = population[:self.num_gradient_optimization]
+            # Shrink the population size at the end of Phase 2
+            # if j == self.evolution_two_epochs - 1:
+            sorted_cost_indices = np.argsort(costs_)
+            elite_individuals = [population[idx] for idx in sorted_cost_indices[:self.num_saved_individuals]]
+            population = [population[idx] for idx in sorted_cost_indices]
+            population = population[:self.num_gradient_optimization]
 
-                    for d, elite in enumerate(elite_individuals):
-                        self.save_to_h5py(
-                            dataset_name=f"elite_individual_{d + 1}_evolution_two",
-                            data_array=elite
-                        )
+            for d, elite in enumerate(elite_individuals):
+                self.save_to_h5py(
+                    dataset_name=f"elite_individual_{d + 1}_evolution_two",
+                    data_array=elite
+                )
+
+            self.save_to_h5py(
+                dataset_name="evolution_two_results",
+                data_array=results_
+            )
 
             self.save_to_h5py(
                 dataset_name="evolution_costs_two",
@@ -659,7 +683,7 @@ class BioEsAg:
             for k, individual in enumerate(population):
                 print()
 
-                optimized_individual, costs = self.gradient_optimization_.gradient_optimization(
+                optimized_individual, costs, results_ = self.gradient_optimization_.gradient_optimization(
                     individual=tf.convert_to_tensor(individual)
                 )
 
@@ -669,6 +693,11 @@ class BioEsAg:
                 self.save_to_h5py(
                     dataset_name=f"elite_individual_{k+1}_gradient_optimization",
                     data_array=population[k]
+                )
+
+                self.save_to_h5py(
+                    dataset_name=f"optimization_{k+1}_results",
+                    data_array=results_
                 )
 
             self.save_to_h5py(

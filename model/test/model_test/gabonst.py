@@ -116,6 +116,13 @@ def evolutionary_optimization(
     sorted_indices = np.argsort(costs)
     lowest_indices = sorted_indices[:num_elite_individuals]
 
+    # simulate the best solution and record the result
+    inx11 = sorted_indices[0]
+    ind11 = population[inx11]
+    y_hat11, dd11 = individual_simulation(individual=ind11)
+
+
+
     # Separate individuals and costs into low-cost and high-cost groups
     low_cost_individuals = [population[i] for i in range(len(costs)) if costs[i] < mean_cost]
     high_cost_individuals = [population[i] for i in range(len(costs)) if costs[i] >= mean_cost]
@@ -337,7 +344,7 @@ def evolutionary_optimization(
         low_cost_individuals = low_cost_individuals + initialized_individuals
         low_costs = low_costs + costs3
 
-    return low_cost_individuals, low_costs, mean_cost
+    return low_cost_individuals, low_costs, mean_cost, y_hat11
 
 
 

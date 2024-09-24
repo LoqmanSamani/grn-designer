@@ -43,6 +43,7 @@ def population_initialization(population_size, individual_shape, species_paramet
         for i in range(0, len(species_parameters) * 2, 2):
             for ind in population:
                 ind[-1, i, :3] = species_parameters[int(i // 2)]
+                ind[i+1, :, :] = np.random.rand(individual_shape[1], individual_shape[2])
 
         for i in range(pair_start + 1, pair_stop + 1, 2):
             for ind in population:
