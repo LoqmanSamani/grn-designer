@@ -692,7 +692,7 @@ class BioEsAg:
 
                 self.save_to_h5py(
                     dataset_name=f"elite_individual_{k+1}_gradient_optimization",
-                    data_array=population[k]
+                    data_array=optimized_individual
                 )
 
                 self.save_to_h5py(

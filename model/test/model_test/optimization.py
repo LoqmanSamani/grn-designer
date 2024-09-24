@@ -269,7 +269,7 @@ class GradientOptimization:
             weight_decay=self.weight_decay
         )
 
-        results_ = np.array((self.epochs, individual.shape[1], individual.shape[2]))
+        results_ = np.zeros((self.epochs, individual.shape[1], individual.shape[2]))
         for i in range(self.epochs):
             with tf.GradientTape() as tape:
                 y_hat = self.simulation(
@@ -295,7 +295,7 @@ class GradientOptimization:
                 costs.append(cost.numpy())
                 results_[i, :, :] = y_hat.numpy()
 
-            print(f"Epoch {i + 1}/{self.epochs}, Cost: {round(cost.numpy()), 5}")
+            print(f"Epoch {i + 1}/{self.epochs}, Cost: {round(cost.numpy(), 5)}")
             variables = list(parameters.values())
             gradients = tape.gradient(cost, variables)
             optimizer.apply_gradients(zip(gradients, variables))

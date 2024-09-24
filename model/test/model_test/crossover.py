@@ -46,8 +46,8 @@ def apply_crossover(elite_individuals, individual, crossover_alpha, sim_crossove
                 individual=individual,
                 alpha=crossover_alpha
             )
-        else:
-            print("there is no elite-individual !!!")
+    else:
+        print("there is no elite-individual !!!")
 
     return individual
 
