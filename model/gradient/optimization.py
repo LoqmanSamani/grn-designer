@@ -1,6 +1,11 @@
 from ..sim.sim_tensor import tensor_simulation
 import tensorflow as tf
 
+
+
+
+
+
 class GradientOptimization:
     """
     A class for performing gradient-based optimization using the Adam optimizer.
@@ -19,6 +24,7 @@ class GradientOptimization:
         - weight_decay (float): The weight decay (regularization) factor for the Adam optimizer.
     """
 
+
     def __init__(self, epochs, learning_rate, target, param_opt, compartment_opt, cost_alpha, cost_beta, max_val,
                  cost_kernel_size, weight_decay):
 
@@ -36,7 +42,10 @@ class GradientOptimization:
         Initializes the GradientOptimization class with the specified parameters.
         """
 
-    def parameter_extraction(self, individual, compartment_opt):
+
+
+
+    def parameter_extraction(self, individual):
         """
         Extracts the parameters of species, pairs and initial condition compartments from the given individual tensor.
 
@@ -74,14 +83,16 @@ class GradientOptimization:
             parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
             pair += 1
 
-        if compartment_opt:
-            sp = 1
-            for k in range(1, num_species * 2, 2):
-                compartment = tf.Variable(individual[k, :, :], trainable=True)
-                parameters[f'compartment_{sp}'] = compartment
-                sp += 1
+
+        sp = 1
+        for k in range(1, num_species * 2, 2):
+            compartment = tf.Variable(individual[k, :, :], trainable=True)
+            parameters[f'compartment_{sp}'] = compartment
+            sp += 1
 
         return parameters, num_species, num_pairs, max_epoch, stop, time_step
+
+
 
 
 
@@ -142,7 +153,12 @@ class GradientOptimization:
 
         return individual
 
-    def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch):
+
+
+
+
+
+    def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, param_opt, compartment_opt):
         """
         Runs a simulation using the given individual and parameters.
 
@@ -166,10 +182,15 @@ class GradientOptimization:
             num_pairs=num_pairs,
             stop=stop,
             time_step=time_step,
-            max_epoch=max_epoch
+            max_epoch=max_epoch,
+            param_opt=param_opt,
+            compartment_opt=compartment_opt
         )
 
         return y_hat
+
+
+
 
     def compute_cost_(self, y_hat, target, alpha, beta, max_val):
 
@@ -188,6 +209,9 @@ class GradientOptimization:
         total_loss = alpha * mse_loss + beta * ssim_loss_value
 
         return total_loss
+
+
+
 
     def ssim_loss(self, y_hat, target, max_val):
         """
@@ -232,11 +256,18 @@ class GradientOptimization:
 
         costs = []
         parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
-            individual=individual,
-            compartment_opt=self.compartment_opt
+            individual=individual
         )
+
+        # defining a learning rate decay for a better convergence in the last steps of the optimization
+        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+            initial_learning_rate=self.learning_rate,
+            decay_steps=10000,
+            decay_rate=0.9
+        )
+
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate=self.learning_rate,
+            learning_rate=lr_schedule,
             weight_decay=self.weight_decay
         )
 
@@ -249,7 +280,9 @@ class GradientOptimization:
                     num_pairs=num_pairs,
                     stop=stop,
                     time_step=time_step,
-                    max_epoch=max_epoch
+                    max_epoch=max_epoch,
+                    param_opt=self.param_opt,
+                    compartment_opt=self.compartment_opt
                 )
 
                 cost = self.compute_cost_(
@@ -262,7 +295,7 @@ class GradientOptimization:
 
                 costs.append(cost.numpy())
 
-            print(f"Epoch {i + 1}/{self.epochs}, Cost: {cost.numpy()}")
+            print(f"Epoch {i + 1}/{self.epochs}, Cost: {round(cost.numpy()), 5}")
             variables = list(parameters.values())
             gradients = tape.gradient(cost, variables)
             optimizer.apply_gradients(zip(gradients, variables))

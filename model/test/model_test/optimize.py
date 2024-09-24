@@ -8,7 +8,7 @@ import numpy as np
 
 
 
-class GradientOptimization:
+class AdamOptimization:
     """
     A class for performing gradient-based optimization using the Adam optimizer.
     This class is designed to optimize the parameters of species and pair interactions
