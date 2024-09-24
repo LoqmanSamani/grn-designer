@@ -27,13 +27,27 @@ The purpose of this algorithm is to analyze an input image—a two-dimensional m
 
 Once the algorithm receives the input diffusion pattern, it follows these steps:
 
-1. [**Pooling Down-sampling (Optional):**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/pooling.py) If the input pattern is too large and computationally demanding, the algorithm reduces its size using a combination of padding and pooling layers. These techniques, common in computer vision, help maintain the essential information while reducing computational intensity. This step is optional; if resources allow, the algorithm can proceed with the original size.
+
+Sure! Here's an improved version of both parts, with simpler language and clear explanations.
+
+
+
+1. [**Zoom In (Optional):**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/reshape.py): If the input pattern is too large and takes too much computational power, the algorithm can reduce its size using interpolation methods provided by [`scipy.ndimage.zoom(...)`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.zoom.html) from the SciPy library. This function offers five different interpolation methods for resizing an input image:
+
+- **0**: Nearest-neighbor interpolation (fast but less accurate).
+- **1**: Bilinear interpolation (a good balance between speed and accuracy).
+- **2**: Bi-quadratic interpolation.
+- **3**: Bi-cubic interpolation (default, more accurate but slower).
+- **4 or 5**: Higher-order interpolations (for even more accuracy, but slower).
+
+In our case, we use **bilinear interpolation** as the default method to reduce the input pattern size. However, this can be easily changed to any of the other methods depending on the needs of the project.
+
 
 2. [**Initialization:**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/initialization.py) A population of candidate solutions (agents) is generated, each with the same dimensions as the reduced-size compartment (target(Height, width)). Each agent(z, Height, width) represents a potential pathway, with its own unique set of molecules and complexes (z represents the number of different molecules and complexes).
 
 3. [**Evolutionary Optimization (Phase 1):**](https://github.com/LoqmanSamani/master_project/tree/systembiology/model/evolution) The algorithm applies evolutionary techniques such as mutation, crossover, and selection to optimize each agent by minimizing its difference from the target (i.e. the system is simulated with each agent and the result - the prediction - is compared with the target and the difference is shown as a cost). This phase focuses on evolving the agents to better match the input pattern.
 
-4. [**Transpose Convolution:**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/pooling.py) A proportion of the agents is selected for up-sampling back to the original compartment size using a transpose convolution operation. This step is necessary to continue the optimization on the original scale while managing computational costs.
+4. [**Zoom Out:**](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/reshape.py): After zooming in, a portion of the agents are selected to zoom back out to the original compartment size. This is done using the same interpolation method applied in the zoom-in step. Zooming out is essential because it allows the optimization process to continue at the original scale while keeping computational costs under control.
 
 5. [**Evolutionary Optimization (Phase 2):**](https://github.com/LoqmanSamani/master_project/tree/systembiology/model/evolution) The second phase of evolutionary optimization further refines the agents. The population size is reduced to lessen computational intensity, and some mutation operations (like species insertion and deletion) are limited or omitted. The assumption is that the optimal system structure has already been identified, so further fine-tuning focuses on the original compartment size.
 
@@ -58,19 +72,6 @@ In **Figure 2** below, you can see the structure of the BioEsAg algorithm reposi
 ![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/model_structure.png)
 
 *Figure 2: BioEsAg Algorithm Repository Structure*
-
-
-
-## 1.2.0.0: Pooling, Padding and Transpose Convolution
-
-![model_structure](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/figures/pooling.jpg)
-
-*Figure3: Pooling, Padding and Transpose Convolution*
-
-
-
-
-
 
 
 
@@ -426,62 +427,67 @@ Within the evolutionary algorithm (EA) used in our system, there are two key ins
 
 
 
-### 1.4.4.0: Cost Functions
+### 1.4.4.0: Cost Function
 
-In the development of our evolutionary algorithm, three distinct [cost functions](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/cost.py) have been implemented. Each cost function has its own strengths and weaknesses, and selecting the appropriate one is critical, as it directly impacts the effectiveness of the algorithm. The robustness of an evolutionary or machine learning algorithm is tightly linked to the choice of the cost (or fitness) function, making this decision a crucial part of the design process.
+In developing both our [evolutionary algorithm](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/bioesag.py) and [gradient-based optimization algorithm](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/gradient/optimization.py), we implemented a [specific cost function](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/evolution/cost.py) that combines two common metrics: **Mean Squared Error (MSE)** and the **Structural Similarity Index (SSIM)**.
 
-We will evaluate each of these cost functions across various tasks to determine which performs best, and ultimately, select the most suitable one as the default for our algorithm. Below are the cost functions we have developed:
+#### Mean Squared Error (MSE)
+MSE is a widely used cost function that calculates the average of the squared differences between the predicted and target values. In simple terms, it measures how much the predicted image differs from the target image pixel by pixel. The formula for MSE is:
 
-1. **Mean Squared Error (MSE)**
-
-   The Mean Squared Error (MSE) is a widely used metric that calculates the average squared difference between predicted values and actual target values. This cost function is sensitive to large errors, as squaring the differences amplifies the impact of larger deviations. ***MSE is particularly useful for assessing how closely a model’s predictions match the actual data.***
-
-   **Mathematical Formulation**:
-   ```
-   MSE_i = (1 / (y * x)) * Σ[(T_jk - P_ijk) ^ 2]
-   ```
-   - `P_ijk` is the predicted value at position (i, j, k) for the i-th individual.
-   - `T_jk` is the target value at position (j, k).
-   - `y * x` is the total number of elements in the matrices.
-
-   This function computes the mean of the squared differences across all elements, providing a single error value for each individual.
+    MSE = (1/n) * Σ(y_i - ŷ_i)^2
 
 
-2. **Normalized Cross-Correlation (NCC)**
+where:
 
-   Normalized Cross-Correlation (NCC) measures the similarity between two matrices (or images) on a pixel-by-pixel basis. Unlike MSE, which focuses on the absolute differences, NCC evaluates pattern similarity, making it less sensitive to differences in contrast between the matrices. ***NCC is particularly useful when the goal is to match the overall patterns rather than the exact pixel values.***
+- `y_i` is the target value
 
-   **Mathematical Formulation**:
-   ```
-   NCC_i = (1 / (y * x)) * Σ[((P_ijk - μ_P) * (T_jk - μ_T)) / (σ_P * σ_T)]
-   ```
-   - `μ_P` and `σ_P` are the mean and standard deviation of the predicted values for the i-th individual.
-   - `μ_T` and `σ_T` are the mean and standard deviation of the target values.
-   - The NCC value quantifies the degree of correlation between the predicted and target matrices, with higher values indicating greater similarity.
+- `y-hat_i` is the predicted value
 
-   If the standard deviations `σ_P` or `σ_T` are zero (indicating no variance), the NCC is set to zero, as meaningful correlation cannot be computed.
+- `n` is the number of pixels.
+
+The goal of MSE is to minimize the overall difference between the predicted and target images. However, when working with normalized images (where pixel values are scaled between 0 and 1), using MSE alone can lead to undesirable outcomes. For example, the algorithm might "cheat" by converging to a zero matrix, which minimizes MSE but effectively erases the image pattern—a situation we want to avoid.
+
+#### Structural Similarity Index (SSIM)
+SSIM, on the other hand, is designed to measure the perceptual similarity between two images, taking into account structural information like luminance, contrast, and texture. Unlike MSE, which treats each pixel independently, SSIM considers the overall structure of the image. The formula for SSIM is:
+
+    SSIM(x, y) = [(2 * μ_x * μ_y + C1) * (2 * σ_xy + C2)] / [(μ_x^2 + μ_y^2 + C1) * (σ_x^2 + σ_y^2 + C2)]
 
 
-3. **GRM Fitness Error**
+where:
+- `µ_x` and `µ_y` are the means of the predicted and target images
+- `sigma_x^2`and `sigma_y^2` are the variances
+- `sigma_xy` is the covariance between the images
+- `C_1` and `C_2` are small constants to avoid division by zero
 
-   The GRM Fitness Error is a specialized cost function developed by R. Mousavi & D. Lobo (2024). It integrates spatial similarity with a penalty for non-equilibrium states. This method applies a box blur to both the target and predicted matrices, reducing the sensitivity to noise and small-scale variations. The error is then calculated based on deviations that exceed a defined threshold, combined with a penalty for large concentration changes in the predicted matrix.
+SSIM focuses on maintaining the structural integrity of the image, but it can be sensitive to contrast variations between the predicted and target images, which can lead to issues when used alone.
 
-   **Mathematical Formulation**:
-   ```
-   GRM_i = (1 / (y * x)) * Σ[log(1 + max(diff_ijk - α, 0))] + max(ΔD_i - β, 0)
-   ```
-   - `diff_ijk` represents the absolute difference between the blurred prediction and target values at position (i, j, k).
-   - `α` is the error concentration threshold, determining which deviations are penalized.
-   - `β` is the equilibrium penalty threshold, controlling the penalty applied to large changes in concentration `ΔD_i`.
-   - The first term accounts for the deviation between the blurred matrices, and the second term penalizes non-equilibrium states.
+#### Combining MSE and SSIM
+To address the limitations of using MSE or SSIM individually, we decided to combine both methods in our cost function. MSE helps ensure accuracy by minimizing overall pixel differences, while SSIM preserves the image's structural details, making sure the pattern is not lost.
 
-   ***The GRM Fitness Error is particularly useful in scenarios where spatial consistency and stability of the prediction are critical.***
+We introduced two hyperparameters, **alpha** and **beta**, to control the contribution of each metric in the total cost function. The combined cost function is calculated as:
 
+    Total Loss = α * MSE + β * (1 - SSIM)
+
+
+Here:
+- **MSE Loss** minimizes pixel differences.
+- **1 - SSIM** maximizes structural similarity (since SSIM ranges from 0 to 1, subtracting it from 1 turns it into a loss).
+
+By adjusting alpha and beta, we can control the balance between reducing the overall error (MSE) and preserving the structural patterns (SSIM).
+
+In summary, this combined cost function helps our optimization algorithms (especially in the gradient-based stage) reduce the cost without compromising the structure of the target image. It avoids the problem of the algorithm converging to a meaningless zero matrix while ensuring the final solution maintains both accuracy and precision.
 
 
 
 
-## 1.5.0.0: Gradient-Based Parameter Optimization with TensorFlow's GradientTape
+
+
+
+
+
+
+
+## 1.5.0.0: [Gradient-Based Parameter Optimization with TensorFlow's GradientTape](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/gradient/optimization.py)
 
 After employing a metaheuristic algorithm (genetic algorithm based on natural selection theory (GABONST)), to find solutions for the simulation system, a gradient-based optimization algorithm is utilized to further refine the solutions. This step is crucial if the evolutionary algorithm does not converge on the exact solution. The gradient-based optimization is implemented in a class named [`GradientOptimization`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/gradient/optimization.py), which leverages TensorFlow, a widely used machine learning library. TensorFlow’s [`GradientTape`](https://www.tensorflow.org/api_docs/python/tf/GradientTape) module is instrumental in automatic differentiation, a fundamental aspect of gradient-based optimization. For effective use of GradientTape, the simulation model must be implemented using TensorFlow functionalities. As mentioned earlier, the simulation models (both [`individual_simulation(individual)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_ind/simulation.py) and [`population_simulation(population)`](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_pop/simulation.py)) were initially implemented using NumPy. To leverage TensorFlow’s gradient capabilities, we reimplemented the individual simulation using TensorFlow. To distinguish between the NumPy and TensorFlow implementations, the new function is named [`tensor_simulation(...)](https://github.com/LoqmanSamani/master_project/blob/systembiology/model/sim/sim_tensor/tensor_simulation.py), which simulates the system using TensorFlow functionalities while preserving the behavior of the NumPy-based version.
 
