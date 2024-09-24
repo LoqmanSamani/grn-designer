@@ -1,4 +1,4 @@
-from tensor_simulation import *
+from ..sim.sim_tensor.tensor_simulation import *
 import os
 import h5py
 import time
@@ -307,6 +307,7 @@ class AdamOptimization:
 
         costs = []
         time_ = []
+        results = np.zeros((self.epochs, self.target.shape[0], self.target.shape[1]))
 
         self.save_to_h5py(
             dataset_name="target",
@@ -344,6 +345,7 @@ class AdamOptimization:
                     param_opt=self.param_opt,
                     compartment_opt=self.compartment_opt
                 )
+                results[i-1, :, :] = y_hat.numpy()
 
                 cost = self.compute_cost_(
                     y_hat=y_hat,
@@ -387,6 +389,12 @@ class AdamOptimization:
                 self.save_to_h5py(
                     dataset_name="time",
                     data_array=np.array(time_),
+                    store_path=self.path,
+                    file_name=self.file_name
+                )
+                self.save_to_h5py(
+                    dataset_name="results",
+                    data_array=results,
                     store_path=self.path,
                     file_name=self.file_name
                 )
