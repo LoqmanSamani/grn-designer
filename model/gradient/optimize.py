@@ -96,7 +96,7 @@ class AdamOptimization:
             h5file.create_dataset(dataset_name, data=data_array)
 
 
-    def parameter_extraction(self, individual):
+    def parameter_extraction(self, individual, param_opt, compartment_opt):
         """
         Extracts the parameters of species, pairs and initial condition compartments from the given individual tensor.
 
@@ -124,22 +124,42 @@ class AdamOptimization:
         pair_start = int(num_species * 2)
         pair_stop = int(pair_start + (num_pairs * 2))
 
-        species = 1
-        for i in range(0, num_species * 2, 2):
-            parameters[f"species_{species}"] = tf.Variable(individual[-1, i, 0:3], trainable=True)
-            species += 1
+        if param_opt:
+            species = 1
+            for i in range(0, num_species * 2, 2):
+                parameters[f"species_{species}"] = tf.Variable(individual[-1, i, 0:3], trainable=True)
+                species += 1
 
-        pair = 1
-        for j in range(pair_start + 1, pair_stop + 1, 2):
-            parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
-            pair += 1
+            pair = 1
+            for j in range(pair_start + 1, pair_stop + 1, 2):
+                parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
+                pair += 1
+        else:
+            species = 1
+            for i in range(0, num_species * 2, 2):
+                parameters[f"species_{species}"] = tf.Variable(individual[-1, i, 0:3], trainable=False)
+                species += 1
 
+            pair = 1
+            for j in range(pair_start + 1, pair_stop + 1, 2):
+                parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=False)
+                pair += 1
+            
 
-        sp = 1
-        for k in range(1, num_species * 2, 2):
-            compartment = tf.Variable(individual[k, :, :], trainable=True)
-            parameters[f'compartment_{sp}'] = compartment
-            sp += 1
+        if compartment_opt:
+            
+            sp = 1
+            for k in range(1, num_species * 2, 2):
+                compartment = tf.Variable(individual[k, :, :], trainable=True)
+                parameters[f'compartment_{sp}'] = compartment
+                sp += 1
+        else:
+            sp = 1
+            for k in range(1, num_species * 2, 2):
+                compartment = tf.Variable(individual[k, :, :], trainable=False)
+                parameters[f'compartment_{sp}'] = compartment
+                sp += 1
+            
 
         return parameters, num_species, num_pairs, max_epoch, stop, time_step
 
@@ -317,7 +337,9 @@ class AdamOptimization:
         )
 
         parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
-            individual=individual
+            individual=individual,
+             param_opt=self.param_opt, 
+            compartment_opt=self.compartment_opt
         )
 
         # defining a learning rate decay for a better convergence in the last steps of the optimization
