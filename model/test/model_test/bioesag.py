@@ -241,7 +241,7 @@ class BioEsAg:
             cval=self.zoom_cval,
             grid_mode=self.zoom_grid_mode
         )
-
+        """
         # Initialize Gradient Optimization
         self.gradient_optimization_ = GradientOptimization(
             epochs=self.optimization_epochs,
@@ -255,6 +255,7 @@ class BioEsAg:
             cost_kernel_size=self.cost_kernel_size,
             weight_decay=self.weight_decay
         )
+        """
 
 
     # store all input information to a json file to use it later if needed (reproduce)

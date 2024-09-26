@@ -109,6 +109,8 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
                         )
                     )
 
+
+
             # Handle species collision
             for j in range(pair_start, pair_stop, 2):
 

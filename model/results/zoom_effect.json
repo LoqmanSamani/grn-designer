@@ -1,0 +1,33 @@
+{
+    "Simulation Duration": {
+        "1 species & 0 pair": [
+            180.5451045036316,
+            64.6853244304657
+        ],
+        "2 species & 1 pair": [
+            653.7833743095398,
+            262.4401876926422
+        ],
+        "3 species & 3 pairs": [
+            1491.5433278083801,
+            577.7086861133575
+        ],
+        "4 species and 6 pairs": [
+            2630.692981481552,
+            986.5229954719543
+        ],
+        "5 species & 10 pairs": [
+            4175.29120182991,
+            1524.51948595047
+        ]
+    },
+    "Simulation Information": [
+        "population_size=50, target.shape=(100, 100)",
+        "evolution_one_epochs=100 or 70",
+        "evolution_two_epochs=30",
+        "evolution_two_ratio=0.5",
+        "zoom_=True",
+        "zoom_in_factor=0.5",
+        "zoom_out_factor=2"
+    ]
+}
