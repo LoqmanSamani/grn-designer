@@ -124,18 +124,37 @@ def evolutionary_optimization(
 
 
     # Separate individuals and costs into low-cost and high-cost groups
-    low_cost_individuals = [population[i] for i in range(len(costs)) if costs[i] < mean_cost]
-    high_cost_individuals = [population[i] for i in range(len(costs)) if costs[i] >= mean_cost]
+    low_cost_individuals = [population[i] for i in range(len(costs)) if costs[i] <= mean_cost]
+    high_cost_individuals = [population[i] for i in range(len(costs)) if costs[i] > mean_cost]
 
     # Separate the costs in the same way
-    low_costs = [costs[i] for i in range(len(costs)) if costs[i] < mean_cost]
-    high_costs = [costs[i] for i in range(len(costs)) if costs[i] >= mean_cost]
+    low_costs = [costs[i] for i in range(len(costs)) if costs[i] <= mean_cost]
+    high_costs = [costs[i] for i in range(len(costs)) if costs[i] > mean_cost]
 
     # Elite individuals based on the lowest costs
     elite_individuals = [population[i] for i in lowest_indices]
 
+
+    # Apply crossover to high-cost individuals
+    for i in range(len(high_cost_individuals)):
+        filtered_elite_individuals = filter_elite_individuals(
+            low_cost_individuals=low_cost_individuals,
+            elite_individuals=elite_individuals,
+            high_cost_individual=high_cost_individuals[i]
+        )
+
+        high_cost_individuals[i] = apply_crossover(
+            elite_individuals=filtered_elite_individuals,
+            individual=high_cost_individuals[i],
+            crossover_alpha=crossover_alpha,
+            sim_crossover=sim_crossover,
+            compartment_crossover=compartment_crossover,
+            param_crossover=param_crossover
+        )
+
     # Apply mutations to low-cost individuals
     for i in range(len(low_cost_individuals)):
+
         low_cost_individuals[i] = apply_mutation(
             individual=low_cost_individuals[i],
             sim_mutation_rate=sim_mutation_rate,
@@ -169,22 +188,7 @@ def evolutionary_optimization(
             species_deletion_mutation=species_deletion_mutation
         )
 
-    # Apply crossover to high-cost individuals
-    for i in range(len(high_cost_individuals)):
-        filtered_elite_individuals = filter_elite_individuals(
-            low_cost_individuals=low_cost_individuals,
-            elite_individuals=elite_individuals,
-            high_cost_individual=high_cost_individuals[i]
-        )
 
-        high_cost_individuals[i] = apply_crossover(
-            elite_individuals=filtered_elite_individuals,
-            individual=high_cost_individuals[i],
-            crossover_alpha=crossover_alpha,
-            sim_crossover=sim_crossover,
-            compartment_crossover=compartment_crossover,
-            param_crossover=param_crossover
-        )
 
     # Recompute costs after crossover
     predictions1 = np.zeros((len(high_cost_individuals), y, x))
@@ -220,7 +224,7 @@ def evolutionary_optimization(
     # Filter out individuals that improved after crossover
     inxs = []
     for i in range(len(costs1)):
-        if costs1[i] < mean_cost:
+        if costs1[i] <= mean_cost:
             low_cost_individuals.append(high_cost_individuals[i])
             low_costs.append(costs1[i])
             inxs.append(i)
@@ -298,7 +302,7 @@ def evolutionary_optimization(
     # Filter out individuals that improved after mutation
     inxs2 = []
     for i in range(len(costs2)):
-        if costs2[i] < mean_cost:
+        if costs2[i] <= mean_cost:
             low_cost_individuals.append(high_cost_individuals[i])
             low_costs.append(costs2[i])
             inxs2.append(i)
@@ -340,7 +344,7 @@ def evolutionary_optimization(
             kernel_size=cost_kernel_size,
             method=cost_method
         )
-        costs3 = [1000 if math.isnan(cost) or cost == float('inf') else cost for cost in costs3]
+        costs3 = [10000 if math.isnan(cost) or cost == float('inf') else cost for cost in costs3]
         low_cost_individuals = low_cost_individuals + initialized_individuals
         low_costs = low_costs + costs3
 

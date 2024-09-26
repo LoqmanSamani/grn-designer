@@ -20,7 +20,7 @@ class BioEsAg:
                  optimization_epochs=50, evolution_one_epochs=100, evolution_two_epochs=50,
                  cost_method="MSE", learning_rate=0.001, weight_decay=None,
                  sim_mutation_rate=0.05, compartment_mutation_rate=0.8, parameter_mutation_rate=0.05,
-                 insertion_mutation_rate=0.2, deletion_mutation_rate=0.25, crossover_alpha=0.5,
+                 insertion_mutation_rate=0.2, deletion_mutation_rate=0.25, crossover_alpha=0.4,
                  gradient_optimization=False, parameter_optimization=False, condition_optimization=False,
                  sim_mutation=True, compartment_mutation=True, param_mutation=False, species_insertion_mutation_one=False,
                  species_deletion_mutation_one=False, species_insertion_mutation_two=False, species_deletion_mutation_two=False,
