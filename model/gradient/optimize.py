@@ -151,7 +151,11 @@ class AdamOptimization:
             sp = 1
             for k in range(1, num_species * 2, 2):
                 compartment = tf.Variable(individual[k, :, :], trainable=True)
-                parameters[f'compartment_{sp}'] = compartment
+                # apply relu to keep the values non-negative
+                compartment_relu = tf.nn.relu(
+                    compartment
+                )
+                parameters[f'compartment_{sp}'] = compartment_relu
                 sp += 1
         else:
             sp = 1
