@@ -391,8 +391,9 @@ class AdamOptimization:
             if i % self.checkpoint_interval == 0:
 
                 toc = time.time()
+                print(time)
                 time_.append(toc - tic)
-                tic = 0
+                tic = time.time()
                 individual = self.update_parameters(
                     individual=individual,
                     parameters=parameters,
