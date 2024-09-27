@@ -9,7 +9,7 @@ import os
 import h5py
 import time
 
-
+# print(tf.config.list_physical_devices('GPU'))
 
 
 
