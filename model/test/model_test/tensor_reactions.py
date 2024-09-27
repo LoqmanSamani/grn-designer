@@ -15,8 +15,8 @@ def apply_component_production(initial_concentration, production_pattern, produc
     Returns:
         - tf.Tensor: Updated concentration tensor.
     """
-
-    updated_concentration = tf.maximum(initial_concentration + (production_pattern * production_rate * time_step), 0.0)
+    production_pattern_ = tf.maximum(production_pattern, 0.0)
+    updated_concentration = tf.maximum(initial_concentration + (production_pattern_ * production_rate * time_step), 0.0)
 
     return updated_concentration
 

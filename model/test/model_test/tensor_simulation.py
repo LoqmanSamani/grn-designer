@@ -3,7 +3,7 @@ from tensor_diffusion import *
 
 
 
-def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, param_opt, compartment_opt):
+def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, param_opt, compartment_opt, trainable_compartment):
     """
     Simulates the evolution of species and complexes in a spatial compartment over time.
 
@@ -42,6 +42,7 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
     num_epochs = int(stop / time_step)  # Total number of epochs
     pair_start = int(num_species * 2)  # Starting index for species pairs
     pair_stop = int(pair_start + (num_pairs * 2))  # Ending index for species pairs
+    results = tf.TensorArray(tf.float32, size=trainable_compartment)
 
     epoch = 0
     while epoch <= max_epoch or epoch <= num_epochs:
@@ -235,8 +236,11 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
 
         epoch += 1
 
+        for sp in range(trainable_compartment):
+            results = results.write(sp, individual[sp * 2])
+        results = results.stack()
 
-    return individual[0, :, :]
+    return results
 
 
 

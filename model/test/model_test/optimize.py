@@ -40,7 +40,8 @@ class AdamOptimization:
                  max_val=1.0,
                  checkpoint_interval=10,
                  decay_steps=40,
-                 decay_rate=0.6
+                 decay_rate=0.6,
+                 trainable_compartment=1
                  ):
 
         self.epochs = epochs
@@ -56,6 +57,7 @@ class AdamOptimization:
         self.checkpoint_interval = checkpoint_interval
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
+        self.trainable_compartment = trainable_compartment
         """
         Initializes the GradientOptimization class with the specified parameters.
         """
@@ -96,7 +98,7 @@ class AdamOptimization:
             h5file.create_dataset(dataset_name, data=data_array)
 
 
-    def parameter_extraction(self, individual, param_opt, compartment_opt):
+    def parameter_extraction(self, individual, param_opt, compartment_opt, trainable_compartment):
         """
         Extracts the parameters of species, pairs and initial condition compartments from the given individual tensor.
 
@@ -150,12 +152,12 @@ class AdamOptimization:
             
             sp = 1
             for k in range(1, num_species * 2, 2):
-                compartment = tf.Variable(individual[k, :, :], trainable=True)
-                # apply relu to keep the values non-negative
-                compartment_relu = tf.nn.relu(
-                    compartment
-                )
-                parameters[f'compartment_{sp}'] = compartment_relu
+                if sp <= trainable_compartment:
+                    compartment = tf.Variable(individual[k, :, :], trainable=True)
+                else:
+                    compartment = tf.Variable(individual[k, :, :], trainable=False)
+
+                parameters[f'compartment_{sp}'] = compartment
                 sp += 1
         else:
             sp = 1
@@ -171,7 +173,7 @@ class AdamOptimization:
 
 
 
-    def update_parameters(self, individual, parameters, param_opt, compartment_opt):
+    def update_parameters(self, individual, parameters, param_opt, compartment_opt, trainable_compartment):
         """
         Updates the parameters of species and pairs in the individual tensor after optimization.
 
@@ -213,17 +215,18 @@ class AdamOptimization:
         if compartment_opt:
             sp = 1
             for i in range(1, num_species * 2, 2):
-                indices_ = []
-                updates = tf.reshape(parameters[f"compartment_{sp}"], [-1])
-                for row in range(individual[0, :, :].shape[0]):
-                    for col in range(individual[0, :, :].shape[1]):
-                        indices_.append([i, row, col])
+                if sp <= trainable_compartment:
+                    indices_ = []
+                    updates = tf.reshape(parameters[f"compartment_{sp}"], [-1])
+                    for row in range(individual[0, :, :].shape[0]):
+                        for col in range(individual[0, :, :].shape[1]):
+                            indices_.append([i, row, col])
 
-                individual = tf.tensor_scatter_nd_update(
-                    individual,
-                    indices=indices_,
-                    updates=updates
-                )
+                    individual = tf.tensor_scatter_nd_update(
+                        individual,
+                        indices=indices_,
+                        updates=updates
+                    )
                 sp += 1
 
         return individual
@@ -233,7 +236,7 @@ class AdamOptimization:
 
 
 
-    def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, param_opt, compartment_opt):
+    def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, param_opt, compartment_opt, trainable_compartment):
         """
         Runs a simulation using the given individual and parameters.
 
@@ -259,7 +262,8 @@ class AdamOptimization:
             time_step=time_step,
             max_epoch=max_epoch,
             param_opt=param_opt,
-            compartment_opt=compartment_opt
+            compartment_opt=compartment_opt,
+            trainable_compartment=trainable_compartment
         )
 
         return y_hat
@@ -267,7 +271,7 @@ class AdamOptimization:
 
 
 
-    def compute_cost_(self, y_hat, target, alpha, beta, max_val):
+    def compute_cost_(self, y_hat, target, alpha, beta, max_val, trainable_compartment):
 
         """
         Computes the cost (loss) between the simulated output and the target.
@@ -279,8 +283,14 @@ class AdamOptimization:
         Returns:
             - tf.Tensor: The computed cost (loss) value.
         """
-        mse_loss = tf.reduce_mean(tf.square(y_hat - target))
-        ssim_loss_value = self.ssim_loss(y_hat, target, max_val)
+        mse_loss = 0.0
+        ssim_loss_value = 0.0
+        for i in range(1, trainable_compartment + 1):
+            mse = tf.reduce_mean(tf.square(y_hat[i, :, :] - target))
+            ssim_loss_ = self.ssim_loss(y_hat[i, :, :], target, max_val)
+            mse_loss += mse
+            ssim_loss_value += ssim_loss_
+
         total_loss = alpha * mse_loss + beta * ssim_loss_value
 
         return total_loss
@@ -331,7 +341,7 @@ class AdamOptimization:
 
         costs = []
         time_ = []
-        results = np.zeros((self.epochs, self.target.shape[0], self.target.shape[1]))
+        results = np.zeros((self.trainable_compartment, self.epochs, self.target.shape[0], self.target.shape[1]))
 
         self.save_to_h5py(
             dataset_name="target",
@@ -343,7 +353,8 @@ class AdamOptimization:
         parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
             individual=individual,
              param_opt=self.param_opt, 
-            compartment_opt=self.compartment_opt
+            compartment_opt=self.compartment_opt,
+            trainable_compartment=self.trainable_compartment
         )
 
         # defining a learning rate decay for a better convergence in the last steps of the optimization
@@ -369,16 +380,19 @@ class AdamOptimization:
                     time_step=time_step,
                     max_epoch=max_epoch,
                     param_opt=self.param_opt,
-                    compartment_opt=self.compartment_opt
+                    compartment_opt=self.compartment_opt,
+                    trainable_compartment=self.trainable_compartment
                 )
-                results[i-1, :, :] = y_hat.numpy()
+                for j in range(1, self.trainable_compartment + 1):
+                    results[j, i-1, :, :] = y_hat[j, :, :].numpy()
 
                 cost = self.compute_cost_(
                     y_hat=y_hat,
                     target=self.target,
                     alpha=self.cost_alpha,
                     beta=self.cost_beta,
-                    max_val=self.max_val
+                    max_val=self.max_val,
+                    trainable_compartment=self.trainable_compartment
                 )
 
                 costs.append(cost.numpy())
@@ -398,7 +412,9 @@ class AdamOptimization:
                     individual=individual,
                     parameters=parameters,
                     param_opt=self.param_opt,
-                    compartment_opt=self.compartment_opt
+                    compartment_opt=self.compartment_opt,
+                    trainable_compartment=self.trainable_compartment
+
                 )
 
                 self.save_to_h5py(
@@ -431,7 +447,9 @@ class AdamOptimization:
             individual=individual,
             parameters=parameters,
             param_opt=self.param_opt,
-            compartment_opt=self.compartment_opt
+            compartment_opt=self.compartment_opt,
+            trainable_compartment=self.trainable_compartment
+
         )
 
         return individual, costs
