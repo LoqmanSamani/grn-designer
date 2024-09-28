@@ -312,8 +312,13 @@ class AdamOptimization:
 
         return (1 - tf.reduce_mean(ssim_score)).numpy()
 
-
-
+    def create_optimizer(self):
+        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+            initial_learning_rate=self.learning_rate,
+            decay_steps=self.decay_steps,
+            decay_rate=self.decay_rate
+        )
+        return tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
 
     def gradient_optimization(self, individual):
@@ -346,47 +351,39 @@ class AdamOptimization:
             compartment_opt=self.compartment_opt
         )
 
-        # defining a learning rate decay for a better convergence in the last steps of the optimization
-        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-            initial_learning_rate=self.learning_rate,
-            decay_steps=self.decay_steps,
-            decay_rate=self.decay_rate
-        )
-
-        optimizer = tf.keras.optimizers.Adam(
-            learning_rate=lr_schedule
-        )
-
         tic = time.time()
         for i in range(1, self.epochs + 1):
-            with tf.GradientTape() as tape:
-                y_hat = self.simulation(
-                    individual=individual,
-                    parameters=parameters,
-                    num_species=num_species,
-                    num_pairs=num_pairs,
-                    stop=stop,
-                    time_step=time_step,
-                    max_epoch=max_epoch,
-                    param_opt=self.param_opt,
-                    compartment_opt=self.compartment_opt
-                )
-                results[i-1, :, :] = y_hat.numpy()
+            for j in range(len(parameters)):  # Assuming you have multiple parameter sets
+                optimizer = self.create_optimizer()  # Recreate the optimizer for each parameter set
+                with tf.GradientTape() as tape:
+                    y_hat = self.simulation(
+                        individual=individual,
+                        parameters=parameters[j],  # Use the correct parameter set
+                        num_species=num_species,
+                        num_pairs=num_pairs,
+                        stop=stop,
+                        time_step=time_step,
+                        max_epoch=max_epoch,
+                        param_opt=self.param_opt,
+                        compartment_opt=self.compartment_opt
+                    )
+                    results[j, i - 1, :, :] = y_hat.numpy()
 
-                cost = self.compute_cost_(
-                    y_hat=y_hat,
-                    target=self.target,
-                    alpha=self.cost_alpha,
-                    beta=self.cost_beta,
-                    max_val=self.max_val
-                )
+                    cost = self.compute_cost_(
+                        y_hat=y_hat,
+                        target=self.target,
+                        alpha=self.cost_alpha,
+                        beta=self.cost_beta,
+                        max_val=self.max_val
+                    )
 
-                costs.append(cost.numpy())
+                    costs.append(cost.numpy())
 
-            variables = list(parameters.values())
-            gradients = tape.gradient(cost, variables)
-            optimizer.apply_gradients(zip(gradients, variables))
-            print(f"Epoch {i}/{self.epochs}, Cost: {cost.numpy()}")
+                variables = list(parameters[j].values())  # Track the correct variables
+                gradients = tape.gradient(cost, variables)
+                optimizer.apply_gradients(zip(gradients, variables))  # Apply gradients to the correct variables
+
+                print(f"Epoch {i}/{self.epochs}, Optimizer {j + 1}, Cost: {cost.numpy()}")
 
             if i % self.checkpoint_interval == 0:
 
