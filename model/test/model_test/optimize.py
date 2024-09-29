@@ -41,7 +41,7 @@ class AdamOptimization:
                  checkpoint_interval=10,
                  decay_steps=40,
                  decay_rate=0.6,
-                 trainable_compartment=1,
+                 trainable_compartment=1
                  ):
 
         self.epochs = epochs
@@ -93,30 +93,15 @@ class AdamOptimization:
 
         with h5py.File(path, 'a') as h5file:
             if dataset_name in h5file:
-                # If the dataset already exists, delete it
+
                 del h5file[dataset_name]
-            # Now create the new dataset with the updated data
+
             h5file.create_dataset(dataset_name, data=data_array)
 
 
+
+
     def parameter_extraction(self, individual, param_opt, compartment_opt, trainable_compartment):
-        """
-        Extracts the parameters of species, pairs and initial condition compartments from the given individual tensor.
-
-        Args:
-            - individual (tf.Tensor): A tensor representing an individual in the population.
-            - param_opt (bool): if True, the species and complex parameters will be extracted.
-            - compartment_opt (bool): if True, the initial condition of each species will be extracted.
-
-        Returns:
-            - tuple: A tuple containing:
-                - parameters (dict): A dictionary of trainable parameters for species and pairs.
-                - num_species (int): The number of species in the individual.
-                - num_pairs (int): The number of pair interactions in the individual.
-                - max_epoch (int): The maximum number of epochs for the simulation.
-                - stop (int): The stop time for the simulation.
-                - time_step (float): The time step for the simulation.
-        """
 
         params = []
         num_species = int(individual[-1, -1, 0])
@@ -127,18 +112,17 @@ class AdamOptimization:
         pair_start = int(num_species * 2)
         pair_stop = int(pair_start + (num_pairs * 2))
 
-
         for t in range(trainable_compartment):
 
             parameters = {}
             if param_opt:
                 species = 1
                 for i in range(0, num_species * 2, 2):
-                    if int(species-1) == t:
-                        parameters[f"species_{species}"] = tf.Variable(individual[-1, i, 0:3], trainable=True)
+                    if int(species - 1) == t:
+                        parameters[f"species_{species}"] = tf.Variable(individual[0, i, 0:3], trainable=True)
                         species += 1
                     else:
-                        parameters[f"species_{species}"] = tf.Variable(individual[-1, i, 0:3], trainable=False)
+                        parameters[f"species_{species}"] = tf.Variable(individual[0, i, 0:3], trainable=False)
                         species += 1
 
                 pair = 1
@@ -149,20 +133,18 @@ class AdamOptimization:
             else:
                 species = 1
                 for i in range(0, num_species * 2, 2):
-                    parameters[f"species_{species}"] = tf.Variable(individual[-1, i, 0:3], trainable=False)
+                    parameters[f"species_{species}"] = tf.Variable(individual[0, i, 0:3], trainable=False)
                     species += 1
-
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
                     parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=False)
                     pair += 1
-            
 
             if compartment_opt:
                 sp = 1
                 for k in range(1, num_species * 2, 2):
-                    if int(sp-1) == t:
+                    if int(sp - 1) == t:
                         compartment = tf.Variable(individual[k, :, :], trainable=True)
                         parameters[f'compartment_{sp}'] = compartment
                         sp += 1
@@ -180,44 +162,104 @@ class AdamOptimization:
 
             params.append(parameters)
 
+        if trainable_compartment < 1:
+            parameters = {}
+            if param_opt:
+                species = 1
+                for i in range(0, num_species * 2, 2):
+                    parameters[f"species_{species}"] = tf.Variable(individual[0, i, 0:3], trainable=True)
+                    species += 1
+
+                pair = 1
+                for j in range(pair_start + 1, pair_stop + 1, 2):
+                    parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
+                    pair += 1
+
+                sp = 1
+                for k in range(1, num_species * 2, 2):
+                    compartment = tf.Variable(individual[k, :, :], trainable=False)
+                    parameters[f'compartment_{sp}'] = compartment
+                    sp += 1
+
+            else:
+                species = 1
+                for i in range(0, num_species * 2, 2):
+                    parameters[f"species_{species}"] = tf.Variable(individual[0, i, 0:3], trainable=False)
+                    species += 1
+
+                pair = 1
+                for j in range(pair_start + 1, pair_stop + 1, 2):
+                    parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=False)
+                    pair += 1
+
+                sp = 1
+                for k in range(1, num_species * 2, 2):
+                    compartment = tf.Variable(individual[k, :, :], trainable=False)
+                    parameters[f'compartment_{sp}'] = compartment
+                    sp += 1
+
+            params.append(parameters)
+
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
 
 
 
     def update_parameters(self, individual, parameters, param_opt, compartment_opt, trainable_compartment):
-        """
-        Updates the parameters of species and pairs in the individual tensor after optimization.
-
-        Args:
-            - individual (tf.Tensor): The original individual tensor.
-            - parameters (dict): A dictionary of updated parameters for species and pairs.
-            - param_opt (bool): if True, the species and complex parameters will be extracted.
-            - compartment_opt (bool): if True, the initial condition of each species will be extracted.
-
-        Returns:
-            - tf.Tensor: The updated individual tensor with optimized parameters.
-        """
 
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
         pair_start = int(num_species * 2)
         z, y, x = individual.shape
 
-        for i in range(len(parameters)):
-            if param_opt:
+        if trainable_compartment < 1 and param_opt:
+
+            j = 0
+            for species in range(1, num_species + 1):
+                individual = tf.tensor_scatter_nd_update(
+                    individual,
+                    indices=tf.constant([[z - 1, j, k] for k in range(3)], dtype=tf.int32),
+                    updates=parameters[0][f"species_{species}"]
+                )
+                j += 2
+
+            for pair in range(1, num_pairs + 1):
+                j = pair_start + (pair - 1) * 2 + 1
+                individual = tf.tensor_scatter_nd_update(
+                    individual,
+                    indices=tf.constant([[j, 1, k] for k in range(4)], dtype=tf.int32),
+                    updates=parameters[0][f"pair_{pair}"]
+                )
+
+            for comp in range(1, num_species + 1):
+                idx = int(((comp - 1) * 2) + 1)
+
+                indices_ = []
+                updates = tf.maximum(tf.reshape(parameters[0][f"compartment_{comp}"], [-1]), 0.0)
+                for row in range(y):
+                    for col in range(x):
+                        indices_.append([idx, row, col])
+
+                individual = tf.tensor_scatter_nd_update(
+                    individual,
+                    indices=indices_,
+                    updates=updates
+                )
+
+
+        elif trainable_compartment >= 1:
+            for i in range(len(parameters)):
                 j = 0
-                for species in range(1, num_species+1):
+                for species in range(1, num_species + 1):
                     if parameters[i][f"species_{species}"].trainable:
                         individual = tf.tensor_scatter_nd_update(
                             individual,
-                            indices=tf.constant([[z-1, j, k] for k in range(3)], dtype=tf.int32),
+                            indices=tf.constant([[z - 1, j, k] for k in range(3)], dtype=tf.int32),
                             updates=parameters[i][f"species_{species}"]
                         )
                     j += 2
 
-
-                for pair in range(1, num_pairs+1):
+                for pair in range(1, num_pairs + 1):
                     if parameters[i][f"pair_{pair}"].trainable:
                         j = pair_start + (pair - 1) * 2 + 1
                         individual = tf.tensor_scatter_nd_update(
@@ -226,9 +268,8 @@ class AdamOptimization:
                             updates=parameters[i][f"pair_{pair}"]
                         )
 
-            if compartment_opt:
-                for comp in range(1, trainable_compartment+1):
-                    idx = int(((comp-1)*2)+1)
+                for comp in range(1, trainable_compartment + 1):
+                    idx = int(((comp - 1) * 2) + 1)
                     if parameters[i][f"compartment_{comp}"].trainable:
                         indices_ = []
                         updates = tf.maximum(tf.reshape(parameters[i][f"compartment_{comp}"], [-1]), 0.0)
@@ -243,7 +284,6 @@ class AdamOptimization:
                         )
 
         return individual
-
 
 
 
@@ -366,14 +406,14 @@ class AdamOptimization:
             )
             return tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
-
+        optimizers = [create_optimizer() for _ in range(len(parameters))]
         tic_ = time.time()
         tic = time.time()
         for i in range(1, self.epochs + 1):
             cost_ = []
-            for j in range(len(parameters)):  # Assuming you have multiple parameter sets
+            for j in range(len(parameters)):
 
-                optimizer = create_optimizer()  # Recreate the optimizer for each parameter set
+                optimizer = optimizers[j]
 
                 with tf.GradientTape() as tape:
                     y_hat = self.simulation(
