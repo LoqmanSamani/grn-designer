@@ -190,10 +190,16 @@ class AdamOptimization:
                     sp += 1
 
             params.append(parameters)
+            print(params)
+            for i, param_dict in enumerate(params):
+                print(f"Checking parameter set {i+1}")
+                for key, value in param_dict.items():
+                    print(f"Variable '{key}' is {'trainable' if value.trainable else 'not trainable'}.")
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
     def update_parameters(self, individual, parameters, param_opt, trainable_compartment):
+        print(individual)
 
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
@@ -270,6 +276,7 @@ class AdamOptimization:
                             indices=indices_,
                             updates=updates
                         )
+        print(individual)
 
         return individual
 

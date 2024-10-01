@@ -49,17 +49,17 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
     while epoch <= max_epoch or epoch <= num_epochs:
 
         for i in range(num_iters):
-
+            
             # Update species production
             for j in range(0, num_species * 2, 2):
-
+                h = int(j / 2) + 1
                 individual = tf.tensor_scatter_nd_update(
                     tensor=individual,
                     indices=list([j, k, i] for k in range(y)),
                     updates=apply_component_production(
                         initial_concentration=individual[j, :, i],
-                        production_pattern=parameters[f"compartment_{int(compartment + 1)}"][:, i],
-                        production_rate=parameters[f"species_{int(compartment + 1)}"][0],
+                        production_pattern=parameters[f"compartment_{h}"][:, i],
+                        production_rate=parameters[f"species_{h}"][0],
                         time_step=time_step
                     )
                 )
@@ -177,7 +177,7 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
 
         epoch += 1
 
-    return individual[comp_, :, :]
+    return individual
 
 
 
