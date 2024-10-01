@@ -459,7 +459,7 @@ class AdamOptimization:
 
                 variables = list(parameters[j].values())
                 gradients = tape.gradient(cost, variables)
-                gradients = [tf.clip_by_value(grad, -1.0, 1.0) for grad in gradients]
+                # gradients = [tf.clip_by_value(grad, -1.0, 1.0) for grad in gradients]
                 optimizer.apply_gradients(zip(gradients, variables))
                 results[j, i - 1, :, :] = y_hat.numpy()
                 individual = self.init_individual(individual=individual)
