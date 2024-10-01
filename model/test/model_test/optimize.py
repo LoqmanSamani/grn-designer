@@ -5,9 +5,6 @@ import time
 import numpy as np
 
 
-
-
-
 class AdamOptimization:
     """
     A class for performing gradient-based optimization using the Adam optimizer.
@@ -26,13 +23,12 @@ class AdamOptimization:
         - weight_decay (float): The weight decay (regularization) factor for the Adam optimizer.
     """
 
-
     def __init__(self,
                  target,
                  path,
                  file_name,
                  epochs=100,
-                 learning_rate=0.001,
+                 learning_rate=None,
                  param_opt=False,
                  compartment_opt=True,
                  cost_alpha=0.6,
@@ -45,7 +41,6 @@ class AdamOptimization:
                  ):
 
         self.epochs = epochs
-        self.learning_rate = learning_rate
         self.target = target
         self.path = path
         self.file_name = file_name
@@ -58,13 +53,13 @@ class AdamOptimization:
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
         self.trainable_compartment = trainable_compartment
-        
+        if learning_rate is None:
+            learning_rate = [0.001]  # Default learning rate
+        self.learning_rate = learning_rate
+
         """
         Initializes the GradientOptimization class with the specified parameters.
         """
-
-
-
 
     def save_to_h5py(self, dataset_name, data_array, store_path, file_name):
         """
@@ -93,13 +88,9 @@ class AdamOptimization:
 
         with h5py.File(path, 'a') as h5file:
             if dataset_name in h5file:
-
                 del h5file[dataset_name]
 
             h5file.create_dataset(dataset_name, data=data_array)
-
-
-
 
     def parameter_extraction(self, individual, param_opt, compartment_opt, trainable_compartment):
 
@@ -202,10 +193,7 @@ class AdamOptimization:
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
-
-
-
-    def update_parameters(self, individual, parameters, param_opt, compartment_opt, trainable_compartment):
+    def update_parameters(self, individual, parameters, param_opt, trainable_compartment):
 
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
@@ -285,10 +273,6 @@ class AdamOptimization:
 
         return individual
 
-
-
-
-
     def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, compartment):
         """
         Runs a simulation using the given individual and parameters.
@@ -337,10 +321,6 @@ class AdamOptimization:
 
         return total_loss
 
-
-
-
-
     def ssim_loss(self, y_hat, target, max_val):
         """
         Compute the Structural Similarity Index (SSIM) loss between two matrices.
@@ -359,11 +339,41 @@ class AdamOptimization:
         target = tf.expand_dims(target, axis=-1)
         ssim_score = tf.image.ssim(y_hat, target, max_val=max_val)
 
-    
         return (1 - tf.reduce_mean(ssim_score)).numpy()
 
+    def share_information(self, params):
+
+        for i in range(len(params)):
+            current_dict = params[i]
+            for j in range(len(params)):
+                if i != j:
+                    for key, val in current_dict.items():
+                        if val.trainable:
+                            if key in params[j] and not params[j][key].trainable:
+                                params[j][key].assign(val)
+
+        return params
 
 
+    def init_individual(self, individual):
+
+        num_species = int(individual[-1, -1, 0])
+        num_pairs = int(individual[-1, -1, 1])
+        pair_start = int(num_species * 2)
+        pair_stop = int(pair_start + (num_pairs * 2))
+        _, y, x = individual.shape
+
+        for i in range(0, num_species * 2, 2):
+            update = tf.zeros((y, x))
+            indices = tf.constant([[i]])
+            individual = tf.tensor_scatter_nd_update(individual, indices, [update])
+
+        for j in range(pair_start, pair_stop, 2):
+            update = tf.zeros((y, x))
+            indices = tf.constant([[j]])
+            individual = tf.tensor_scatter_nd_update(individual, indices, [update])
+
+        return individual
 
 
 
@@ -393,26 +403,29 @@ class AdamOptimization:
 
         parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
             individual=individual,
-             param_opt=self.param_opt, 
+            param_opt=self.param_opt,
             compartment_opt=self.compartment_opt,
             trainable_compartment=self.trainable_compartment
         )
 
-        def create_optimizer():
+        def create_optimizer(lr):
             lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-                initial_learning_rate=self.learning_rate,
+                initial_learning_rate=lr,
                 decay_steps=self.decay_steps,
                 decay_rate=self.decay_rate
             )
             return tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
-        optimizers = [create_optimizer() for _ in range(len(parameters))]
+        if len(self.learning_rate) > 1:
+            optimizers = [create_optimizer(self.learning_rate[i]) for i in range(len(parameters))]
+        else:
+            optimizers = [create_optimizer(self.learning_rate[0]) for _ in range(len(parameters))]
+
         tic_ = time.time()
         tic = time.time()
         for i in range(1, self.epochs + 1):
             cost_ = []
             for j in range(len(parameters)):
-
                 optimizer = optimizers[j]
 
                 with tf.GradientTape() as tape:
@@ -441,12 +454,14 @@ class AdamOptimization:
                 gradients = tape.gradient(cost, variables)
                 optimizer.apply_gradients(zip(gradients, variables))
                 results[j, i - 1, :, :] = y_hat.numpy()
+                individual = self.init_individual(individual=individual)
 
-                print(f"Epoch {i}/{self.epochs}, Optimizer {j+1}, Cost: {cost.numpy()}")
+                print(f"Epoch {i}/{self.epochs}, Optimizer {j + 1}, Cost: {cost.numpy()}")
+
+            parameters = self.share_information(params=parameters)
 
             costs.append(cost_)
             if i % self.checkpoint_interval == 0:
-
                 toc = time.time()
                 time_.append(toc - tic)
                 tic = time.time()
@@ -454,7 +469,6 @@ class AdamOptimization:
                     individual=individual,
                     parameters=parameters,
                     param_opt=self.param_opt,
-                    compartment_opt=self.compartment_opt,
                     trainable_compartment=self.trainable_compartment
 
                 )
@@ -492,12 +506,11 @@ class AdamOptimization:
             store_path=self.path,
             file_name=self.file_name
         )
-        
+
         individual = self.update_parameters(
             individual=individual,
             parameters=parameters,
             param_opt=self.param_opt,
-            compartment_opt=self.compartment_opt,
             trainable_compartment=self.trainable_compartment
 
         )
@@ -519,5 +532,5 @@ class AdamOptimization:
             store_path=self.path,
             file_name=self.file_name
         )
-        
+
         return individual, costs

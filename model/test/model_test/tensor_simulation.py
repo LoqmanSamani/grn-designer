@@ -2,6 +2,9 @@ from tensor_reactions import *
 from tensor_diffusion import *
 
 
+
+
+
 def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, compartment):
     """
     Simulates the evolution of species and complexes in a spatial compartment over time.
@@ -46,21 +49,24 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
     while epoch <= max_epoch or epoch <= num_epochs:
 
         for i in range(num_iters):
+
             # Update species production
-            individual = tf.tensor_scatter_nd_update(
-                tensor=individual,
-                indices=list([comp_, k, i] for k in range(y)),
-                updates=apply_component_production(
-                    initial_concentration=individual[comp_, :, i],
-                    production_pattern=parameters[f"compartment_{int(compartment+1)}"][:, i],
-                    production_rate=parameters[f"species_{int(compartment+1)}"][0],
-                    time_step=time_step
+            for j in range(0, num_species * 2, 2):
+
+                individual = tf.tensor_scatter_nd_update(
+                    tensor=individual,
+                    indices=list([j, k, i] for k in range(y)),
+                    updates=apply_component_production(
+                        initial_concentration=individual[j, :, i],
+                        production_pattern=parameters[f"compartment_{int(compartment + 1)}"][:, i],
+                        production_rate=parameters[f"species_{int(compartment + 1)}"][0],
+                        time_step=time_step
+                    )
                 )
-            )
+
 
             # Handle species collision
             for j in range(pair_start, pair_stop, 2):
-
                 species1_idx = int(individual[j + 1, 0, 0])
                 species2_idx = int(individual[j + 1, 0, 1])
 
@@ -88,10 +94,8 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
                     updates=updated_complex
                 )
 
-
             # Update species degradation
             for j in range(0, num_species * 2, 2):
-
                 individual = tf.tensor_scatter_nd_update(
                     tensor=individual,
                     indices=list([j, k, i] for k in range(y)),
@@ -102,10 +106,8 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
                     )
                 )
 
-
             # Handle complex degradation
             for j in range(pair_start, pair_stop, 2):
-
                 individual = tf.tensor_scatter_nd_update(
                     tensor=individual,
                     indices=list([j, k, i] for k in range(y)),
@@ -116,10 +118,8 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
                     )
                 )
 
-
             # Handle complex dissociation
             for j in range(pair_start, pair_stop, 2):
-
                 species1_idx = int(individual[j + 1, 0, 0])
                 species2_idx = int(individual[j + 1, 0, 1])
 
@@ -147,10 +147,8 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
                     updates=updated_complex
                 )
 
-
             # Update species diffusion
             for j in range(0, num_species * 2, 2):
-
                 individual = tf.tensor_scatter_nd_update(
                     tensor=individual,
                     indices=list([j, k, i] for k in range(y)),
@@ -163,10 +161,8 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
                     )
                 )
 
-
             # Handle complex diffusion
             for j in range(pair_start, pair_stop, 2):
-
                 individual = tf.tensor_scatter_nd_update(
                     tensor=individual,
                     indices=list([j, k, i] for k in range(y)),
