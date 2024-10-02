@@ -254,6 +254,9 @@ class AdamOptimization:
                     sp += 1
 
             params.append(parameters)
+            print("extracted params:")
+            print("--------------------------------------------")
+            print(parameters)
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
@@ -261,6 +264,15 @@ class AdamOptimization:
 
 
     def update_parameters(self, individual, parameters, param_opt, trainable_compartment):
+        print("ind before update:")
+        print("--------------------------------------------")
+        print(individual[0])
+        print(individual[1])
+        print(individual[2])
+        print(individual[3])
+        print(individual[4])
+        print(individual[5])
+        print(individual[6])
 
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
@@ -337,6 +349,15 @@ class AdamOptimization:
                             indices=indices_,
                             updates=updates
                         )
+        print("ind after update:")
+        print("--------------------------------------------")
+        print(individual[0])
+        print(individual[1])
+        print(individual[2])
+        print(individual[3])
+        print(individual[4])
+        print(individual[5])
+        print(individual[6])
 
         return individual
 
@@ -383,9 +404,15 @@ class AdamOptimization:
             - tf.Tensor: The computed cost (loss) value.
         """
         mse_loss = tf.reduce_mean(tf.square(y_hat - target))
+        print("------------------------------------------")
+        print("mse loss:")
+        print(mse_loss)
         ssim_loss_value = self.ssim_loss(y_hat, target, max_val)
+        print("ssim loss:")
+        print(ssim_loss_value)
         total_loss = alpha * mse_loss + beta * ssim_loss_value
-
+        print("total loss:")
+        print(total_loss)
         return total_loss
 
     def ssim_loss(self, y_hat, target, max_val):
@@ -411,7 +438,9 @@ class AdamOptimization:
 
 
     def share_information(self, params):
-
+        print("params before share:")
+        print("_--------------------------------")
+        print(params)
         for i in range(len(params)):
             current_dict = params[i]
             for j in range(len(params)):
@@ -420,12 +449,18 @@ class AdamOptimization:
                         if val.trainable:
                             if key in params[j] and not params[j][key].trainable:
                                 params[j][key].assign(val)
+        print("params after share:")
+        print("_--------------------------------")
+        print(params)
 
         return params
 
 
     def init_individual(self, individual):
-
+        print("init ind:")
+        print("-----------------------------")
+        print("ind before init:")
+        print(individual)
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
         pair_start = int(num_species * 2)
@@ -441,6 +476,8 @@ class AdamOptimization:
             update = tf.zeros((y, x))
             indices = tf.constant([[j]])
             individual = tf.tensor_scatter_nd_update(individual, indices, [update])
+        print("ind after init:")
+        print(individual)
 
         return individual
 
@@ -525,16 +562,19 @@ class AdamOptimization:
                     )
 
                     cost_.append(cost.numpy())
+                print(f"Epoch {i}/{self.epochs}, Optimizer {j + 1}, Cost: {cost.numpy()}")
 
                 variables = list(parameters[j].values())
                 gradients = tape.gradient(cost, variables)
                 # gradients = [tf.clip_by_value(grad, -1.0, 1.0) for grad in gradients]
-                #print(gradients)
+                print("grads:")
+                print("------------------------------------------------------")
+                print(gradients)
                 optimizer.apply_gradients(zip(gradients, variables))
                 results[j, i - 1, :, :] = y_hat.numpy()
                 individual = self.init_individual(individual=individual)
 
-                print(f"Epoch {i}/{self.epochs}, Optimizer {j + 1}, Cost: {cost.numpy()}")
+
 
             parameters = self.share_information(params=parameters)
 
