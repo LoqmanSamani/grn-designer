@@ -3,8 +3,6 @@ from tensor_diffusion import *
 
 
 
-
-
 def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, compartment):
     """
     Simulates the evolution of species and complexes in a spatial compartment over time.
@@ -177,7 +175,7 @@ def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time
 
         epoch += 1
 
-    return individual
+    return individual[comp_, :, :]
 
 
 

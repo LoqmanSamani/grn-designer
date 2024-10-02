@@ -5,6 +5,9 @@ import time
 import numpy as np
 
 
+
+
+
 class AdamOptimization:
     """
     A class for performing gradient-based optimization using the Adam optimizer.
@@ -35,6 +38,7 @@ class AdamOptimization:
                  cost_beta=0.4,
                  max_val=1.0,
                  checkpoint_interval=10,
+                 lr_decay=False,
                  decay_steps=40,
                  decay_rate=0.6,
                  trainable_compartment=1
@@ -50,6 +54,7 @@ class AdamOptimization:
         self.cost_beta = cost_beta
         self.max_val = max_val
         self.checkpoint_interval = checkpoint_interval
+        self.lr_decay = lr_decay
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
         self.trainable_compartment = trainable_compartment
@@ -92,6 +97,9 @@ class AdamOptimization:
 
             h5file.create_dataset(dataset_name, data=data_array)
 
+
+
+
     def parameter_extraction(self, individual, param_opt, compartment_opt, trainable_compartment):
 
         params = []
@@ -110,44 +118,76 @@ class AdamOptimization:
                 species = 1
                 for i in range(0, num_species * 2, 2):
                     if int(species - 1) == t:
-                        parameters[f"species_{species}"] = tf.Variable(individual[0, i, 0:3], trainable=True)
+                        parameters[f"species_{species}"] = tf.Variable(
+                            individual[0, i, 0:3],
+                            name=f"species_{species}",
+                            trainable=True
+                        )
                         species += 1
                     else:
-                        parameters[f"species_{species}"] = tf.Variable(individual[0, i, 0:3], trainable=False)
+                        parameters[f"species_{species}"] = tf.Variable(
+                            individual[0, i, 0:3],
+                            name=f"species_{species}",
+                            trainable=False
+                        )
                         species += 1
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
+                    parameters[f"pair_{pair}"] = tf.Variable(
+                        individual[j, 1, :4],
+                        name=f"pair_{pair}",
+                        trainable=True
+                    )
                     pair += 1
 
             else:
                 species = 1
                 for i in range(0, num_species * 2, 2):
-                    parameters[f"species_{species}"] = tf.Variable(individual[0, i, 0:3], trainable=False)
+                    parameters[f"species_{species}"] = tf.Variable(
+                        individual[0, i, 0:3],
+                        name=f"species_{species}",
+                        trainable=False
+                    )
                     species += 1
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=False)
+                    parameters[f"pair_{pair}"] = tf.Variable(
+                        individual[j, 1, :4],
+                        name=f"pair_{pair}",
+                        trainable=False
+                    )
                     pair += 1
 
             if compartment_opt:
                 sp = 1
                 for k in range(1, num_species * 2, 2):
                     if int(sp - 1) == t:
-                        compartment = tf.Variable(individual[k, :, :], trainable=True)
+                        compartment = tf.Variable(
+                            individual[k, :, :],
+                            name=f"compartment_{sp}",
+                            trainable=True
+                        )
                         parameters[f'compartment_{sp}'] = compartment
                         sp += 1
                     else:
-                        compartment = tf.Variable(individual[k, :, :], trainable=False)
+                        compartment = tf.Variable(
+                            individual[k, :, :],
+                            name=f"compartment_{sp}",
+                            trainable=False
+                        )
                         parameters[f'compartment_{sp}'] = compartment
                         sp += 1
 
             else:
                 sp = 1
                 for k in range(1, num_species * 2, 2):
-                    compartment = tf.Variable(individual[k, :, :], trainable=False)
+                    compartment = tf.Variable(
+                        individual[k, :, :],
+                        name=f"compartment_{sp}",
+                        trainable=False
+                    )
                     parameters[f'compartment_{sp}'] = compartment
                     sp += 1
 
@@ -158,48 +198,69 @@ class AdamOptimization:
             if param_opt:
                 species = 1
                 for i in range(0, num_species * 2, 2):
-                    parameters[f"species_{species}"] = tf.Variable(individual[0, i, 0:3], trainable=True)
+                    parameters[f"species_{species}"] = tf.Variable(
+                        individual[0, i, 0:3],
+                        name=f"species_{species}",
+                        trainable=True
+                    )
                     species += 1
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=True)
+                    parameters[f"pair_{pair}"] = tf.Variable(
+                        individual[j, 1, :4],
+                        name=f"pair_{pair}",
+                        trainable=True
+                    )
                     pair += 1
 
                 sp = 1
                 for k in range(1, num_species * 2, 2):
-                    compartment = tf.Variable(individual[k, :, :], trainable=False)
+                    compartment = tf.Variable(
+                        individual[k, :, :],
+                        name=f"compartment_{sp}",
+                        trainable=False
+                    )
                     parameters[f'compartment_{sp}'] = compartment
                     sp += 1
 
             else:
                 species = 1
                 for i in range(0, num_species * 2, 2):
-                    parameters[f"species_{species}"] = tf.Variable(individual[0, i, 0:3], trainable=False)
+                    parameters[f"species_{species}"] = tf.Variable(
+                        individual[0, i, 0:3],
+                        name=f"species_{species}",
+                        trainable=False
+                    )
                     species += 1
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = tf.Variable(individual[j, 1, :4], trainable=False)
+                    parameters[f"pair_{pair}"] = tf.Variable(
+                        individual[j, 1, :4],
+                        name=f"pair_{pair}",
+                        trainable=False
+                    )
                     pair += 1
 
                 sp = 1
                 for k in range(1, num_species * 2, 2):
-                    compartment = tf.Variable(individual[k, :, :], trainable=False)
+                    compartment = tf.Variable(
+                        individual[k, :, :],
+                        name=f"compartment_{sp}",
+                        trainable=False
+                    )
                     parameters[f'compartment_{sp}'] = compartment
                     sp += 1
 
             params.append(parameters)
-            print(params)
-            for i, param_dict in enumerate(params):
-                print(f"Checking parameter set {i+1}")
-                for key, value in param_dict.items():
-                    print(f"Variable '{key}' is {'trainable' if value.trainable else 'not trainable'}.")
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
+
+
+
     def update_parameters(self, individual, parameters, param_opt, trainable_compartment):
-        print(individual)
 
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
@@ -276,7 +337,6 @@ class AdamOptimization:
                             indices=indices_,
                             updates=updates
                         )
-        print(individual)
 
         return individual
 
@@ -348,6 +408,8 @@ class AdamOptimization:
 
         return (1 - tf.reduce_mean(ssim_score)).numpy()
 
+
+
     def share_information(self, params):
 
         for i in range(len(params)):
@@ -416,12 +478,19 @@ class AdamOptimization:
         )
 
         def create_optimizer(lr):
+            
             lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
                 initial_learning_rate=lr,
                 decay_steps=self.decay_steps,
                 decay_rate=self.decay_rate
             )
-            return tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+            if self.lr_decay:
+                optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+            else:
+                optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
+                  
+            return optimizer
+            
 
         if len(self.learning_rate) > 1:
             optimizers = [create_optimizer(self.learning_rate[i]) for i in range(len(parameters))]
@@ -460,6 +529,7 @@ class AdamOptimization:
                 variables = list(parameters[j].values())
                 gradients = tape.gradient(cost, variables)
                 # gradients = [tf.clip_by_value(grad, -1.0, 1.0) for grad in gradients]
+                #print(gradients)
                 optimizer.apply_gradients(zip(gradients, variables))
                 results[j, i - 1, :, :] = y_hat.numpy()
                 individual = self.init_individual(individual=individual)
@@ -542,3 +612,5 @@ class AdamOptimization:
         )
 
         return individual, costs
+
+
