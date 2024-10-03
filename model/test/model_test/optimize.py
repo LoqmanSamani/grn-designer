@@ -119,14 +119,14 @@ class AdamOptimization:
                 for i in range(0, num_species * 2, 2):
                     if int(species - 1) == t:
                         parameters[f"species_{species}"] = tf.Variable(
-                            individual[0, i, 0:3],
+                            individual[-1, i, 0:3],
                             name=f"species_{species}",
                             trainable=True
                         )
                         species += 1
                     else:
                         parameters[f"species_{species}"] = tf.Variable(
-                            individual[0, i, 0:3],
+                            individual[-1, i, 0:3],
                             name=f"species_{species}",
                             trainable=False
                         )
@@ -145,7 +145,7 @@ class AdamOptimization:
                 species = 1
                 for i in range(0, num_species * 2, 2):
                     parameters[f"species_{species}"] = tf.Variable(
-                        individual[0, i, 0:3],
+                        individual[-1, i, 0:3],
                         name=f"species_{species}",
                         trainable=False
                     )
@@ -199,7 +199,7 @@ class AdamOptimization:
                 species = 1
                 for i in range(0, num_species * 2, 2):
                     parameters[f"species_{species}"] = tf.Variable(
-                        individual[0, i, 0:3],
+                        individual[-1, i, 0:3],
                         name=f"species_{species}",
                         trainable=True
                     )
@@ -228,7 +228,7 @@ class AdamOptimization:
                 species = 1
                 for i in range(0, num_species * 2, 2):
                     parameters[f"species_{species}"] = tf.Variable(
-                        individual[0, i, 0:3],
+                        individual[-1, i, 0:3],
                         name=f"species_{species}",
                         trainable=False
                     )
@@ -256,7 +256,7 @@ class AdamOptimization:
             params.append(parameters)
             print("extracted params:")
             print("--------------------------------------------")
-            print(parameters)
+            print(params)
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
@@ -265,14 +265,21 @@ class AdamOptimization:
 
     def update_parameters(self, individual, parameters, param_opt, trainable_compartment):
         print("ind before update:")
-        print("--------------------------------------------")
+        print("------------------------c0--------------------")
         print(individual[0])
+        print("--------------------------c1------------------")
         print(individual[1])
+        print("------------c2--------------------------------")
         print(individual[2])
+        print("--------------c3------------------------------")
         print(individual[3])
+        print("----------------c4----------------------------")
         print(individual[4])
+        print("------------------c5--------------------------")
         print(individual[5])
+        print("--------------------c6------------------------")
         print(individual[6])
+        print("----------------------c7----------------------")
 
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
@@ -350,14 +357,21 @@ class AdamOptimization:
                             updates=updates
                         )
         print("ind after update:")
-        print("--------------------------------------------")
+        print("------------------------c0--------------------")
         print(individual[0])
+        print("--------------------------c1------------------")
         print(individual[1])
+        print("------------c2--------------------------------")
         print(individual[2])
+        print("--------------c3------------------------------")
         print(individual[3])
+        print("----------------c4----------------------------")
         print(individual[4])
+        print("------------------c5--------------------------")
         print(individual[5])
+        print("--------------------c6------------------------")
         print(individual[6])
+        print("----------------------c7----------------------")
 
         return individual
 
@@ -407,10 +421,10 @@ class AdamOptimization:
         print("------------------------------------------")
         print("mse loss:")
         print(mse_loss)
-        ssim_loss_value = self.ssim_loss(y_hat, target, max_val)
-        print("ssim loss:")
-        print(ssim_loss_value)
-        total_loss = alpha * mse_loss + beta * ssim_loss_value
+        #ssim_loss_value = self.ssim_loss(y_hat, target, max_val)
+        #print("ssim loss:")
+        #print(ssim_loss_value)
+        total_loss = alpha * mse_loss # + beta * ssim_loss_value
         print("total loss:")
         print(total_loss)
         return total_loss
