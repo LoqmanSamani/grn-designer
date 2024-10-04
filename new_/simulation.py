@@ -117,4 +117,4 @@ def individual_simulation(individual):
 
         epoch += 1
 
-    return individual
+    return individual[0, :, :]

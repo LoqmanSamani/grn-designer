@@ -1,0 +1,135 @@
+{
+    "population_size": 100,
+    "individual_shape": [
+        3,
+        100,
+        100
+    ],
+    "individual_parameters": {
+        "species_parameters": [
+            [
+                1,
+                0.1,
+                0.9
+            ]
+        ],
+        "pair_parameters": [
+            [
+                1.6,
+                0.3,
+                0.1,
+                0.17
+            ]
+        ]
+    },
+    "simulation_parameters": {
+        "max_simulation_epoch": 1000,
+        "simulation_stop_time": 50,
+        "time_step": 0.2
+    },
+    "store_path": "/home/samani/Documents/sim/test/hhh/",
+    "cost_alpha": 0.6,
+    "cost_beta": 0.4,
+    "cost_max_val": 1.0,
+    "optimization_epochs": 0,
+    "gradient_optimization": false,
+    "parameter_optimization": false,
+    "condition_optimization": false,
+    "num_gradient_optimization": 1,
+    "num_saved_individuals": 100,
+    "evolution_one_epochs": 100,
+    "evolution_two_epochs": 0,
+    "evolution_two_ratio": 1,
+    "zoom_": false,
+    "zoom_in_factor": 0.5,
+    "zoom_out_factor": 2,
+    "zoom_order": 1,
+    "zoom_mode": "constant",
+    "zoom_cval": 0.0,
+    "zoom_grid_mode": false,
+    "individual_fix_shape": false,
+    "sim_mutation": true,
+    "compartment_mutation": true,
+    "param_mutation": true,
+    "species_insertion_mutation_one": true,
+    "species_deletion_mutation_one": true,
+    "species_insertion_mutation_two": false,
+    "species_deletion_mutation_two": false,
+    "crossover_alpha": 0.5,
+    "sim_crossover": true,
+    "compartment_crossover": true,
+    "param_crossover": true,
+    "num_elite_individuals": 5,
+    "sim_mutation_rate": 0.1,
+    "compartment_mutation_rate": 0.8,
+    "parameter_mutation_rate": 0.1,
+    "insertion_mutation_rate": 0.04,
+    "deletion_mutation_rate": 0.6,
+    "sim_means": [
+        5.0,
+        0.5
+    ],
+    "sim_std_devs": [
+        100.0,
+        2.0
+    ],
+    "sim_min_vals": [
+        5.0,
+        0.1
+    ],
+    "sim_max_vals": [
+        100.0,
+        1.0
+    ],
+    "compartment_mean": 0.0,
+    "compartment_std": 100.0,
+    "compartment_min_val": -1.0,
+    "compartment_max_val": 1.0,
+    "sim_distribution": "uniform",
+    "compartment_distribution": "uniform",
+    "species_param_means": [
+        0.0,
+        0.0,
+        0.0
+    ],
+    "species_param_stds": [
+        10.0,
+        5.0,
+        10.0
+    ],
+    "species_param_min_vals": [
+        -1.0,
+        -1.0,
+        -1.0
+    ],
+    "species_param_max_vals": [
+        1.0,
+        1.0,
+        1.0
+    ],
+    "complex_param_means": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+    ],
+    "complex_param_stds": [
+        100.0,
+        10.0,
+        5.0,
+        10.0
+    ],
+    "complex_param_min_vals": [
+        -1,
+        -1,
+        -1,
+        -1
+    ],
+    "complex_param_max_vals": [
+        1,
+        1,
+        1,
+        1
+    ],
+    "param_distribution": "uniform"
+}

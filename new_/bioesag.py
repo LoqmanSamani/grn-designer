@@ -19,14 +19,14 @@ class BioEsAg:
                  target, population_size, individual_shape, individual_parameters, simulation_parameters, store_path=None,
                  optimization_epochs=50, evolution_one_epochs=100, evolution_two_epochs=50,
                  learning_rate=0.001, sim_mutation_rate=0.05, compartment_mutation_rate=0.8, parameter_mutation_rate=0.05,
-                 insertion_mutation_rate=0.2, deletion_mutation_rate=0.25, crossover_alpha=0.5,
+                 insertion_mutation_rate=0.05, deletion_mutation_rate=0.1, crossover_alpha=0.5,
                  checkpoint_interval=5, lr_decay=False, decay_steps=10000, decay_rate=0.98, trainable_compartment=1,
                  gradient_optimization=False, parameter_optimization=False, condition_optimization=False,
                  sim_mutation=True, compartment_mutation=True, param_mutation=False, species_insertion_mutation_one=False,
                  species_deletion_mutation_one=False, species_insertion_mutation_two=False, species_deletion_mutation_two=False,
                  compartment_crossover=True, param_crossover=False, sim_crossover=True,
                  individual_fix_shape=False, cost_alpha=0.6, cost_beta=0.4, cost_max_val=1.0, num_gradient_optimization=1,
-                 num_saved_individuals=3, evolution_two_ratio=0.2, zoom_=False, zoom_in_factor=0.5, zoom_out_factor=2,
+                 num_saved_individuals=10, evolution_two_ratio=0.2, zoom_=False, zoom_in_factor=0.5, zoom_out_factor=2,
                  zoom_order=1, zoom_mode="constant", zoom_cval=0.0, zoom_grid_mode=False, num_elite_individuals=5,
                  sim_means=(5.0, 0.5), sim_std_devs=(100.0, 2.0), sim_min_vals=(5.0, 0.1), sim_max_vals=(100.0, 1.0),
                  compartment_mean=0.0, compartment_std=100.0, compartment_min_val=-1.0, compartment_max_val=1.0,
@@ -520,6 +520,8 @@ class BioEsAg:
                 complex_parameters=self.individual_parameters["pair_parameters"],
                 simulation_parameters=self.simulation_parameters
             )
+            print(max(population, key=lambda arr: arr.shape[0]).shape)
+            print(len(population))
             # save the cost data
             sorted_cost = np.sort(cost)
             evolution_costs_one[i, :-2] = sorted_cost[:self.num_saved_individuals] # the best costs

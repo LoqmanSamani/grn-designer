@@ -308,7 +308,7 @@ def evolutionary_optimization(
         predictions3 = np.zeros((len(initialized_individuals), y, x))
 
         for i in range(len(initialized_individuals)):
-            predictions3[i, :, :], dd2 = individual_simulation(individual=initialized_individuals[i])
+            predictions3[i, :, :] = individual_simulation(individual=initialized_individuals[i])
             initialized_individuals[i] = reset_individual(individual=initialized_individuals[i])
 
         costs3 = compute_cost(
