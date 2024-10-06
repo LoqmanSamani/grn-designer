@@ -1,7 +1,6 @@
-from initialization import species_initialization
 import itertools
 import numpy as np
-
+from initialization import species_initialization
 
 
 
@@ -148,7 +147,7 @@ def apply_simulation_parameters_mutation(individual, mutation_rate, means, std_d
         individual[-1, -1, i + 3] = max(min_vals[i], min(max_vals[i], individual[-1, -1, i + 3]))
 
     individual[-1, -1, 3:5] = np.maximum(individual[-1, -1, 3:5], 0)
-    if individual[-1, -1, 3] / individual[-1, -1, 4] > 1000 or individual[-1, -1, 3] / individual[-1, -1, 4] < 100:
+    if individual[-1, -1, 3] / individual[-1, -1, 4] > 500 or individual[-1, -1, 3] / individual[-1, -1, 4] < 100:
         individual[-1, -1, 3] = 20
         individual[-1, -1, 4] = 0.1
 

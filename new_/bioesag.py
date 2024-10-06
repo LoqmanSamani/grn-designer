@@ -16,8 +16,8 @@ import time
 
 class BioEsAg:
     def __init__(self,
-                 target, population_size, individual_shape, individual_parameters, simulation_parameters, store_path=None,
-                 optimization_epochs=50, evolution_one_epochs=100, evolution_two_epochs=50,
+                 target, population_size, individual_shape, individual_parameters, simulation_parameters, num_init_species=1, num_init_pairs=0,
+                 store_path=None, optimization_epochs=50, evolution_one_epochs=100, evolution_two_epochs=50,
                  learning_rate=0.001, sim_mutation_rate=0.05, compartment_mutation_rate=0.8, parameter_mutation_rate=0.05,
                  insertion_mutation_rate=0.05, deletion_mutation_rate=0.1, crossover_alpha=0.5,
                  checkpoint_interval=5, lr_decay=False, decay_steps=10000, decay_rate=0.98, trainable_compartment=1,
@@ -155,6 +155,8 @@ class BioEsAg:
         self.individual_shape = individual_shape
         self.individual_parameters = individual_parameters
         self.simulation_parameters = simulation_parameters
+        self.num_init_species = num_init_species
+        self.num_init_pairs = num_init_pairs
         self.store_path = store_path
 
         # Cost function parameters
@@ -418,6 +420,7 @@ class BioEsAg:
         Returns:
         None
         """
+        num_patterns, _, _ = self.target.shape
         run_time = np.zeros(4)
 
         prep_start = time.time()
@@ -432,11 +435,17 @@ class BioEsAg:
         num_pairs = len(self.individual_parameters["pair_parameters"])
 
         # Phase 1:  zoom the Target to reduce the computational cost
+        tt = []
         if self.zoom_:
-            target_ = self.reshape_.zoom_in(
-                target=self.target,
-                zoom_=self.zoom_in_factor
-            )
+            for i in range(self.target.shape[0]):
+                t_ = self.reshape_.zoom_in(
+                    target=self.target[i, :, :],
+                    zoom_=self.zoom_in_factor
+                )
+                tt.append(t_)
+            target_ = np.zeros((self.target.shape[0], tt[0].shape[0], tt[0].shape[1]))
+            for j in range(len(tt)):
+                target_[j, :, :] = tt[j]
         else:
             target_ = self.target
 
@@ -449,7 +458,7 @@ class BioEsAg:
         # Initialize the population based on the reduced target shape
         population = population_initialization(
             population_size=self.population_size,
-            individual_shape=(self.individual_shape[0], target_.shape[0], target_.shape[1]),
+            individual_shape=(self.individual_shape[0], target_.shape[1], target_.shape[2]),
             species_parameters=self.individual_parameters["species_parameters"],
             complex_parameters=self.individual_parameters["pair_parameters"],
             num_species=num_species,
@@ -457,7 +466,9 @@ class BioEsAg:
             max_sim_epochs=self.simulation_parameters["max_simulation_epoch"],
             sim_stop_time=self.simulation_parameters["simulation_stop_time"],
             time_step=self.simulation_parameters["time_step"],
-            individual_fix_size=self.individual_fix_shape
+            individual_fix_size=self.individual_fix_shape,
+            init_species=self.num_init_species,
+            init_pairs=self.num_init_pairs
         )
         prep_stop = time.time()
         run_time[0] = prep_stop - prep_start
@@ -478,6 +489,9 @@ class BioEsAg:
                 population=population,
                 target=target_,
                 population_size=self.population_size,
+                num_patterns=num_patterns,
+                init_species=self.num_init_species,
+                init_pairs=self.num_init_pairs,
                 cost_alpha=self.cost_alpha,
                 cost_beta=self.cost_beta,
                 max_val=self.cost_max_val,
@@ -520,8 +534,7 @@ class BioEsAg:
                 complex_parameters=self.individual_parameters["pair_parameters"],
                 simulation_parameters=self.simulation_parameters
             )
-            print(max(population, key=lambda arr: arr.shape[0]).shape)
-            print(len(population))
+
             # save the cost data
             sorted_cost = np.sort(cost)
             evolution_costs_one[i, :-2] = sorted_cost[:self.num_saved_individuals] # the best costs
@@ -557,8 +570,8 @@ class BioEsAg:
             population = self.reshape_.zoom_out(
                 population=population,
                 zoom_=self.zoom_out_factor,
-                x_=self.target.shape[0],
-                y_=self.target.shape[1]
+                x_=self.target.shape[1],
+                y_=self.target.shape[2]
             )
 
 
@@ -576,6 +589,9 @@ class BioEsAg:
                     population=population,
                     target=self.target,
                     population_size=pop_size,
+                    num_patterns=num_patterns,
+                    init_species=self.num_init_species,
+                    init_pairs=self.num_init_pairs,
                     cost_alpha=self.cost_alpha,
                     cost_beta=self.cost_beta,
                     max_val=self.cost_max_val,

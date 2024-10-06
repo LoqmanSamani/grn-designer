@@ -4,7 +4,7 @@ from numba import jit
 
 
 @jit(nopython=True)
-def individual_simulation(individual):
+def individual_simulation(individual, num_patterns):
     """
     Simulate the dynamics of a single individual within a specified compartmental system.
 
@@ -40,6 +40,7 @@ def individual_simulation(individual):
     num_epochs = int(stop / time_step)  # Total number of epochs
     pair_start = int(num_species * 2)  # Starting index for species pairs
     pair_stop = int(pair_start + (num_pairs * 2))  # Ending index for species pairs
+    sim_results = np.zeros((num_patterns, y, x))
 
     epoch = 0
     while epoch <= max_epoch or epoch <= num_epochs:
@@ -116,5 +117,9 @@ def individual_simulation(individual):
                 )
 
         epoch += 1
+    sp = 0
+    for i in range(num_patterns):
+        sim_results[i, :, :] = individual[sp, :, :]
+        sp += 2
 
-    return individual[0, :, :]
+    return sim_results

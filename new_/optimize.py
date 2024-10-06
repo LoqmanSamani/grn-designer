@@ -254,9 +254,9 @@ class AdamOptimization:
                     sp += 1
 
             params.append(parameters)
-        print("extracted params:")
-        print("--------------------------------------------")
-        print(params)
+        #print("extracted params:")
+        #print("--------------------------------------------")
+        #print(params)
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
@@ -264,15 +264,15 @@ class AdamOptimization:
 
 
     def update_parameters(self, individual, parameters, param_opt, trainable_compartment):
-        print("ind before update:")
-        print("--------------------------------------------")
-        print("com 0:", individual[0])
-        print("com 1:", individual[1])
-        print("com 2:", individual[2])
-        print("com 3:", individual[3])
-        print("com 4:", individual[4])
-        print("com 5:", individual[5])
-        print("com 6:", individual[6])
+        #print("ind before update:")
+        #print("--------------------------------------------")
+        #print("com 0:", individual[0])
+        #print("com 1:", individual[1])
+        #print("com 2:", individual[2])
+        #print("com 3:", individual[3])
+        #print("com 4:", individual[4])
+        #print("com 5:", individual[5])
+        #print("com 6:", individual[6])
 
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
@@ -349,15 +349,15 @@ class AdamOptimization:
                             indices=indices_,
                             updates=updates
                         )
-        print("ind after update:")
-        print("--------------------------------------------")
-        print("com 0:", individual[0])
-        print("com 1:", individual[1])
-        print("com 2:", individual[2])
-        print("com 3:", individual[3])
-        print("com 4:", individual[4])
-        print("com 5:", individual[5])
-        print("com 6:", individual[6])
+        #print("ind after update:")
+        #print("--------------------------------------------")
+        #print("com 0:", individual[0])
+        #print("com 1:", individual[1])
+        #print("com 2:", individual[2])
+        #print("com 3:", individual[3])
+        #print("com 4:", individual[4])
+        #print("com 5:", individual[5])
+        #print("com 6:", individual[6])
 
         return individual
 
@@ -404,15 +404,15 @@ class AdamOptimization:
             - tf.Tensor: The computed cost (loss) value.
         """
         mse_loss = tf.reduce_mean(tf.square(y_hat - target))
-        print("------------------------------------------")
-        print("mse loss:")
-        print(mse_loss)
+        #print("------------------------------------------")
+        #print("mse loss:")
+        #print(mse_loss)
         ssim_loss_value = self.ssim_loss(y_hat, target, max_val)
-        print("ssim loss:")
-        print(ssim_loss_value)
+        #print("ssim loss:")
+        #print(ssim_loss_value)
         total_loss = alpha * mse_loss + beta * ssim_loss_value
-        print("total loss:")
-        print(total_loss)
+        #print("total loss:")
+        #print(total_loss)
         return total_loss
 
     def ssim_loss(self, y_hat, target, max_val):
@@ -452,10 +452,10 @@ class AdamOptimization:
 
 
     def init_individual(self, individual):
-        print("init ind:")
-        print("-----------------------------")
-        print("ind before init:")
-        print(individual)
+        #print("init ind:")
+        #print("-----------------------------")
+        #print("ind before init:")
+        #print(individual)
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
         pair_start = int(num_species * 2)
@@ -471,8 +471,8 @@ class AdamOptimization:
             update = tf.zeros((y, x))
             indices = tf.constant([[j]])
             individual = tf.tensor_scatter_nd_update(individual, indices, [update])
-        print("ind after init:")
-        print(individual)
+        #print("ind after init:")
+        #print(individual)
 
         return individual
 
@@ -562,22 +562,22 @@ class AdamOptimization:
                 variables = list(parameters[j].values())
                 gradients = tape.gradient(cost, variables)
                 # gradients = [tf.clip_by_value(grad, -1.0, 1.0) for grad in gradients]
-                print("grads:")
-                print("------------------------------------------------------")
-                print(gradients)
+                #print("grads:")
+                #print("------------------------------------------------------")
+                #print(gradients)
                 optimizer.apply_gradients(zip(gradients, variables))
                 results[j, i - 1, :, :] = y_hat.numpy()
                 
 
-            print("params before share:")
-            print("_--------------------------------")
-            print(parameters)
+            #print("params before share:")
+            #print("_--------------------------------")
+            #print(parameters)
 
             parameters = self.share_information(params=parameters)
 
-            print("params after share:")
-            print("_--------------------------------")
-            print(parameters)
+            #print("params after share:")
+            #print("_--------------------------------")
+            #print(parameters)
 
 
             costs.append(cost_)
