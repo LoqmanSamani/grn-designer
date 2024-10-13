@@ -3,6 +3,9 @@ import os
 import h5py
 import time
 import numpy as np
+import torch
+import torch.nn.functional as F
+from torchvision import transforms
 
 
 
@@ -41,7 +44,8 @@ class AdamOptimization:
                  lr_decay=False,
                  decay_steps=40,
                  decay_rate=0.6,
-                 trainable_compartment=1
+                 trainable_compartment=1,
+                 device="cpu"
                  ):
 
         self.epochs = epochs
@@ -58,6 +62,7 @@ class AdamOptimization:
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
         self.trainable_compartment = trainable_compartment
+        self.device = device
         if learning_rate is None:
             learning_rate = [0.001]  # Default learning rate
         self.learning_rate = learning_rate
@@ -99,7 +104,6 @@ class AdamOptimization:
 
 
 
-
     def parameter_extraction(self, individual, param_opt, compartment_opt, trainable_compartment):
 
         params = []
@@ -118,45 +122,40 @@ class AdamOptimization:
                 species = 1
                 for i in range(0, num_species * 2, 2):
                     if int(species - 1) == t:
-                        parameters[f"species_{species}"] = tf.Variable(
-                            individual[-1, i, 0:3],
-                            name=f"species_{species}",
-                            trainable=True
+                        parameters[f"species_{species}"] = torch.nn.Parameter(
+                            torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                            requires_grad=True
                         )
                         species += 1
                     else:
-                        parameters[f"species_{species}"] = tf.Variable(
-                            individual[-1, i, 0:3],
-                            name=f"species_{species}",
-                            trainable=False
+                        parameters[f"species_{species}"] = torch.nn.Parameter(
+                            torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                            requires_grad=False
                         )
                         species += 1
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = tf.Variable(
-                        individual[j, 1, :4],
-                        name=f"pair_{pair}",
-                        trainable=True
+                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
+                        torch.tensor(individual[j, 1, :4], dtype=torch.float32),
+                        requires_grad=True
                     )
                     pair += 1
 
             else:
                 species = 1
                 for i in range(0, num_species * 2, 2):
-                    parameters[f"species_{species}"] = tf.Variable(
-                        individual[-1, i, 0:3],
-                        name=f"species_{species}",
-                        trainable=False
+                    parameters[f"species_{species}"] = torch.nn.Parameter(
+                        torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                        requires_grad=False
                     )
                     species += 1
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = tf.Variable(
-                        individual[j, 1, :4],
-                        name=f"pair_{pair}",
-                        trainable=False
+                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
+                        torch.tensor(individual[j, 1, :4], dtype=torch.float32),
+                        requires_grad=False
                     )
                     pair += 1
 
@@ -164,31 +163,25 @@ class AdamOptimization:
                 sp = 1
                 for k in range(1, num_species * 2, 2):
                     if int(sp - 1) == t:
-                        compartment = tf.Variable(
-                            individual[k, :, :],
-                            name=f"compartment_{sp}",
-                            trainable=True
+                        parameters[f'compartment_{sp}'] = torch.nn.Parameter(
+                            torch.tensor(individual[k, :, :], dtype=torch.float32),
+                            requires_grad=True
                         )
-                        parameters[f'compartment_{sp}'] = compartment
                         sp += 1
                     else:
-                        compartment = tf.Variable(
-                            individual[k, :, :],
-                            name=f"compartment_{sp}",
-                            trainable=False
+                        parameters[f'compartment_{sp}'] = torch.nn.Parameter(
+                            torch.tensor(individual[k, :, :], dtype=torch.float32),
+                            requires_grad=False
                         )
-                        parameters[f'compartment_{sp}'] = compartment
                         sp += 1
 
             else:
                 sp = 1
                 for k in range(1, num_species * 2, 2):
-                    compartment = tf.Variable(
-                        individual[k, :, :],
-                        name=f"compartment_{sp}",
-                        trainable=False
+                    parameters[f'compartment_{sp}'] = torch.nn.Parameter(
+                        torch.tensor(individual[k, :, :], dtype=torch.float32),
+                        requires_grad=False
                     )
-                    parameters[f'compartment_{sp}'] = compartment
                     sp += 1
 
             params.append(parameters)
@@ -198,65 +191,54 @@ class AdamOptimization:
             if param_opt:
                 species = 1
                 for i in range(0, num_species * 2, 2):
-                    parameters[f"species_{species}"] = tf.Variable(
-                        individual[-1, i, 0:3],
-                        name=f"species_{species}",
-                        trainable=True
+                    parameters[f"species_{species}"] = torch.nn.Parameter(
+                        torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                        requires_grad=True
                     )
                     species += 1
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = tf.Variable(
-                        individual[j, 1, :4],
-                        name=f"pair_{pair}",
-                        trainable=True
+                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
+                        torch.tensor(individual[j, 1, :4], dtype=torch.float32),
+                        requires_grad=True
                     )
                     pair += 1
 
                 sp = 1
                 for k in range(1, num_species * 2, 2):
-                    compartment = tf.Variable(
-                        individual[k, :, :],
-                        name=f"compartment_{sp}",
-                        trainable=False
+                    parameters[f'compartment_{sp}'] = torch.nn.Parameter(
+                        torch.tensor(individual[k, :, :], dtype=torch.float32),
+                        requires_grad=False
                     )
-                    parameters[f'compartment_{sp}'] = compartment
                     sp += 1
 
             else:
                 species = 1
                 for i in range(0, num_species * 2, 2):
-                    parameters[f"species_{species}"] = tf.Variable(
-                        individual[-1, i, 0:3],
-                        name=f"species_{species}",
-                        trainable=False
+                    parameters[f"species_{species}"] = torch.nn.Parameter(
+                        torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                        requires_grad=False
                     )
                     species += 1
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = tf.Variable(
-                        individual[j, 1, :4],
-                        name=f"pair_{pair}",
-                        trainable=False
+                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
+                        torch.tensor(individual[j, 1, :4], dtype=torch.float32),
+                        requires_grad=False
                     )
                     pair += 1
 
                 sp = 1
                 for k in range(1, num_species * 2, 2):
-                    compartment = tf.Variable(
-                        individual[k, :, :],
-                        name=f"compartment_{sp}",
-                        trainable=False
+                    parameters[f'compartment_{sp}'] = torch.nn.Parameter(
+                        torch.tensor(individual[k, :, :], dtype=torch.float32),
+                        requires_grad=False
                     )
-                    parameters[f'compartment_{sp}'] = compartment
                     sp += 1
 
             params.append(parameters)
-        print("extracted params:")
-        print("--------------------------------------------")
-        print(params)
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
@@ -264,15 +246,6 @@ class AdamOptimization:
 
 
     def update_parameters(self, individual, parameters, param_opt, trainable_compartment):
-        print("ind before update:")
-        print("--------------------------------------------")
-        print("com 0:", individual[0])
-        print("com 1:", individual[1])
-        print("com 2:", individual[2])
-        print("com 3:", individual[3])
-        print("com 4:", individual[4])
-        print("com 5:", individual[5])
-        print("com 6:", individual[6])
 
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
@@ -280,88 +253,45 @@ class AdamOptimization:
         z, y, x = individual.shape
 
         if trainable_compartment < 1 and param_opt:
-
             j = 0
             for species in range(1, num_species + 1):
-                individual = tf.tensor_scatter_nd_update(
-                    individual,
-                    indices=tf.constant([[z - 1, j, k] for k in range(3)], dtype=tf.int32),
-                    updates=parameters[0][f"species_{species}"]
-                )
+                individual[z - 1, j, :3] = parameters[0][f"species_{species}"]
                 j += 2
 
             for pair in range(1, num_pairs + 1):
                 j = pair_start + (pair - 1) * 2 + 1
-                individual = tf.tensor_scatter_nd_update(
-                    individual,
-                    indices=tf.constant([[j, 1, k] for k in range(4)], dtype=tf.int32),
-                    updates=parameters[0][f"pair_{pair}"]
-                )
+                individual[j, 1, :4] = parameters[0][f"pair_{pair}"]
 
             for comp in range(1, num_species + 1):
                 idx = int(((comp - 1) * 2) + 1)
-
-                indices_ = []
-                updates = tf.maximum(tf.reshape(parameters[0][f"compartment_{comp}"], [-1]), 0.0)
-                for row in range(y):
-                    for col in range(x):
-                        indices_.append([idx, row, col])
-
-                individual = tf.tensor_scatter_nd_update(
-                    individual,
-                    indices=indices_,
-                    updates=updates
-                )
-
+                updates = torch.max(parameters[0][f"compartment_{comp}"], torch.tensor(0.0))
+                individual[idx, :, :] = updates
 
         elif trainable_compartment >= 1:
             for i in range(len(parameters)):
                 j = 0
                 for species in range(1, num_species + 1):
-                    if parameters[i][f"species_{species}"].trainable:
-                        individual = tf.tensor_scatter_nd_update(
-                            individual,
-                            indices=tf.constant([[z - 1, j, k] for k in range(3)], dtype=tf.int32),
-                            updates=parameters[i][f"species_{species}"]
-                        )
+                    if parameters[i][f"species_{species}"].requires_grad:
+                        individual[z - 1, j, :3] = parameters[i][f"species_{species}"]
                     j += 2
 
                 for pair in range(1, num_pairs + 1):
-                    if parameters[i][f"pair_{pair}"].trainable:
+                    if parameters[i][f"pair_{pair}"].requires_grad:
                         j = pair_start + (pair - 1) * 2 + 1
-                        individual = tf.tensor_scatter_nd_update(
-                            individual,
-                            indices=tf.constant([[j, 1, k] for k in range(4)], dtype=tf.int32),
-                            updates=parameters[i][f"pair_{pair}"]
-                        )
+                        individual[j, 1, :4] = parameters[i][f"pair_{pair}"]
 
                 for comp in range(1, trainable_compartment + 1):
                     idx = int(((comp - 1) * 2) + 1)
-                    if parameters[i][f"compartment_{comp}"].trainable:
-                        indices_ = []
-                        updates = tf.maximum(tf.reshape(parameters[i][f"compartment_{comp}"], [-1]), 0.0)
-                        for row in range(y):
-                            for col in range(x):
-                                indices_.append([idx, row, col])
-
-                        individual = tf.tensor_scatter_nd_update(
-                            individual,
-                            indices=indices_,
-                            updates=updates
-                        )
-        print("ind after update:")
-        print("--------------------------------------------")
-        print("com 0:", individual[0])
-        print("com 1:", individual[1])
-        print("com 2:", individual[2])
-        print("com 3:", individual[3])
-        print("com 4:", individual[4])
-        print("com 5:", individual[5])
-        print("com 6:", individual[6])
+                    if parameters[i][f"compartment_{comp}"].requires_grad:
+                        updates = torch.max(parameters[i][f"compartment_{comp}"], torch.tensor(0.0))
+                        individual[idx, :, :] = updates
 
         return individual
 
-    def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, compartment):
+
+
+
+    def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, compartment, device):
         """
         Runs a simulation using the given individual and parameters.
 
@@ -386,93 +316,110 @@ class AdamOptimization:
             stop=stop,
             time_step=time_step,
             max_epoch=max_epoch,
-            compartment=compartment
+            compartment=compartment,
+            device=self.device
         )
 
         return y_hat
 
     def compute_cost_(self, y_hat, target, alpha, beta, max_val):
-
         """
-        Computes the cost (loss) between the simulated output and the target.
+        Computes the cost (loss) between the simulated output and the target using MSE and SSIM loss.
 
         Args:
-            - y_hat (tf.Tensor): The simulated output tensor.
-            - target (tf.Tensor): The target tensor representing the desired diffusion pattern.
+            - y_hat (torch.Tensor): The simulated output tensor.
+            - target (torch.Tensor): The target tensor representing the desired diffusion pattern.
+            - alpha (float): Weight for the MSE loss.
+            - beta (float): Weight for the SSIM loss.
+            - max_val (float): The dynamic range of the input values, typically the maximum pixel intensity.
 
         Returns:
-            - tf.Tensor: The computed cost (loss) value.
+            - torch.Tensor: The computed cost (loss) value.
         """
-        mse_loss = tf.reduce_mean(tf.square(y_hat - target))
-        print("------------------------------------------")
-        print("mse loss:")
-        print(mse_loss)
+        # MSE loss
+        mse_loss = F.mse_loss(y_hat, target)
+
+        # SSIM loss
         ssim_loss_value = self.ssim_loss(y_hat, target, max_val)
-        print("ssim loss:")
-        print(ssim_loss_value)
+
+        # Total loss is a combination of MSE and SSIM loss
         total_loss = alpha * mse_loss + beta * ssim_loss_value
-        print("total loss:")
-        print(total_loss)
+
         return total_loss
 
     def ssim_loss(self, y_hat, target, max_val):
         """
-        Compute the Structural Similarity Index (SSIM) loss between two matrices.
-
-        SSIM is used to measure the perceptual similarity between two images or matrices.
+        Compute the Structural Similarity Index (SSIM) loss between two matrices using PyTorch.
 
         Parameters:
-        - y_hat (tf.Tensor): A 2D tensor representing the predicted matrix or image. Shape: (y, x).
-        - target (tf.Tensor): A 2D tensor representing the target matrix or image. Shape: (y, x).
+        - y_hat (torch.Tensor): A 2D tensor representing the predicted matrix or image. Shape: (y, x).
+        - target (torch.Tensor): A 2D tensor representing the target matrix or image. Shape: (y, x).
         - max_val (float): The dynamic range of the input values, typically the maximum value of pixel intensity.
 
         Returns:
-        - tf.Tensor: The SSIM loss, computed as `1 - SSIM score`.
+        - torch.Tensor: The SSIM loss, computed as `1 - SSIM score`.
         """
-        y_hat = tf.expand_dims(y_hat, axis=-1)
-        target = tf.expand_dims(target, axis=-1)
-        ssim_score = tf.image.ssim(y_hat, target, max_val=max_val)
+        y_hat = y_hat.unsqueeze(0).unsqueeze(0)  # Add batch and channel dimensions
+        target = target.unsqueeze(0).unsqueeze(0)  # Add batch and channel dimensions
 
-        return (1 - tf.reduce_mean(ssim_score)).numpy()
+        # SSIM function from torchvision.ops, requires 4D tensors: (batch, channel, height, width)
+        ssim_score = transforms.functional.ssim(y_hat, target, data_range=max_val)
+
+        return 1 - ssim_score
 
 
 
     def share_information(self, params):
-        
+        """
+        Share the values of trainable parameters between dictionaries of parameters.
+
+        Args:
+            - params (list of dicts): A list where each element is a dictionary of parameters (tensors).
+                                      Each tensor in the dictionary can either be trainable or not.
+
+        Returns:
+            - params (list of dicts): Updated list where non-trainable tensors are updated with the values
+                                      from trainable ones that share the same key.
+        """
+        # Iterate through all parameter dictionaries
         for i in range(len(params)):
             current_dict = params[i]
+
             for j in range(len(params)):
                 if i != j:
+                    # Update non-trainable parameters with values from trainable ones
                     for key, val in current_dict.items():
-                        if val.trainable:
-                            if key in params[j] and not params[j][key].trainable:
-                                params[j][key].assign(val)
-        
+                        if val.requires_grad:
+                            if key in params[j] and not params[j][key].requires_grad:
+                                # Copy data from the trainable tensor to the non-trainable tensor
+                                with torch.no_grad():  # Disable gradient tracking for the operation
+                                    params[j][key].copy_(val)  # In-place tensor update
+
         return params
 
+    def init_individual(sef, individual):
+        """
+        Initializes the individual tensor by setting certain slices to zero.
 
-    def init_individual(self, individual):
-        print("init ind:")
-        print("-----------------------------")
-        print("ind before init:")
-        print(individual)
+        Args:
+            - individual (torch.Tensor): The input tensor of shape (z, y, x).
+
+        Returns:
+            - torch.Tensor: The modified tensor with specified indices updated to zeros.
+        """
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
         pair_start = int(num_species * 2)
         pair_stop = int(pair_start + (num_pairs * 2))
         _, y, x = individual.shape
 
+        # Set species indices to zero
         for i in range(0, num_species * 2, 2):
-            update = tf.zeros((y, x))
-            indices = tf.constant([[i]])
-            individual = tf.tensor_scatter_nd_update(individual, indices, [update])
+            individual[i] = torch.zeros((y, x), dtype=individual.dtype)
 
+        # Set pair indices to zero
         for j in range(pair_start, pair_stop, 2):
-            update = tf.zeros((y, x))
-            indices = tf.constant([[j]])
-            individual = tf.tensor_scatter_nd_update(individual, indices, [update])
-        print("ind after init:")
-        print(individual)
+            individual[j] = torch.zeros((y, x), dtype=individual.dtype)
 
         return individual
 
@@ -493,7 +440,8 @@ class AdamOptimization:
 
         costs = []
         time_ = []
-        results = np.zeros((self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
+        sim_results = np.zeros((self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
+        com_results = np.zeros((self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
 
         self.save_to_h5py(
             dataset_name="target",
@@ -509,25 +457,34 @@ class AdamOptimization:
             trainable_compartment=self.trainable_compartment
         )
 
-        def create_optimizer(lr):
-            
-            lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-                initial_learning_rate=lr,
-                decay_steps=self.decay_steps,
-                decay_rate=self.decay_rate
-            )
+        def create_optimizer(model_parameters, lr):
+            """
+            Creates an Adam optimizer with optional exponential learning rate decay.
+
+            Args:
+                - model_parameters: The parameters of the model to optimize.
+                - lr (float): The initial learning rate.
+
+            Returns:
+                - optimizer: The created Adam optimizer.
+                - lr_scheduler: The learning rate scheduler if decay is enabled, otherwise None.
+            """
+            optimizer = torch.optim.Adam(model_parameters, lr=lr)
+
+            lr_scheduler = None
             if self.lr_decay:
-                optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
-            else:
-                optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
-                  
-            return optimizer
+                lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+                    optimizer,
+                    gamma=self.decay_rate
+                )
+
+            return optimizer, lr_scheduler
             
 
         if len(self.learning_rate) > 1:
-            optimizers = [create_optimizer(self.learning_rate[i]) for i in range(len(parameters))]
+            optimizers = [create_optimizer(parameters[i], self.learning_rate[i]) for i in range(len(parameters))]
         else:
-            optimizers = [create_optimizer(self.learning_rate[0]) for _ in range(len(parameters))]
+            optimizers = [create_optimizer(parameters[i], self.learning_rate[0]) for i in range(len(parameters))]
 
         tic_ = time.time()
         tic = time.time()
@@ -536,49 +493,54 @@ class AdamOptimization:
             for j in range(len(parameters)):
                 optimizer = optimizers[j]
 
-                with tf.GradientTape() as tape:
-                    y_hat = self.simulation(
-                        individual=individual,
-                        parameters=parameters[j],
-                        num_species=num_species,
-                        num_pairs=num_pairs,
-                        stop=stop,
-                        time_step=time_step,
-                        max_epoch=max_epoch,
-                        compartment=j
-                    )
+                # Zero the gradients
+                optimizer.zero_grad()
 
-                    cost = self.compute_cost_(
-                        y_hat=y_hat,
-                        target=self.target[j, :, :],
-                        alpha=self.cost_alpha,
-                        beta=self.cost_beta,
-                        max_val=self.max_val
-                    )
-                    individual = self.init_individual(individual=individual)
-                    cost_.append(cost.numpy())
-                    print(f"Epoch {i}/{self.epochs}, Optimizer {j + 1}, Cost: {cost.numpy()}")
-                    
-                variables = list(parameters[j].values())
-                gradients = tape.gradient(cost, variables)
-                # gradients = [tf.clip_by_value(grad, -1.0, 1.0) for grad in gradients]
-                print("grads:")
-                print("------------------------------------------------------")
-                print(gradients)
-                optimizer.apply_gradients(zip(gradients, variables))
-                results[j, i - 1, :, :] = y_hat.numpy()
-                
+                # Enable gradient tracking on the parameters for the current optimizer
+                #for param in parameters[j].values():
+                    #param.requires_grad = True
 
-            print("params before share:")
-            print("_--------------------------------")
-            print(parameters)
+                # Forward pass: simulate the output
+                y_hat = self.simulation(
+                    individual=individual,
+                    parameters=parameters[j],
+                    num_species=num_species,
+                    num_pairs=num_pairs,
+                    stop=stop,
+                    time_step=time_step,
+                    max_epoch=max_epoch,
+                    compartment=j
+                )
 
-            parameters = self.share_information(params=parameters)
+                # Compute cost
+                cost = self.compute_cost_(
+                    y_hat=y_hat,
+                    target=self.target[j, :, :],
+                    alpha=self.cost_alpha,
+                    beta=self.cost_beta,
+                    max_val=self.max_val
+                )
+                individual = self.init_individual(individual=individual)
+                cost_.append(cost.item())
+                print(f"Epoch {i}/{self.epochs}, Optimizer {j + 1}, Cost: {cost.item()}")
 
-            print("params after share:")
-            print("_--------------------------------")
-            print(parameters)
+                # Backward pass: compute gradients
+                cost.backward()
 
+                # Clip gradients if necessary (you can uncomment if needed)
+                # for param in parameters[j].values():
+                #     if param.grad is not None:
+                #         param.grad = torch.clamp(param.grad, -1.0, 1.0)
+
+                # Print gradients
+                gradients = {key: param.grad for key, param in parameters[j].items() if param.grad is not None}
+
+                optimizer.step()
+                sim_results[j, i - 1, :, :] = y_hat.detach()
+                com_results[j, i - 1, :, :] = parameters[j][f"compartment_{j+1}"]
+
+            if i % 2 == 0:
+                parameters = self.share_information(params=parameters)
 
             costs.append(cost_)
             if i % self.checkpoint_interval == 0:
@@ -612,8 +574,14 @@ class AdamOptimization:
                     file_name=self.file_name
                 )
                 self.save_to_h5py(
-                    dataset_name="results",
-                    data_array=results,
+                    dataset_name="sim_results",
+                    data_array=sim_results,
+                    store_path=self.path,
+                    file_name=self.file_name
+                )
+                self.save_to_h5py(
+                    dataset_name="com_results",
+                    data_array=com_results,
                     store_path=self.path,
                     file_name=self.file_name
                 )
@@ -647,8 +615,14 @@ class AdamOptimization:
             file_name=self.file_name
         )
         self.save_to_h5py(
-            dataset_name="results",
-            data_array=results,
+            dataset_name="sim_results",
+            data_array=sim_results,
+            store_path=self.path,
+            file_name=self.file_name
+        )
+        self.save_to_h5py(
+            dataset_name="com_results",
+            data_array=com_results,
             store_path=self.path,
             file_name=self.file_name
         )
