@@ -482,9 +482,9 @@ class AdamOptimization:
             
 
         if len(self.learning_rate) > 1:
-            optimizers = [create_optimizer(parameters[i], self.learning_rate[i]) for i in range(len(parameters))]
+            optimizers = [create_optimizer(parameters[i].values(), self.learning_rate[i]) for i in range(len(parameters))]
         else:
-            optimizers = [create_optimizer(parameters[i], self.learning_rate[0]) for i in range(len(parameters))]
+            optimizers = [create_optimizer(parameters[i].values(), self.learning_rate[0]) for i in range(len(parameters))]
 
         tic_ = time.time()
         tic = time.time()
@@ -494,7 +494,7 @@ class AdamOptimization:
                 optimizer = optimizers[j]
 
                 # Zero the gradients
-                optimizer.zero_grad()
+                #optimizer.zero_grad()
 
                 # Enable gradient tracking on the parameters for the current optimizer
                 #for param in parameters[j].values():
@@ -509,7 +509,8 @@ class AdamOptimization:
                     stop=stop,
                     time_step=time_step,
                     max_epoch=max_epoch,
-                    compartment=j
+                    compartment=j,
+                    device=self.device
                 )
 
                 # Compute cost
