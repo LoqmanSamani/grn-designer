@@ -239,6 +239,12 @@ class AdamOptimization:
                     sp += 1
 
             params.append(parameters)
+<<<<<<< HEAD
+=======
+        #print("extracted params:")
+        #print("--------------------------------------------")
+        #print(params)
+>>>>>>> 620b09c068d0e6f36996548c611444233ef75d68
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
@@ -246,6 +252,18 @@ class AdamOptimization:
 
 
     def update_parameters(self, individual, parameters, param_opt, trainable_compartment):
+<<<<<<< HEAD
+=======
+        #print("ind before update:")
+        #print("--------------------------------------------")
+        #print("com 0:", individual[0])
+        #print("com 1:", individual[1])
+        #print("com 2:", individual[2])
+        #print("com 3:", individual[3])
+        #print("com 4:", individual[4])
+        #print("com 5:", individual[5])
+        #print("com 6:", individual[6])
+>>>>>>> 620b09c068d0e6f36996548c611444233ef75d68
 
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
@@ -282,9 +300,33 @@ class AdamOptimization:
 
                 for comp in range(1, trainable_compartment + 1):
                     idx = int(((comp - 1) * 2) + 1)
+<<<<<<< HEAD
                     if parameters[i][f"compartment_{comp}"].requires_grad:
                         updates = torch.max(parameters[i][f"compartment_{comp}"], torch.tensor(0.0))
                         individual[idx, :, :] = updates
+=======
+                    if parameters[i][f"compartment_{comp}"].trainable:
+                        indices_ = []
+                        updates = tf.maximum(tf.reshape(parameters[i][f"compartment_{comp}"], [-1]), 0.0)
+                        for row in range(y):
+                            for col in range(x):
+                                indices_.append([idx, row, col])
+
+                        individual = tf.tensor_scatter_nd_update(
+                            individual,
+                            indices=indices_,
+                            updates=updates
+                        )
+        #print("ind after update:")
+        #print("--------------------------------------------")
+        #print("com 0:", individual[0])
+        #print("com 1:", individual[1])
+        #print("com 2:", individual[2])
+        #print("com 3:", individual[3])
+        #print("com 4:", individual[4])
+        #print("com 5:", individual[5])
+        #print("com 6:", individual[6])
+>>>>>>> 620b09c068d0e6f36996548c611444233ef75d68
 
         return individual
 
@@ -336,6 +378,7 @@ class AdamOptimization:
         Returns:
             - torch.Tensor: The computed cost (loss) value.
         """
+<<<<<<< HEAD
         # MSE loss
         mse_loss = F.mse_loss(y_hat, target)
 
@@ -345,6 +388,18 @@ class AdamOptimization:
         # Total loss is a combination of MSE and SSIM loss
         total_loss = alpha * mse_loss + beta * ssim_loss_value
 
+=======
+        mse_loss = tf.reduce_mean(tf.square(y_hat - target))
+        #print("------------------------------------------")
+        #print("mse loss:")
+        #print(mse_loss)
+        ssim_loss_value = self.ssim_loss(y_hat, target, max_val)
+        #print("ssim loss:")
+        #print(ssim_loss_value)
+        total_loss = alpha * mse_loss + beta * ssim_loss_value
+        #print("total loss:")
+        #print(total_loss)
+>>>>>>> 620b09c068d0e6f36996548c611444233ef75d68
         return total_loss
 
     def ssim_loss(self, y_hat, target, max_val):
@@ -401,12 +456,20 @@ class AdamOptimization:
         """
         Initializes the individual tensor by setting certain slices to zero.
 
+<<<<<<< HEAD
         Args:
             - individual (torch.Tensor): The input tensor of shape (z, y, x).
 
         Returns:
             - torch.Tensor: The modified tensor with specified indices updated to zeros.
         """
+=======
+    def init_individual(self, individual):
+        #print("init ind:")
+        #print("-----------------------------")
+        #print("ind before init:")
+        #print(individual)
+>>>>>>> 620b09c068d0e6f36996548c611444233ef75d68
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
         pair_start = int(num_species * 2)
@@ -419,7 +482,15 @@ class AdamOptimization:
 
         # Set pair indices to zero
         for j in range(pair_start, pair_stop, 2):
+<<<<<<< HEAD
             individual[j] = torch.zeros((y, x), dtype=individual.dtype)
+=======
+            update = tf.zeros((y, x))
+            indices = tf.constant([[j]])
+            individual = tf.tensor_scatter_nd_update(individual, indices, [update])
+        #print("ind after init:")
+        #print(individual)
+>>>>>>> 620b09c068d0e6f36996548c611444233ef75d68
 
         return individual
 
@@ -496,6 +567,7 @@ class AdamOptimization:
                 # Zero the gradients
                 #optimizer.zero_grad()
 
+<<<<<<< HEAD
                 # Enable gradient tracking on the parameters for the current optimizer
                 #for param in parameters[j].values():
                     #param.requires_grad = True
@@ -512,6 +584,32 @@ class AdamOptimization:
                     compartment=j,
                     device=self.device
                 )
+=======
+                    cost = self.compute_cost_(
+                        y_hat=y_hat,
+                        target=self.target[j, :, :],
+                        alpha=self.cost_alpha,
+                        beta=self.cost_beta,
+                        max_val=self.max_val
+                    )
+                    individual = self.init_individual(individual=individual)
+                    cost_.append(cost.numpy())
+                    print(f"Epoch {i}/{self.epochs}, Optimizer {j + 1}, Cost: {cost.numpy()}")
+                    
+                variables = list(parameters[j].values())
+                gradients = tape.gradient(cost, variables)
+                # gradients = [tf.clip_by_value(grad, -1.0, 1.0) for grad in gradients]
+                #print("grads:")
+                #print("------------------------------------------------------")
+                #print(gradients)
+                optimizer.apply_gradients(zip(gradients, variables))
+                results[j, i - 1, :, :] = y_hat.numpy()
+                
+
+            #print("params before share:")
+            #print("_--------------------------------")
+            #print(parameters)
+>>>>>>> 620b09c068d0e6f36996548c611444233ef75d68
 
                 # Compute cost
                 cost = self.compute_cost_(
@@ -525,8 +623,14 @@ class AdamOptimization:
                 cost_.append(cost.item())
                 print(f"Epoch {i}/{self.epochs}, Optimizer {j + 1}, Cost: {cost.item()}")
 
+<<<<<<< HEAD
                 # Backward pass: compute gradients
                 cost.backward()
+=======
+            #print("params after share:")
+            #print("_--------------------------------")
+            #print(parameters)
+>>>>>>> 620b09c068d0e6f36996548c611444233ef75d68
 
                 # Clip gradients if necessary (you can uncomment if needed)
                 # for param in parameters[j].values():

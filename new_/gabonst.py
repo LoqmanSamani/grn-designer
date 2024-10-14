@@ -7,7 +7,7 @@ import math
 
 
 def evolutionary_optimization(
-        population, target, population_size, cost_alpha, cost_beta, max_val, sim_mutation_rate,
+        population, target, population_size, num_patterns, init_species, init_pairs, cost_alpha, cost_beta, max_val, sim_mutation_rate,
         compartment_mutation_rate, parameter_mutation_rate, insertion_mutation_rate, deletion_mutation_rate,
         sim_means, sim_std_devs, sim_min_vals, sim_max_vals, compartment_mean, compartment_std, compartment_min_val,
         compartment_max_val, sim_distribution, compartment_distribution, species_param_means, species_param_stds,
@@ -17,32 +17,33 @@ def evolutionary_optimization(
         param_crossover, num_elite_individuals, individual_fix_size, species_parameters, complex_parameters, simulation_parameters
 ):
     """
-        Performs an evolutionary optimization process on a population of individuals, applying mutation and crossover
-        operations to evolve the population towards a target state.
+    Perform an evolutionary optimization process to evolve a population of individuals toward a target state.
 
-        This function simulates each individual, computes their costs relative to a target, and then applies mutations and
-        crossovers. It retains the best-performing individuals (elite individuals) and reinitializes underperforming
-        individuals if necessary.
+    This function simulates each individual in the population, computes their performance relative to a target state,
+    applies mutations and crossover operations, and retains elite individuals based on performance. Underperforming
+    individuals are reinitialized or optimized through mutation and crossover mechanisms.
 
         Parameters:
-            - population (list of numpy.ndarray): The current population of individuals to be optimized, where each
-              individual is represented as a 3D numpy array.
-            - target (numpy.ndarray): The target state that the population aims to achieve, represented as a 2D numpy array.
+            - population (list of numpy.ndarray): The population of individuals to be evolved, each represented by a 3D numpy array.
+            - target (numpy.ndarray): The target state the individuals aim to approximate, represented as a 2D numpy array.
+            - population_size (int): The total size of the population.
+            - num_patterns (int): The number of pattern simulations for each individual.
+            - init_species (int): The number of initial species for the individuals.
+            - init_pairs (int): The number of initial complex pairs for the individuals.
             - cost_alpha (float): Weighting factor for the primary component of the cost function.
             - cost_beta (float): Weighting factor for the secondary component of the cost function.
-            - cost_kernel_size (int): The size of the kernel used in the cost computation.
-            - cost_method (str): The method used to compute the cost function (e.g., "mse", "mae").
-            - sim_mutation_rate (float): The mutation rate for simulation parameters.
-            - compartment_mutation_rate (float): The mutation rate for compartment parameters.
-            - parameter_mutation_rate (float): The mutation rate for species and complex parameters.
-            - insertion_mutation_rate (float): The mutation rate for species insertion operations.
-            - deletion_mutation_rate (float): The mutation rate for species deletion operations.
+            - max_val (float): Maximum allowable value in the cost function computation.
+            - sim_mutation_rate (float): Mutation rate for the simulation parameters.
+            - compartment_mutation_rate (float): Mutation rate for the compartment parameters.
+            - parameter_mutation_rate (float): Mutation rate for the species and complex parameters.
+            - insertion_mutation_rate (float): Mutation rate for species insertion operations.
+            - deletion_mutation_rate (float): Mutation rate for species deletion operations.
             - sim_means (list of float): Mean values for the simulation parameters.
             - sim_std_devs (list of float): Standard deviation values for the simulation parameters.
             - sim_min_vals (list of float): Minimum values for the simulation parameters.
             - sim_max_vals (list of float): Maximum values for the simulation parameters.
             - compartment_mean (float): Mean value for the compartment parameters.
-            - compartment_std (float): Standard deviation value for the compartment parameters.
+            - compartment_std (float): Standard deviation for the compartment parameters.
             - compartment_min_val (float): Minimum value for the compartment parameters.
             - compartment_max_val (float): Maximum value for the compartment parameters.
             - sim_distribution (str): The distribution type for simulation mutations (e.g., "normal", "uniform").
@@ -56,33 +57,38 @@ def evolutionary_optimization(
             - complex_param_min_vals (list of float): Minimum values for the complex parameters.
             - complex_param_max_vals (list of float): Maximum values for the complex parameters.
             - param_distribution (str): The distribution type for parameter mutations (e.g., "normal", "uniform").
-            - sim_mutation (bool): Flag indicating whether to apply simulation parameter mutations.
-            - compartment_mutation (bool): Flag indicating whether to apply compartment parameter mutations.
-            - param_mutation (bool): Flag indicating whether to apply species and complex parameter mutations.
-            - species_insertion_mutation (bool): Flag indicating whether to apply species insertion mutations.
-            - species_deletion_mutation (bool): Flag indicating whether to apply species deletion mutations.
-            - crossover_alpha (float): The weighting factor for crossover operations, determining the contribution of elite
-              individuals.
-            - sim_crossover (bool): Flag indicating whether to apply crossover to simulation variables.
-            - compartment_crossover (bool): Flag indicating whether to apply crossover to compartment parameters.
-            - param_crossover (bool): Flag indicating whether to apply crossover to species and complex parameters.
-            - num_elite_individuals (int): The number of elite individuals selected for crossover operations.
-            - individual_fix_size (bool): Flag indicating whether individuals in the population should maintain a fixed size.
-            - species_parameters (list of lists): The initial parameters for the species in the population.
-            - complex_parameters (list of tuples): The initial parameters for the complexes in the population.
+            - sim_mutation (bool): Whether to apply mutations to the simulation parameters.
+            - compartment_mutation (bool): Whether to apply mutations to the compartment parameters.
+            - param_mutation (bool): Whether to apply mutations to the species and complex parameters.
+            - species_insertion_mutation (bool): Whether to apply species insertion mutations.
+            - species_deletion_mutation (bool): Whether to apply species deletion mutations.
+            - crossover_alpha (float): Weighting factor for crossover operations.
+            - sim_crossover (bool): Whether to apply crossover to simulation variables.
+            - compartment_crossover (bool): Whether to apply crossover to compartment parameters.
+            - param_crossover (bool): Whether to apply crossover to species and complex parameters.
+            - num_elite_individuals (int): The number of elite individuals selected for crossover.
+            - individual_fix_size (bool): Whether individuals should maintain a fixed size across the population.
+            - species_parameters (list of lists): Initial parameters for the species in the individuals.
+            - complex_parameters (list of tuples): Initial parameters for the complexes in the individuals.
+            - simulation_parameters (dict): Dictionary containing simulation-specific parameters (e.g., "max_simulation_epoch",
+              "simulation_stop_time", "time_step").
 
         Returns:
-            - list of numpy.ndarray: The optimized population after applying evolutionary operations, with individuals
-              closer to the target state.
-        """
+            - low_cost_individuals (list of numpy.ndarray): The population of evolved individuals with lower costs.
+            - low_costs (list of float): The corresponding costs of the evolved individuals.
+            - mean_cost (float): The mean cost of the evolved population.
+    """
 
     _, y, x = population[0].shape
     m = len(population)
-    predictions = np.zeros((m, y, x))
+    predictions = np.zeros((num_patterns, m, y, x))
 
-    # Simulate each individual and collect predictions and deltas
+    # Simulate each individual and collect predictions
     for i in range(m):
-        predictions[i, :, :] = individual_simulation(individual=population[i])
+        predictions[:, i, :, :] = individual_simulation(
+            individual=population[i],
+            num_patterns=num_patterns
+        )
         # reset each individual after simulation
         population[i] = reset_individual(individual=population[i])
 
@@ -176,10 +182,13 @@ def evolutionary_optimization(
         )
 
     # Recompute costs after crossover
-    predictions1 = np.zeros((len(high_cost_individuals), y, x))
+    predictions1 = np.zeros((num_patterns, len(high_cost_individuals), y, x))
 
     for i in range(len(high_cost_individuals)):
-        predictions1[i, :, :] = individual_simulation(individual=high_cost_individuals[i])
+        predictions1[:, i, :, :] = individual_simulation(
+            individual=high_cost_individuals[i],
+            num_patterns=num_patterns
+        )
         high_cost_individuals[i] = reset_individual(individual=high_cost_individuals[i])
 
 
@@ -252,10 +261,13 @@ def evolutionary_optimization(
             )
 
     # Recompute costs after mutation
-    predictions2 = np.zeros((len(high_cost_individuals), y, x))
+    predictions2 = np.zeros((num_patterns, len(high_cost_individuals), y, x))
 
     for i in range(len(high_cost_individuals)):
-        predictions2[i, :, :] = individual_simulation(individual=high_cost_individuals[i])
+        predictions2[:, i, :, :] = individual_simulation(
+            individual=high_cost_individuals[i],
+            num_patterns=num_patterns
+        )
         high_cost_individuals[i] = reset_individual(individual=high_cost_individuals[i])
 
     costs2 = compute_cost(
@@ -301,14 +313,19 @@ def evolutionary_optimization(
             max_sim_epochs=simulation_parameters["max_simulation_epoch"],
             sim_stop_time=simulation_parameters["simulation_stop_time"],
             time_step=simulation_parameters["time_step"],
-            individual_fix_size=individual_fix_size
+            individual_fix_size=individual_fix_size,
+            init_species=init_species,
+            init_pairs=init_pairs
         )
 
         # Recompute costs after initialization
-        predictions3 = np.zeros((len(initialized_individuals), y, x))
+        predictions3 = np.zeros((num_patterns, len(initialized_individuals), y, x))
 
         for i in range(len(initialized_individuals)):
-            predictions3[i, :, :] = individual_simulation(individual=initialized_individuals[i])
+            predictions3[:, i, :, :] = individual_simulation(
+                individual=initialized_individuals[i],
+                num_patterns=num_patterns
+            )
             initialized_individuals[i] = reset_individual(individual=initialized_individuals[i])
 
         costs3 = compute_cost(
