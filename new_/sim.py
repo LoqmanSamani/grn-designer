@@ -1,5 +1,5 @@
-from tensor_reactions import *
-from tensor_diffusion import *
+from react import *
+from diff import *
 
 
 

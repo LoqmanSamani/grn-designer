@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from ignite.metrics import SSIM
+#torch.autograd.set_detect_anomaly(True)
 
 
 
@@ -43,6 +44,7 @@ class AdamOptimization:
                  cost_beta=0.4,
                  max_val=1.0,
                  checkpoint_interval=10,
+                 share_info=4,
                  lr_decay=False,
                  decay_steps=40,
                  decay_rate=0.6,
@@ -61,6 +63,7 @@ class AdamOptimization:
         self.cost_beta = cost_beta
         self.max_val = max_val
         self.checkpoint_interval = checkpoint_interval
+        self.share_info = share_info
         self.lr_decay = lr_decay
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
@@ -529,7 +532,7 @@ class AdamOptimization:
             - optimizer: The created Adam optimizer.
             - lr_scheduler: The learning rate scheduler if decay is enabled, otherwise None.
         """
-        optimizer = torch.optim.Adam(model_parameters, lr=lr)
+        optimizer = torch.optim.Adam(params=model_parameters, lr=lr)
 
         lr_scheduler = None
         if self.lr_decay:
@@ -557,8 +560,9 @@ class AdamOptimization:
 
         costs = []
         time_ = []
-        sim_results = np.zeros((self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
-        com_results = np.zeros((self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
+        # create arrays to save the progress of the system
+        simulation_results = np.zeros((self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
+        init_conditions = np.zeros((self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
 
         self.save_to_h5py(
             dataset_name="target",
@@ -566,38 +570,37 @@ class AdamOptimization:
             store_path=self.path,
             file_name=self.file_name
         )
-
+        # extract parameters of the model to be optimized
         parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
             individual=individual,
             param_type=self.param_type,
             compartment_opt=self.compartment_opt,
             trainable_compartment=self.trainable_compartment
         )
+        print(len(parameters))
 
-
-            
-
+        # create the needed  optimizers (number of optimizer is equal to the number of patterns in the input pattern-image)
         if len(self.learning_rate) > 1:
-            optimizers = [create_optimizer(parameters[i].values(), self.learning_rate[i]) for i in range(len(parameters))]
+            optimizers = [self.create_optimizer(list(parameters[i].values()), self.learning_rate[i]) for i in range(len(parameters))]
         else:
-            optimizers = [create_optimizer(parameters[i].values(), self.learning_rate[0]) for i in range(len(parameters))]
+            optimizers = [self.create_optimizer(list(parameters[i].values()), self.learning_rate[0]) for i in range(len(parameters))]
 
+        print(len(optimizers))
         tic_ = time.time()
         tic = time.time()
         for i in range(1, self.epochs + 1):
             cost_ = []
             for j in range(len(parameters)):
-                optimizer = optimizers[j]
+                #optimizer = optimizers[j]
 
-                # Zero the gradients
-                #optimizer.zero_grad()
-
+                # Zero the gradient
+                optimizers[j][0].zero_grad()
                 # Enable gradient tracking on the parameters for the current optimizer
                 #for param in parameters[j].values():
                     #param.requires_grad = True
 
                 # Forward pass: simulate the output
-                y_hat = self.simulation(
+                prediction = self.simulation(
                     individual=individual,
                     parameters=parameters[j],
                     num_species=num_species,
@@ -611,17 +614,47 @@ class AdamOptimization:
 
                 # Compute cost
                 cost = self.compute_cost_(
-                    y_hat=y_hat,
+                    y_hat=prediction,
                     target=self.target[j, :, :],
                     alpha=self.cost_alpha,
                     beta=self.cost_beta,
                     max_val=self.max_val
                 )
-                individual = self.init_individual(individual=individual)
-                cost_.append(cost.item())
-                print(f"Epoch {i}/{self.epochs}, Optimizer {j + 1}, Cost: {cost.item()}")
                 # Backward pass: compute gradients
-                cost.backward()
+                cost.backward(retain_graph=True) # backward pass
+                optimizers[j][0].step() #gradient descent
+                cost_.append(cost.item())
+                simulation_results[j, i - 1, :, :] = prediction.detach()
+                init_conditions[j, i - 1, :, :] = parameters[j][f"compartment_{j + 1}"].detach().numpy()
+                individual = self.init_individual(individual=individual) # initialize individual
+
+                # print the cost
+                if len(optimizers) > 1:
+                    print(f"Epoch {i}/{self.epochs}, Optimizer {j + 1}, Cost: {cost.item()}")
+                else:
+                    print(f"Iteration {i}/{self.epochs}, Cost: {cost.item()}")
+
+            costs.append(cost_)
+
+            if i % self.share_info == 0 and len(optimizers) > 1:
+                parameters = self.share_information(params=parameters) # share information among parameters of different optimizers, if there are more than one optimizer
+                individual = self.update_parameters(
+                    individual=individual,
+                    parameters=parameters,
+                    param_opt=self.param_opt,
+                    trainable_compartment=self.trainable_compartment
+
+                ) # update individual with optimized parameters
+            else:
+                individual = self.update_parameters(
+                    individual=individual,
+                    parameters=parameters,
+                    param_opt=self.param_opt,
+                    trainable_compartment=self.trainable_compartment
+
+                )  # update individual with optimized parameters
+
+
 
             #print("params after share:")
             #print("_--------------------------------")
@@ -633,16 +666,8 @@ class AdamOptimization:
                 #         param.grad = torch.clamp(param.grad, -1.0, 1.0)
 
                 # Print gradients
-                gradients = {key: param.grad for key, param in parameters[j].items() if param.grad is not None}
+                #gradients = {key: param.grad for key, param in parameters[j].items() if param.grad is not None}
 
-                optimizer.step()
-                sim_results[j, i - 1, :, :] = y_hat.detach()
-                com_results[j, i - 1, :, :] = parameters[j][f"compartment_{j+1}"]
-
-            if i % 2 == 0:
-                parameters = self.share_information(params=parameters)
-
-            costs.append(cost_)
             if i % self.checkpoint_interval == 0:
                 toc = time.time()
                 time_.append(toc - tic)
@@ -674,14 +699,14 @@ class AdamOptimization:
                     file_name=self.file_name
                 )
                 self.save_to_h5py(
-                    dataset_name="sim_results",
-                    data_array=sim_results,
+                    dataset_name="simulation_results",
+                    data_array=simulation_results,
                     store_path=self.path,
                     file_name=self.file_name
                 )
                 self.save_to_h5py(
-                    dataset_name="com_results",
-                    data_array=com_results,
+                    dataset_name="initial_conditions",
+                    data_array=init_conditions,
                     store_path=self.path,
                     file_name=self.file_name
                 )
@@ -715,14 +740,14 @@ class AdamOptimization:
             file_name=self.file_name
         )
         self.save_to_h5py(
-            dataset_name="sim_results",
-            data_array=sim_results,
+            dataset_name="simulation_results",
+            data_array=simulation_results,
             store_path=self.path,
             file_name=self.file_name
         )
         self.save_to_h5py(
-            dataset_name="com_results",
-            data_array=com_results,
+            dataset_name="initial_conditions",
+            data_array=init_conditions,
             store_path=self.path,
             file_name=self.file_name
         )
