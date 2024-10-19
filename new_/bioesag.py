@@ -673,8 +673,7 @@ class BioEsAg:
                 print()
 
                 optimized_individual, costs = self.gradient_optimization_.gradient_optimization(
-                    individual=tf.convert_to_tensor(individual)
-                )
+                    agent=tf.convert_to_tensor(individual))
 
                 population[k] = optimized_individual.numpy()
                 optimization_costs[:, k] = costs

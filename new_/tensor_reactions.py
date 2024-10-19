@@ -2,9 +2,6 @@ import torch
 
 
 
-
-import torch
-
 def apply_component_production(initial_concentration, production_pattern, production_rate, time_step):
     """
     Update the concentration of a species in each cell of a compartment using PyTorch.

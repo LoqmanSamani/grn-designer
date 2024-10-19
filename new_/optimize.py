@@ -49,7 +49,8 @@ class AdamOptimization:
                  decay_steps=40,
                  decay_rate=0.6,
                  trainable_compartment=1,
-                 device="cpu"
+                 accumulation_steps=None,
+                 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
                  ):
 
         self.epochs = epochs
@@ -68,6 +69,7 @@ class AdamOptimization:
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
         self.trainable_compartment = trainable_compartment
+        #self.accumulation_steps = accumulation_steps,
         self.device = device
         if learning_rate is None:
             learning_rate = [0.001]  # Default learning rate
@@ -110,14 +112,14 @@ class AdamOptimization:
 
 
 
-    def parameter_extraction(self, individual, param_type, compartment_opt, trainable_compartment):
+    def parameter_extraction(self, agent, param_type, compartment_opt, trainable_compartment):
 
         params = []
-        num_species = int(individual[-1, -1, 0])
-        num_pairs = int(individual[-1, -1, 1])
-        max_epoch = int(individual[-1, -1, 2])
-        stop = int(individual[-1, -1, 3])
-        time_step = individual[-1, -1, 4]
+        num_species = int(agent[-1, -1, 0])
+        num_pairs = int(agent[-1, -1, 1])
+        max_epoch = int(agent[-1, -1, 2])
+        stop = int(agent[-1, -1, 3])
+        time_step = agent[-1, -1, 4]
         pair_start = int(num_species * 2)
         pair_stop = int(pair_start + (num_pairs * 2))
 
@@ -129,13 +131,13 @@ class AdamOptimization:
                 for i in range(0, num_species * 2, 2):
                     if int(species - 1) == t:
                         parameters[f"species_{species}"] = torch.nn.Parameter(
-                            torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                            torch.tensor(agent[-1, i, 0:3], dtype=torch.float32),
                             requires_grad=True
                         )
                         species += 1
                     else:
                         parameters[f"species_{species}"] = torch.nn.Parameter(
-                            torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                            torch.tensor(agent[-1, i, 0:3], dtype=torch.float32),
                             requires_grad=False
                         )
                         species += 1
@@ -143,7 +145,7 @@ class AdamOptimization:
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
                     parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        torch.tensor(individual[j, 1, :4], dtype=torch.float32),
+                        torch.tensor(agent[j, 1, :4], dtype=torch.float32),
                         requires_grad=True
                     )
                     pair += 1
@@ -153,7 +155,7 @@ class AdamOptimization:
                 for i in range(0, num_species * 2, 2):
 
                     parameters[f"species_{species}"] = torch.nn.Parameter(
-                        torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                        torch.tensor(agent[-1, i, 0:3], dtype=torch.float32),
                         requires_grad=True
                     )
                     species += 1
@@ -161,7 +163,7 @@ class AdamOptimization:
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
                     parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        torch.tensor(individual[j, 1, :4], dtype=torch.float32),
+                        torch.tensor(agent[j, 1, :4], dtype=torch.float32),
                         requires_grad=True
                     )
                     pair += 1
@@ -170,7 +172,7 @@ class AdamOptimization:
                 species = 1
                 for i in range(0, num_species * 2, 2):
                     parameters[f"species_{species}"] = torch.nn.Parameter(
-                        torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                        torch.tensor(agent[-1, i, 0:3], dtype=torch.float32),
                         requires_grad=False
                     )
                     species += 1
@@ -178,7 +180,7 @@ class AdamOptimization:
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
                     parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        torch.tensor(individual[j, 1, :4], dtype=torch.float32),
+                        torch.tensor(agent[j, 1, :4], dtype=torch.float32),
                         requires_grad=False
                     )
                     pair += 1
@@ -189,13 +191,13 @@ class AdamOptimization:
                 for k in range(1, num_species * 2, 2):
                     if int(sp - 1) == t:
                         parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                            torch.tensor(individual[k, :, :], dtype=torch.float32),
+                            torch.tensor(agent[k, :, :], dtype=torch.float32),
                             requires_grad=True
                         )
                         sp += 1
                     else:
                         parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                            torch.tensor(individual[k, :, :], dtype=torch.float32),
+                            torch.tensor(agent[k, :, :], dtype=torch.float32),
                             requires_grad=False
                         )
                         sp += 1
@@ -204,7 +206,7 @@ class AdamOptimization:
                 sp = 1
                 for k in range(1, num_species * 2, 2):
                     parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                        torch.tensor(individual[k, :, :], dtype=torch.float32),
+                        torch.tensor(agent[k, :, :], dtype=torch.float32),
                         requires_grad=False
                     )
                     sp += 1
@@ -217,7 +219,7 @@ class AdamOptimization:
                 species = 1
                 for i in range(0, num_species * 2, 2):
                     parameters[f"species_{species}"] = torch.nn.Parameter(
-                        torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                        torch.tensor(agent[-1, i, 0:3], dtype=torch.float32),
                         requires_grad=True
                     )
                     species += 1
@@ -225,7 +227,7 @@ class AdamOptimization:
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
                     parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        torch.tensor(individual[j, 1, :4], dtype=torch.float32),
+                        torch.tensor(agent[j, 1, :4], dtype=torch.float32),
                         requires_grad=True
                     )
                     pair += 1
@@ -233,7 +235,7 @@ class AdamOptimization:
                 sp = 1
                 for k in range(1, num_species * 2, 2):
                     parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                        torch.tensor(individual[k, :, :], dtype=torch.float32),
+                        torch.tensor(agent[k, :, :], dtype=torch.float32),
                         requires_grad=False
                     )
                     sp += 1
@@ -243,13 +245,13 @@ class AdamOptimization:
                 for i in range(0, num_species * 2, 2):
                     if species == 1:
                         parameters[f"species_{species}"] = torch.nn.Parameter(
-                            torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                            torch.tensor(agent[-1, i, 0:3], dtype=torch.float32),
                             requires_grad=True
                         )
                         species += 1
                     else:
                         parameters[f"species_{species}"] = torch.nn.Parameter(
-                            torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                            torch.tensor(agent[-1, i, 0:3], dtype=torch.float32),
                             requires_grad=False
                         )
                         species += 1
@@ -258,7 +260,7 @@ class AdamOptimization:
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
                     parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        torch.tensor(individual[j, 1, :4], dtype=torch.float32),
+                        torch.tensor(agent[j, 1, :4], dtype=torch.float32),
                         requires_grad=True
                     )
                     pair += 1
@@ -266,7 +268,7 @@ class AdamOptimization:
                 sp = 1
                 for k in range(1, num_species * 2, 2):
                     parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                        torch.tensor(individual[k, :, :], dtype=torch.float32),
+                        torch.tensor(agent[k, :, :], dtype=torch.float32),
                         requires_grad=False
                     )
                     sp += 1
@@ -275,7 +277,7 @@ class AdamOptimization:
                 species = 1
                 for i in range(0, num_species * 2, 2):
                     parameters[f"species_{species}"] = torch.nn.Parameter(
-                        torch.tensor(individual[-1, i, 0:3], dtype=torch.float32),
+                        torch.tensor(agent[-1, i, 0:3], dtype=torch.float32),
                         requires_grad=False
                     )
                     species += 1
@@ -283,7 +285,7 @@ class AdamOptimization:
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
                     parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        torch.tensor(individual[j, 1, :4], dtype=torch.float32),
+                        torch.tensor(agent[j, 1, :4], dtype=torch.float32),
                         requires_grad=False
                     )
                     pair += 1
@@ -291,7 +293,7 @@ class AdamOptimization:
                 sp = 1
                 for k in range(1, num_species * 2, 2):
                     parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                        torch.tensor(individual[k, :, :], dtype=torch.float32),
+                        torch.tensor(agent[k, :, :], dtype=torch.float32),
                         requires_grad=False
                     )
                     sp += 1
@@ -305,9 +307,7 @@ class AdamOptimization:
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
 
-
-
-    def update_parameters(self, individual, parameters, param_opt, trainable_compartment):
+    def update_parameters(self, agent, parameters, param_opt, trainable_compartment):
 
         #print("ind before update:")
         #print("--------------------------------------------")
@@ -319,45 +319,45 @@ class AdamOptimization:
         #print("com 5:", individual[5])
         #print("com 6:", individual[6])
 
-        num_species = int(individual[-1, -1, 0])
-        num_pairs = int(individual[-1, -1, 1])
+        num_species = int(agent[-1, -1, 0])
+        num_pairs = int(agent[-1, -1, 1])
         pair_start = int(num_species * 2)
-        z, y, x = individual.shape
+
 
         if trainable_compartment < 1 and param_opt:
             j = 0
             for species in range(1, num_species + 1):
-                individual[z - 1, j, :3] = parameters[0][f"species_{species}"]
+                agent[-1, j, :3] = parameters[0][f"species_{species}"]
                 j += 2
 
             for pair in range(1, num_pairs + 1):
                 j = pair_start + (pair - 1) * 2 + 1
-                individual[j, 1, :4] = parameters[0][f"pair_{pair}"]
+                agent[j, 1, :4] = parameters[0][f"pair_{pair}"]
 
             for comp in range(1, num_species + 1):
                 idx = int(((comp - 1) * 2) + 1)
                 updates = torch.max(parameters[0][f"compartment_{comp}"], torch.tensor(0.0))
-                individual[idx, :, :] = updates
+                agent[idx, :, :] = updates
 
         elif trainable_compartment >= 1:
             for i in range(len(parameters)):
                 j = 0
                 for species in range(1, num_species + 1):
                     if parameters[i][f"species_{species}"].requires_grad:
-                        individual[z - 1, j, :3] = parameters[i][f"species_{species}"]
+                        agent[-1, j, :3] = parameters[i][f"species_{species}"]
                     j += 2
 
                 for pair in range(1, num_pairs + 1):
                     if parameters[i][f"pair_{pair}"].requires_grad:
                         j = pair_start + (pair - 1) * 2 + 1
-                        individual[j, 1, :4] = parameters[i][f"pair_{pair}"]
+                        agent[j, 1, :4] = parameters[i][f"pair_{pair}"]
 
                 for comp in range(1, trainable_compartment + 1):
                     idx = int(((comp - 1) * 2) + 1)
 
                     if parameters[i][f"compartment_{comp}"].requires_grad:
                         updates = torch.max(parameters[i][f"compartment_{comp}"], torch.tensor(0.0))
-                        individual[idx, :, :] = updates
+                        agent[idx, :, :] = updates
 
         #print("ind after update:")
         #print("--------------------------------------------")
@@ -369,12 +369,13 @@ class AdamOptimization:
         #print("com 5:", individual[5])
         #print("com 6:", individual[6])
 
-        return individual
+        return agent
 
 
 
 
-    def simulation(self, individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, compartment, device):
+
+    def simulation(self, agent, parameters, num_species, num_pairs, stop, time_step, max_epoch, compartment, device):
         """
         Runs a simulation using the given individual and parameters.
 
@@ -391,17 +392,9 @@ class AdamOptimization:
             - tf.Tensor: The simulated output (y_hat) representing the diffusion pattern.
         """
 
-        y_hat = tensor_simulation(
-            individual=individual,
-            parameters=parameters,
-            num_species=num_species,
-            num_pairs=num_pairs,
-            stop=stop,
-            time_step=time_step,
-            max_epoch=max_epoch,
-            compartment=compartment,
-            device=device
-        )
+        y_hat = tensor_simulation(agent=agent, parameters=parameters, num_species=num_species, num_pairs=num_pairs,
+                                  stop=stop, time_step=time_step, max_epoch=max_epoch, compartment=compartment,
+                                  device=device)
 
         return y_hat
 
@@ -493,13 +486,16 @@ class AdamOptimization:
 
 
 
-
+    """
     def init_individual(self, individual):
 
-        #print("init ind:")
-        #print("-----------------------------")
-        #print("ind before init:")
-        #print(individual)
+        print("init ind:")
+        print("-----------------------------")
+        print("ind before init:")
+        print(individual[0][:])
+        print(individual[2][:])
+        print(individual[4][:])
+
 
         num_species = int(individual[-1, -1, 0])
         num_pairs = int(individual[-1, -1, 1])
@@ -516,7 +512,14 @@ class AdamOptimization:
 
             individual[j] = torch.zeros((y, x), dtype=individual.dtype)
 
+
+        print("ind after init:")
+        print(individual[0][:])
+        print(individual[2][:])
+        print(individual[4][:])
+
         return individual
+    """
 
 
 
@@ -545,7 +548,7 @@ class AdamOptimization:
 
 
 
-    def gradient_optimization(self, individual):
+    def gradient_optimization(self, agent):
         """
         Performs gradient-based optimization on the individual using the Adam optimizer.
 
@@ -571,13 +574,11 @@ class AdamOptimization:
             file_name=self.file_name
         )
         # extract parameters of the model to be optimized
-        parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
-            individual=individual,
-            param_type=self.param_type,
-            compartment_opt=self.compartment_opt,
-            trainable_compartment=self.trainable_compartment
-        )
-        print(len(parameters))
+        parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(agent=agent,
+                                                                                                   param_type=self.param_type,
+                                                                                                   compartment_opt=self.compartment_opt,
+                                                                                                   trainable_compartment=self.trainable_compartment)
+
 
         # create the needed  optimizers (number of optimizer is equal to the number of patterns in the input pattern-image)
         if len(self.learning_rate) > 1:
@@ -585,7 +586,6 @@ class AdamOptimization:
         else:
             optimizers = [self.create_optimizer(list(parameters[i].values()), self.learning_rate[0]) for i in range(len(parameters))]
 
-        print(len(optimizers))
         tic_ = time.time()
         tic = time.time()
         for i in range(1, self.epochs + 1):
@@ -594,23 +594,15 @@ class AdamOptimization:
                 #optimizer = optimizers[j]
 
                 # Zero the gradient
-                optimizers[j][0].zero_grad()
+                #optimizers[j][0].zero_grad(set_to_none=True)
                 # Enable gradient tracking on the parameters for the current optimizer
                 #for param in parameters[j].values():
                     #param.requires_grad = True
 
                 # Forward pass: simulate the output
-                prediction = self.simulation(
-                    individual=individual,
-                    parameters=parameters[j],
-                    num_species=num_species,
-                    num_pairs=num_pairs,
-                    stop=stop,
-                    time_step=time_step,
-                    max_epoch=max_epoch,
-                    compartment=j,
-                    device=self.device
-                )
+                prediction = self.simulation(agent=agent, parameters=parameters[j], num_species=num_species,
+                                             num_pairs=num_pairs, stop=stop, time_step=time_step, max_epoch=max_epoch,
+                                             compartment=j, device=self.device)
 
                 # Compute cost
                 cost = self.compute_cost_(
@@ -622,11 +614,25 @@ class AdamOptimization:
                 )
                 # Backward pass: compute gradients
                 cost.backward(retain_graph=True) # backward pass
-                optimizers[j][0].step() #gradient descent
+                #if self.accumulation_steps:
+                    #if i % self.accumulation_steps == 0:  # Wait for several backward steps
+                optimizers[j][0].step()  # Now we can do an optimizer step
+                if optimizers[j][1] is not None:
+                    optimizers[j][1].step()  # Update learning rate according to the schedule
+
+                optimizers[j][0].zero_grad(set_to_none=True) # Reset gradients tensors
+                #else:
+                    #optimizers[j][0].step() #gradient descent
+                    # Optionally, step the scheduler once per epoch (or per iteration)
+                    #if optimizers[j][1] is not None:
+                        #optimizers[j][1].step()  # Update learning rate according to the schedule
+                    #optimizers[j][0].zero_grad(set_to_none=True)  # Reset gradients tensors
+
+                #print(parameters[j][f"species_{j + 1}"].detach().numpy())
                 cost_.append(cost.item())
                 simulation_results[j, i - 1, :, :] = prediction.detach()
                 init_conditions[j, i - 1, :, :] = parameters[j][f"compartment_{j + 1}"].detach().numpy()
-                individual = self.init_individual(individual=individual) # initialize individual
+                # individual = self.init_individual(individual=individual) # initialize individual
 
                 # print the cost
                 if len(optimizers) > 1:
@@ -638,13 +644,9 @@ class AdamOptimization:
 
             if i % self.share_info == 0 and len(optimizers) > 1:
                 parameters = self.share_information(params=parameters) # share information among parameters of different optimizers, if there are more than one optimizer
-                individual = self.update_parameters(
-                    individual=individual,
-                    parameters=parameters,
-                    param_opt=self.param_opt,
-                    trainable_compartment=self.trainable_compartment
-
-                ) # update individual with optimized parameters
+                agent = self.update_parameters(agent=agent, parameters=parameters, param_opt=self.param_opt,
+                                               trainable_compartment=self.trainable_compartment)  # update individual with optimized parameters
+            """
             else:
                 individual = self.update_parameters(
                     individual=individual,
@@ -653,6 +655,7 @@ class AdamOptimization:
                     trainable_compartment=self.trainable_compartment
 
                 )  # update individual with optimized parameters
+            """
 
 
 
@@ -672,17 +675,12 @@ class AdamOptimization:
                 toc = time.time()
                 time_.append(toc - tic)
                 tic = time.time()
-                individual = self.update_parameters(
-                    individual=individual,
-                    parameters=parameters,
-                    param_opt=self.param_opt,
-                    trainable_compartment=self.trainable_compartment
-
-                )
+                agent = self.update_parameters(agent=agent, parameters=parameters, param_opt=self.param_opt,
+                                               trainable_compartment=self.trainable_compartment)
 
                 self.save_to_h5py(
-                    dataset_name="ind",
-                    data_array=individual,
+                    dataset_name="agent",
+                    data_array=agent.detach().numpy(),
                     store_path=self.path,
                     file_name=self.file_name
                 )
@@ -720,16 +718,11 @@ class AdamOptimization:
             file_name=self.file_name
         )
 
-        individual = self.update_parameters(
-            individual=individual,
-            parameters=parameters,
-            param_opt=self.param_opt,
-            trainable_compartment=self.trainable_compartment
-
-        )
+        agent = self.update_parameters(agent=agent, parameters=parameters, param_opt=self.param_opt,
+                                       trainable_compartment=self.trainable_compartment)
         self.save_to_h5py(
-            dataset_name="ind",
-            data_array=individual,
+            dataset_name="agent",
+            data_array=agent.detach().numpy(),
             store_path=self.path,
             file_name=self.file_name
         )
@@ -752,4 +745,4 @@ class AdamOptimization:
             file_name=self.file_name
         )
 
-        return individual, costs
+        return agent, costs

@@ -4,38 +4,7 @@ from diff import *
 
 
 def tensor_simulation(individual, parameters, num_species, num_pairs, stop, time_step, max_epoch, compartment):
-    """
-    Simulates the evolution of species and complexes in a spatial compartment over time.
 
-    This function performs a series of updates to the concentrations of species and complexes within
-    a 3D tensor representation of the compartment. The updates include production, collision, degradation,
-    dissociation, and diffusion processes, iteratively applied over a specified number of epochs.
-
-        Args:
-            individual (tf.Tensor): A 3D tensor representing the state of species and complexes across
-                                    different compartments and time steps. Shape should be [z, y, x],
-                                    where `z` is the number of species and complexes, and `(y, x)`
-                                    represents the spatial dimensions of the compartment.
-            parameters (dict): A dictionary of TensorFlow variables containing the parameters for the
-                               simulation. Includes production rates, collision rates, degradation rates,
-                               and diffusion rates for species and pairs.
-            num_species (int): The number of distinct species in the simulation.
-            num_pairs (int): The number of distinct pairs (complexes) in the simulation.
-            stop (float): The total simulation time.
-            time_step (float): The time increment for each simulation step.
-            max_epoch (int): The maximum number of epochs to run the simulation.
-
-        Returns:
-            tf.Tensor (y_hat): A 2D tensor representing the final state of the first species across all compartments,
-                       after the simulation has completed.
-
-        Notes:
-            - The function performs updates to the `individual` tensor using `tf.tensor_scatter_nd_update`,
-              which modifies the tensor in place for specific indices.
-            - The simulation updates species production, handles collisions, updates degradation,
-              manages dissociation, and performs diffusion for both species and complexes.
-            - The simulation runs for either `max_epoch` or `num_epochs` epochs, whichever is larger.
-    """
 
     z, y, x = individual.shape  # z: species (including complexes), (y, x): compartment shape
     num_iters = int(x)  # Number of iterations in each epoch (equal to x)

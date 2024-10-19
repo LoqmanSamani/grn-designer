@@ -1,12 +1,6 @@
 import torch
 
 
-
-
-
-
-import torch
-
 def apply_diffusion(current_concentration, compartment, column_position, diffusion_rate, time_step):
     """
     Apply diffusion to update the concentration of species in a specific column of a 2D compartment for all individuals in the population.

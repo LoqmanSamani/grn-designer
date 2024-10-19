@@ -379,15 +379,9 @@ class AdamOptimization:
         """
 
         y_hat = tensor_simulation(
-            individual=individual,
-            parameters=parameters,
-            num_species=num_species,
-            num_pairs=num_pairs,
-            stop=stop,
-            time_step=time_step,
-            max_epoch=max_epoch,
-            compartment=compartment
-        )
+            agent=individual, parameters=parameters, num_species=num_species, num_pairs=num_pairs,
+            stop=stop, time_step=time_step, max_epoch=max_epoch, compartment=compartment,
+            device="cpu")
 
         return y_hat
 
