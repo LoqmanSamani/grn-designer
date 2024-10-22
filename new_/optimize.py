@@ -128,7 +128,7 @@ class AdamOptimization:
         for t in range(trainable_compartment):
 
             parameters = {}
-            if param_type == "not_all":
+            if param_type == "not_all" and tranable_compartment == num_species:
                 species = 1
                 for i in range(0, num_species * 2, 2):
                     if int(species - 1) == t:
@@ -141,6 +141,37 @@ class AdamOptimization:
                         parameters[f"species_{species}"] = torch.nn.Parameter(
                             agent[-1, i, 0:3].clone().detach().float(),
                             requires_grad=False
+                        )
+                        species += 1
+
+                pair = 1
+                for j in range(pair_start + 1, pair_stop + 1, 2):
+                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
+                        agent[j, 1, :4].clone.float(),
+                        requires_grad=True
+                    )
+                    pair += 1
+
+            if param_type == "not_all" and tranable_compartment < num_species:
+                species = 1
+                for i in range(0, num_species * 2, 2):
+                    if int(species - 1) == t:
+                        parameters[f"species_{species}"] = torch.nn.Parameter(
+                            agent[-1, i, 0:3].clone().float(),
+                            requires_grad=True
+                        )
+                        species += 1
+                    elif int(species - 1) <= trainable_compartment:
+                        parameters[f"species_{species}"] = torch.nn.Parameter(
+                            agent[-1, i, 0:3].clone().detach().float(),
+                            requires_grad=False
+                        )
+                        species += 1
+                           
+                    else:
+                        parameters[f"species_{species}"] = torch.nn.Parameter(
+                            agent[-1, i, 0:3].clone().detach().float(),
+                            requires_grad=True
                         )
                         species += 1
 
@@ -425,7 +456,7 @@ class AdamOptimization:
 
 
 
-    def share_information(self, params):
+    def share_information(self, params, num_species):
         """
         Share the values of trainable parameters between dictionaries of parameters.
 
@@ -439,6 +470,7 @@ class AdamOptimization:
         """
 
         pair_sums = {}
+        species_sum = {}
 
         for current_dict in params:
             for key, val in current_dict.items():
@@ -447,6 +479,18 @@ class AdamOptimization:
                         pair_sums[key] = val.detach().clone()
                     else:
                         pair_sums[key] += val.detach()
+
+        if len(params) > 1 and num_species > len(params):
+            
+            for current_dict in params:
+                for i in range(len(params)+1, num_species+1):
+                    for key, val in current_dict.items():
+                        if key == f"species_{i}"  and val.requires_grad:
+                            if key not in pair_sums:
+                                species_sums[key] = val.detach().clone()
+                            else:
+                                species_sums[key] += val.detach()
+                                
 
         for i, current_dict in enumerate(params):
             for key, val in current_dict.items():
@@ -459,6 +503,9 @@ class AdamOptimization:
                 if key in pair_sums and val.requires_grad:
                     with torch.no_grad():
                         val.copy_(pair_sums[key]/len(params))
+                if key in species_sum and val.requires_grad:
+                    with torch.no_grad():
+                        val.copy_(species_sum[key]/len(params))
 
         return params
 
