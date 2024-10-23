@@ -112,8 +112,6 @@ class AdamOptimization:
 
 
 
-
-
     def parameter_extraction(self, agent, param_type, compartment_opt, trainable_compartment):
 
         params = []
@@ -126,64 +124,80 @@ class AdamOptimization:
         pair_stop = int(pair_start + (num_pairs * 2))
 
         for t in range(trainable_compartment):
+            #print(t)
 
+            #parameters = torch.nn.ParameterDict()
             parameters = {}
-            if param_type == "not_all" and tranable_compartment == num_species:
+            if param_type == "not_all" and trainable_compartment == num_species:
                 species = 1
+                
                 for i in range(0, num_species * 2, 2):
+                    #print(species)
                     if int(species - 1) == t:
+                        #print("ttttt")
                         parameters[f"species_{species}"] = torch.nn.Parameter(
                             agent[-1, i, 0:3].clone().float(),
                             requires_grad=True
                         )
-                        species += 1
+                        #if parameters[f"species_{species}"].requires_grad:
+                            #print(f"species_{species}: True")
+                        #else:
+                         #   print(f"species_{species}: False")
+                            
+                        #species += 1
                     else:
                         parameters[f"species_{species}"] = torch.nn.Parameter(
                             agent[-1, i, 0:3].clone().detach().float(),
                             requires_grad=False
                         )
-                        species += 1
+                       # print("nnnn")
+                    species += 1
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
                     parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        agent[j, 1, :4].clone.float(),
+                        agent[j, 1, :4].clone().float(),
                         requires_grad=True
                     )
+                   # print("ppppp")
                     pair += 1
+            #params.append(parameters)
 
-            if param_type == "not_all" and tranable_compartment < num_species:
+            if param_type == "not_all" and trainable_compartment < num_species:
+               # print("not all and <")
                 species = 1
                 for i in range(0, num_species * 2, 2):
+                    #print(species)
                     if int(species - 1) == t:
                         parameters[f"species_{species}"] = torch.nn.Parameter(
                             agent[-1, i, 0:3].clone().float(),
                             requires_grad=True
                         )
-                        species += 1
-                    elif int(species - 1) <= trainable_compartment:
+                    #species += 1
+                    elif species  <= trainable_compartment:
                         parameters[f"species_{species}"] = torch.nn.Parameter(
                             agent[-1, i, 0:3].clone().detach().float(),
                             requires_grad=False
                         )
-                        species += 1
+                    #species += 1
                            
                     else:
                         parameters[f"species_{species}"] = torch.nn.Parameter(
-                            agent[-1, i, 0:3].clone().detach().float(),
+                            agent[-1, i, 0:3].clone().float(),
                             requires_grad=True
                         )
-                        species += 1
+                    species += 1
 
                 pair = 1
                 for j in range(pair_start + 1, pair_stop + 1, 2):
                     parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        agent[j, 1, :4].clone.float(),
+                        agent[j, 1, :4].clone().float(),
                         requires_grad=True
                     )
                     pair += 1
 
             elif param_type == "all":
+               # print("just all")
                 species = 1
                 for i in range(0, num_species * 2, 2):
 
@@ -220,6 +234,7 @@ class AdamOptimization:
 
 
             if compartment_opt:
+              #  print("comp")
                 sp = 1
                 for k in range(1, num_species * 2, 2):
                     if int(sp - 1) == t:
@@ -227,13 +242,13 @@ class AdamOptimization:
                             agent[k, :, :].clone().float(),
                             requires_grad=True
                         )
-                        sp += 1
+                        #sp += 1
                     else:
                         parameters[f'compartment_{sp}'] = torch.nn.Parameter(
                             agent[k, :, :].clone().detach().float(),
                             requires_grad=False
                         )
-                        sp += 1
+                    sp += 1
 
             else:
                 sp = 1
@@ -245,9 +260,12 @@ class AdamOptimization:
                     sp += 1
 
             params.append(parameters)
+            for k, v in parameters.items():
+                print(f"{k}: {v.requires_grad}")
 
         if trainable_compartment == 0:
-            parameters = {}
+           # print("comp == 0")
+            parameters = torch.nn.ParameterDict()
             if param_type == "all":
                 species = 1
                 for i in range(0, num_species * 2, 2):
@@ -281,13 +299,13 @@ class AdamOptimization:
                             agent[-1, i, 0:3].clone().float(),
                             requires_grad=True
                         )
-                        species += 1
+                        #species += 1
                     else:
                         parameters[f"species_{species}"] = torch.nn.Parameter(
                             agent[-1, i, 0:3].clone().detach().float(),
                             requires_grad=False
                         )
-                        species += 1
+                    species += 1
 
 
                 pair = 1
@@ -330,15 +348,23 @@ class AdamOptimization:
                         requires_grad=False
                     )
                     sp += 1
-
+    
             params.append(parameters)
+            for k, v in parameters.items():
+                print(f"{k}: {v.requires_grad}")
+
+        print("params:")
+        print("_______________________________________________________________________________")
+        #print(params)
+        for p in params:
+            for k, v in p.items():
+                print(f"{k}: {v.requires_grad}")
+                    
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
 
-
-
-
+    
     def update_parameters(self, agent, parameters, param_opt, trainable_compartment):
         
         num_species = int(agent[-1, -1, 0])
@@ -348,43 +374,43 @@ class AdamOptimization:
         if trainable_compartment < 1 and param_opt:
             j = 0
             for species in range(1, num_species + 1):
-                agent[-1, j, :3] = parameters[0][f"species_{species}"].detach().clone()  
+                agent[-1, j, :3] = parameters[0][f"species_{species}"].detach().clone()  # Avoid in-place modification
                 j += 2
 
             for pair in range(1, num_pairs + 1):
                 j = pair_start + (pair - 1) * 2 + 1
-                agent[j, 1, :4] = parameters[0][f"pair_{pair}"].detach().clone()  
+                agent[j, 1, :4] = parameters[0][f"pair_{pair}"].detach().clone()  # Avoid in-place modification
 
             for comp in range(1, num_species + 1):
                 idx = int(((comp - 1) * 2) + 1)
                 updates = torch.max(parameters[0][f"compartment_{comp}"], torch.tensor(0.0))
-                agent[idx, :, :] = updates.detach().clone() 
+                agent[idx, :, :] = updates.detach().clone()  # Avoid in-place modification
 
         elif trainable_compartment >= 1:
             for i in range(len(parameters)):
                 j = 0
                 for species in range(1, num_species + 1):
                     if parameters[i][f"species_{species}"].requires_grad:
-                        agent[-1, j, :3] = parameters[i][f"species_{species}"].detach().clone()  
+                        agent[-1, j, :3] = parameters[i][f"species_{species}"].detach().clone()  # Avoid in-place modification
                     j += 2
 
                 for pair in range(1, num_pairs + 1):
                     if parameters[i][f"pair_{pair}"].requires_grad:
                         j = pair_start + (pair - 1) * 2 + 1
-                        agent[j, 1, :4] = parameters[i][f"pair_{pair}"].detach().clone() 
+                        agent[j, 1, :4] = parameters[i][f"pair_{pair}"].detach().clone()  # Avoid in-place modification
 
                 for comp in range(1, trainable_compartment + 1):
                     idx = int(((comp - 1) * 2) + 1)
                     if parameters[i][f"compartment_{comp}"].requires_grad:
                         updates = torch.max(parameters[i][f"compartment_{comp}"], torch.tensor(0.0))
-                        agent[idx, :, :] = updates.detach().clone()
+                        agent[idx, :, :] = updates.detach().clone()  # Avoid in-place modification
 
         return agent
 
+    
 
 
 
-   
 
     def simulation(self, agent, parameters, num_species, num_pairs, stop, time_step, max_epoch, compartment, device):
         """
@@ -468,9 +494,11 @@ class AdamOptimization:
             - params (list of dicts): Updated list where trainable "pair_n" tensors are updated with their sums,
                                       and non-trainable tensors are updated with values from trainable ones.
         """
+       # print(params[0]["species_3"][:10])
+       # print(params[1]["species_3"][:10])
 
         pair_sums = {}
-        species_sum = {}
+        species_sums = {}
 
         for current_dict in params:
             for key, val in current_dict.items():
@@ -486,7 +514,7 @@ class AdamOptimization:
                 for i in range(len(params)+1, num_species+1):
                     for key, val in current_dict.items():
                         if key == f"species_{i}"  and val.requires_grad:
-                            if key not in pair_sums:
+                            if key not in species_sums:
                                 species_sums[key] = val.detach().clone()
                             else:
                                 species_sums[key] += val.detach()
@@ -503,11 +531,15 @@ class AdamOptimization:
                 if key in pair_sums and val.requires_grad:
                     with torch.no_grad():
                         val.copy_(pair_sums[key]/len(params))
-                if key in species_sum and val.requires_grad:
+                if key in species_sums and val.requires_grad:
                     with torch.no_grad():
-                        val.copy_(species_sum[key]/len(params))
+                        val.copy_(species_sums[key]/len(params))
+                        
+       # print(params[0]["species_3"][:10])
+       # print(params[1]["species_3"][:10])
 
         return params
+
 
 
 
@@ -640,7 +672,7 @@ class AdamOptimization:
                     max_val=self.max_val
                 )
                 # Backward pass: compute gradients
-                cost.backward(retain_graph=True) # backward pass
+                cost.backward() # backward pass   retain_graph=True
                 #if self.accumulation_steps:
                     #if i % self.accumulation_steps == 0:  # Wait for several backward steps
                 optimizers[j][0].step()  # Now we can do an optimizer step
@@ -670,7 +702,7 @@ class AdamOptimization:
             costs.append(cost_)
 
             if i % self.share_info == 0 and len(optimizers) > 1:
-                parameters = self.share_information(params=parameters) # share information among parameters of different optimizers, if there are more than one optimizer
+                parameters = self.share_information(params=parameters, num_species=num_species) # share information among parameters of different optimizers, if there are more than one optimizer
                 agent = self.update_parameters(agent=agent, parameters=parameters, param_opt=self.param_opt,
                                                trainable_compartment=self.trainable_compartment)  # update individual with optimized parameters
             """
