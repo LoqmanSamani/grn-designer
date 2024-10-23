@@ -112,8 +112,8 @@ class AdamOptimization:
 
 
 
-    def parameter_extraction(self, agent, param_type, compartment_opt, trainable_compartment):
 
+    def parameter_extraction(self, agent, param_type, compartment_opt, trainable_compartment):
         params = []
         num_species = int(agent[-1, -1, 0])
         num_pairs = int(agent[-1, -1, 1])
@@ -124,242 +124,190 @@ class AdamOptimization:
         pair_stop = int(pair_start + (num_pairs * 2))
 
         for t in range(trainable_compartment):
-            #print(t)
 
-            #parameters = torch.nn.ParameterDict()
             parameters = {}
             if param_type == "not_all" and trainable_compartment == num_species:
-                species = 1
-                
+                s = 1
                 for i in range(0, num_species * 2, 2):
-                    #print(species)
-                    if int(species - 1) == t:
-                        #print("ttttt")
-                        parameters[f"species_{species}"] = torch.nn.Parameter(
-                            agent[-1, i, 0:3].clone().float(),
+                    if int(s - 1) == t:
+                        parameters[f"species_{s}"] = torch.tensor(
+                            agent[-1, i, 0:3].clone(),
                             requires_grad=True
                         )
-                        #if parameters[f"species_{species}"].requires_grad:
-                            #print(f"species_{species}: True")
-                        #else:
-                         #   print(f"species_{species}: False")
-                            
-                        #species += 1
+                        s += 1
                     else:
-                        parameters[f"species_{species}"] = torch.nn.Parameter(
-                            agent[-1, i, 0:3].clone().detach().float(),
+                        parameters[f"species_{s}"] = torch.tensor(
+                            agent[-1, i, 0:3].clone().detach()
+                        )
+                        s += 1
+
+                p = 1
+                for j in range(pair_start + 1, pair_stop + 1, 2):
+                    parameters[f"pair_{p}"] = torch.tensor(
+                        agent[j, 1, :4].clone(),
+                        requires_grad=True
+                    )
+                    p += 1
+
+                c = 1
+                for com in range(1, num_species * 2, 2):
+                    if int(c - 1) == t:
+                        parameters[f"compartment_{c}"] = torch.tensor(
+                            agent[com, :, :].clone(),
+                            requires_grad=True
+                        )
+                        c += 1
+                    else:
+                        parameters[f"compartment_{c}"] = torch.tensor(
+                            agent[com, :, :].clone().detach()
+                        )
+                        c += 1
+                params.append(parameters)
+
+            elif param_type == "not_all" and trainable_compartment < num_species:
+
+                s = 1
+                for i in range(0, num_species * 2, 2):
+                    if int(s - 1) == t:
+                        parameters[f"species_{s}"] = torch.tensor(
+                            agent[-1, i, 0:3].clone(),
+                            requires_grad=True
+                        )
+                        s += 1
+                    elif s <= trainable_compartment:
+                        parameters[f"species_{s}"] = torch.tensor(
+                            agent[-1, i, 0:3].clone().detach()
+                        )
+                        s += 1
+                    else:
+                        parameters[f"species_{s}"] = torch.tensor(
+                            agent[-1, i, 0:3].clone(),
+                            requires_grad=True
+                        )
+                        s += 1
+
+                p = 1
+                for j in range(pair_start + 1, pair_stop + 1, 2):
+                    parameters[f"pair_{p}"] = torch.tensor(
+                        agent[j, 1, :4].clone(),
+                        requires_grad=True
+                    )
+                    p += 1
+
+                c = 1
+                for com in range(1, num_species * 2, 2):
+                    if int(c - 1) == t:
+                        parameters[f"compartment_{c}"] = torch.tensor(
+                            agent[com, :, :].clone(),
+                            requires_grad=True
+                        )
+                        c += 1
+                    else:
+                        parameters[f"compartment_{c}"] = torch.tensor(
+                            agent[com, :, :].clone(),
                             requires_grad=False
                         )
-                       # print("nnnn")
-                    species += 1
+                        c += 1
 
-                pair = 1
-                for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        agent[j, 1, :4].clone().float(),
+                params.append(parameters)
+
+            elif param_type == "all" and compartment_opt:
+                s = 1
+                for i in range(0, num_species * 2, 2):
+                    parameters[f"species_{s}"] = torch.tensor(
+                        agent[-1, i, 0:3].clone(),
                         requires_grad=True
                     )
-                   # print("ppppp")
-                    pair += 1
-            #params.append(parameters)
+                    s += 1
 
-            if param_type == "not_all" and trainable_compartment < num_species:
-               # print("not all and <")
-                species = 1
-                for i in range(0, num_species * 2, 2):
-                    #print(species)
-                    if int(species - 1) == t:
-                        parameters[f"species_{species}"] = torch.nn.Parameter(
-                            agent[-1, i, 0:3].clone().float(),
+                p = 1
+                for j in range(pair_start + 1, pair_stop + 1, 2):
+                    parameters[f"pair_{p}"] = torch.tensor(
+                        agent[j, 1, :4].clone(),
+                        requires_grad=True
+                    )
+                    p += 1
+
+                c = 1
+                for com in range(1, num_species * 2, 2):
+                    if int(c - 1) == t:
+                        parameters[f"compartment_{c}"] = torch.tensor(
+                            agent[com, :, :].clone(),
                             requires_grad=True
                         )
-                    #species += 1
-                    elif species  <= trainable_compartment:
-                        parameters[f"species_{species}"] = torch.nn.Parameter(
-                            agent[-1, i, 0:3].clone().detach().float(),
-                            requires_grad=False
-                        )
-                    #species += 1
-                           
+                        c += 1
                     else:
-                        parameters[f"species_{species}"] = torch.nn.Parameter(
-                            agent[-1, i, 0:3].clone().float(),
+                        parameters[f"compartment_{c}"] = torch.tensor(
+                            agent[com, :, :].clone().detach()
+                        )
+                        c += 1
+
+                params.append(parameters)
+
+            elif compartment_opt and not param_type:
+                s = 1
+                for i in range(0, num_species * 2, 2):
+                    parameters[f"species_{s}"] = torch.tensor(
+                        agent[-1, i, 0:3].clone().detach()
+                    )
+                    s += 1
+
+                p = 1
+                for j in range(pair_start + 1, pair_stop + 1, 2):
+                    parameters[f"pair_{p}"] = torch.tensor(
+                        agent[j, 1, :4].clone().detach()
+                    )
+                    p += 1
+
+                c = 1
+                for com in range(1, num_species * 2, 2):
+                    if int(c - 1) == t:
+                        parameters[f"compartment_{c}"] = torch.tensor(
+                            agent[com, :, :].clone(),
                             requires_grad=True
                         )
-                    species += 1
-
-                pair = 1
-                for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        agent[j, 1, :4].clone().float(),
-                        requires_grad=True
-                    )
-                    pair += 1
-
-            elif param_type == "all":
-               # print("just all")
-                species = 1
-                for i in range(0, num_species * 2, 2):
-
-                    parameters[f"species_{species}"] = torch.nn.Parameter(
-                        agent[-1, i, 0:3].clone().float(),
-                        requires_grad=True
-                    )
-                    species += 1
-
-                pair = 1
-                for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        agent[j, 1, :4].clone().float(),
-                        requires_grad=True
-                    )
-                    pair += 1
-
-            else:
-                species = 1
-                for i in range(0, num_species * 2, 2):
-                    parameters[f"species_{species}"] = torch.nn.Parameter(
-                        agent[-1, i, 0:3].clone().detach().float(),
-                        requires_grad=False
-                    )
-                    species += 1
-
-                pair = 1
-                for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        agent[j, 1, :4].clone().detach().float(),
-                        requires_grad=False
-                    )
-                    pair += 1
-
-
-            if compartment_opt:
-              #  print("comp")
-                sp = 1
-                for k in range(1, num_species * 2, 2):
-                    if int(sp - 1) == t:
-                        parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                            agent[k, :, :].clone().float(),
-                            requires_grad=True
-                        )
-                        #sp += 1
+                        c += 1
                     else:
-                        parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                            agent[k, :, :].clone().detach().float(),
-                            requires_grad=False
+                        parameters[f"compartment_{c}"] = torch.tensor(
+                            agent[com, :, :].clone().detach()
                         )
-                    sp += 1
+                        c += 1
 
-            else:
-                sp = 1
-                for k in range(1, num_species * 2, 2):
-                    parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                        agent[k, :, :].clone().detach().float(),
-                        requires_grad=False
-                    )
-                    sp += 1
+                params.append(parameters)
+
+        parameters = {}
+        if trainable_compartment == 0 and param_type:
+            s = 1
+            for i in range(0, num_species * 2, 2):
+                parameters[f"species_{s}"] = torch.tensor(
+                    agent[-1, i, 0:3].clone(),
+                    requires_grad=True
+                )
+                s += 1
+
+            p = 1
+            for j in range(pair_start + 1, pair_stop + 1, 2):
+                parameters[f"pair_{p}"] = torch.tensor(
+                    agent[j, 1, :4].clone(),
+                    requires_grad=True
+                )
+                p += 1
+
+            c = 1
+            for com in range(1, num_species * 2, 2):
+                parameters[f"compartment_{c}"] = torch.tensor(
+                    agent[com, :, :].clone().detach()
+                )
+                c += 1
 
             params.append(parameters)
-            for k, v in parameters.items():
-                print(f"{k}: {v.requires_grad}")
-
-        if trainable_compartment == 0:
-           # print("comp == 0")
-            parameters = torch.nn.ParameterDict()
-            if param_type == "all":
-                species = 1
-                for i in range(0, num_species * 2, 2):
-                    parameters[f"species_{species}"] = torch.nn.Parameter(
-                        agent[-1, i, 0:3].clone().float(),
-                        requires_grad=True
-                    )
-                    species += 1
-
-                pair = 1
-                for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        agent[j, 1, :4].clone().float(),
-                        requires_grad=True
-                    )
-                    pair += 1
-
-                sp = 1
-                for k in range(1, num_species * 2, 2):
-                    parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                        agent[k, :, :].clone().detach().float(),
-                        requires_grad=False
-                    )
-                    sp += 1
-
-            elif param_type == "not_all":
-                species = 1
-                for i in range(0, num_species * 2, 2):
-                    if species == 1:
-                        parameters[f"species_{species}"] = torch.nn.Parameter(
-                            agent[-1, i, 0:3].clone().float(),
-                            requires_grad=True
-                        )
-                        #species += 1
-                    else:
-                        parameters[f"species_{species}"] = torch.nn.Parameter(
-                            agent[-1, i, 0:3].clone().detach().float(),
-                            requires_grad=False
-                        )
-                    species += 1
-
-
-                pair = 1
-                for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        agent[j, 1, :4].clone().float(),
-                        requires_grad=True
-                    )
-                    pair += 1
-
-                sp = 1
-                for k in range(1, num_species * 2, 2):
-                    parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                        agent[k, :, :].clone().detach().float(),
-                        requires_grad=False
-                    )
-                    sp += 1
-
-            else:
-                species = 1
-                for i in range(0, num_species * 2, 2):
-                    parameters[f"species_{species}"] = torch.nn.Parameter(
-                        agent[-1, i, 0:3].clone().detach().float,
-                        requires_grad=False
-                    )
-                    species += 1
-
-                pair = 1
-                for j in range(pair_start + 1, pair_stop + 1, 2):
-                    parameters[f"pair_{pair}"] = torch.nn.Parameter(
-                        agent[j, 1, :4].clone().detach().float(),
-                        requires_grad=False
-                    )
-                    pair += 1
-
-                sp = 1
-                for k in range(1, num_species * 2, 2):
-                    parameters[f'compartment_{sp}'] = torch.nn.Parameter(
-                        agent[k, :, :].clone().detach().float(),
-                        requires_grad=False
-                    )
-                    sp += 1
-    
-            params.append(parameters)
-            for k, v in parameters.items():
-                print(f"{k}: {v.requires_grad}")
 
         print("params:")
         print("_______________________________________________________________________________")
-        #print(params)
+        # print(params)
         for p in params:
             for k, v in p.items():
                 print(f"{k}: {v.requires_grad}")
-                    
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
