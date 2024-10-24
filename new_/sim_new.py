@@ -4,18 +4,17 @@ from numba import jit
 
 
 @jit(nopython=True)
-def agent_simulation(agent, num_patterns):
-
-    z, y, x = agent.shape
-    num_iters = int(x)
-    num_species = int(agent[-1, -1, 0])
-    num_pairs = int(agent[-1, -1, 1])
-    max_epoch = int(agent[-1, -1, 2])
-    stop = int(agent[-1, -1, 3])
-    time_step = agent[-1, -1, 4]
-    num_epochs = int(stop / time_step)
-    pair_start = int(num_species * 2)
-    pair_stop = int(pair_start + (num_pairs * 2))
+def individual_simulation(agent, num_patterns):
+    z, y, x = agent.shape  # z: species (including complexes), (y, x): compartment shape
+    num_iters = int(x)  # Number of iterations in each epoch (equal to x)
+    num_species = int(agent[-1, -1, 0])  # Number of species present in the system
+    num_pairs = int(agent[-1, -1, 1])  # Number of pairs of interacting species
+    max_epoch = int(agent[-1, -1, 2])  # Maximum number of epochs
+    stop = int(agent[-1, -1, 3])  # Simulation duration
+    time_step = agent[-1, -1, 4]  # Time step
+    num_epochs = int(stop / time_step)  # Total number of epochs
+    pair_start = int(num_species * 2)  # Starting index for species pairs
+    pair_stop = int(pair_start + (num_pairs * 2))  # Ending index for species pairs
     sim_results = np.zeros((num_patterns, y, x))
 
     epoch = 0
