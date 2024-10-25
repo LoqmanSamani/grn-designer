@@ -101,7 +101,7 @@ class Resize:
             num_pairs = int(individual[-1, -1, 1])
             pair_start = int(num_species * 2)
             pair_stop = int(pair_start + (num_pairs * 2))
-            up_individual = np.zeros(shape=(z, x_, y_))
+            up_individual = np.zeros(shape=(z, x_, y_), dtype=np.float32)
 
             for i in range(1, num_species * 2, 2):
                 up_individual[i, :, :] = zoom(

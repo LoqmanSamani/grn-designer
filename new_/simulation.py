@@ -16,7 +16,7 @@ def agent_simulation(agent, num_patterns):
     num_epochs = int(stop / time_step)
     pair_start = int(num_species * 2)
     pair_stop = int(pair_start + (num_pairs * 2))
-    sim_results = np.zeros((num_patterns, y, x))
+    sim_results = np.zeros((num_patterns, y, x), dtype=np.float32)
 
     epoch = 0
     while epoch <= max_epoch or epoch <= num_epochs:

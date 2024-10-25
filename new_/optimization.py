@@ -6,10 +6,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from ignite.metrics import SSIM
-#torch.autograd.set_detect_anomaly(True)
-#from torchviz import make_dot
 
 
+# torch.autograd.set_detect_anomaly(True)
+# from torchviz import make_dot
 
 
 class AdamOptimization:
@@ -38,7 +38,7 @@ class AdamOptimization:
                  learning_rate=None,
                  param_opt=False,
                  param_type="all",
-                 compartment_opt=True,
+                 condition_opt=True,
                  cost_alpha=0.6,
                  cost_beta=0.4,
                  max_val=1.0,
@@ -58,7 +58,7 @@ class AdamOptimization:
         self.file_name = file_name
         self.param_opt = param_opt
         self.param_type = param_type
-        self.compartment_opt = compartment_opt
+        self.compartment_opt = condition_opt
         self.cost_alpha = cost_alpha
         self.cost_beta = cost_beta
         self.max_val = max_val
@@ -68,7 +68,7 @@ class AdamOptimization:
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
         self.trainable_compartment = trainable_compartment
-        #self.accumulation_steps = accumulation_steps,
+        # self.accumulation_steps = accumulation_steps,
         self.device = device
         if learning_rate is None:
             learning_rate = [0.001]  # Default learning rate
@@ -108,9 +108,6 @@ class AdamOptimization:
                 del h5file[dataset_name]
 
             h5file.create_dataset(dataset_name, data=data_array)
-
-
-
 
     def parameter_extraction(self, agent, param_type, compartment_opt, trainable_compartment):
         params = []
@@ -310,10 +307,8 @@ class AdamOptimization:
 
         return params, num_species, num_pairs, max_epoch, stop, time_step
 
-
-    
     def update_parameters(self, agent, parameters, param_opt, trainable_compartment):
-        
+
         num_species = int(agent[-1, -1, 0])
         num_pairs = int(agent[-1, -1, 1])
         pair_start = int(num_species * 2)
@@ -338,7 +333,8 @@ class AdamOptimization:
                 j = 0
                 for species in range(1, num_species + 1):
                     if parameters[i][f"species_{species}"].requires_grad:
-                        agent[-1, j, :3] = parameters[i][f"species_{species}"].detach().clone()  # Avoid in-place modification
+                        agent[-1, j, :3] = parameters[i][
+                            f"species_{species}"].detach().clone()  # Avoid in-place modification
                     j += 2
 
                 for pair in range(1, num_pairs + 1):
@@ -353,11 +349,6 @@ class AdamOptimization:
                         agent[idx, :, :] = updates.detach().clone()  # Avoid in-place modification
 
         return agent
-
-    
-
-
-
 
     def simulation(self, agent, parameters, num_species, num_pairs, stop, time_step, max_epoch, compartment, device):
         """
@@ -426,9 +417,6 @@ class AdamOptimization:
 
         return 1 - ssim_score
 
-
-
-
     def share_information(self, params, num_species):
         """
         Share the values of trainable parameters between dictionaries of parameters.
@@ -441,8 +429,8 @@ class AdamOptimization:
             - params (list of dicts): Updated list where trainable "pair_n" tensors are updated with their sums,
                                       and non-trainable tensors are updated with values from trainable ones.
         """
-       # print(params[0]["species_3"][:10])
-       # print(params[1]["species_3"][:10])
+        # print(params[0]["species_3"][:10])
+        # print(params[1]["species_3"][:10])
 
         pair_sums = {}
         species_sums = {}
@@ -456,16 +444,15 @@ class AdamOptimization:
                         pair_sums[key] += val.detach()
 
         if len(params) > 1 and num_species > len(params):
-            
+
             for current_dict in params:
-                for i in range(len(params)+1, num_species+1):
+                for i in range(len(params) + 1, num_species + 1):
                     for key, val in current_dict.items():
-                        if key == f"species_{i}"  and val.requires_grad:
+                        if key == f"species_{i}" and val.requires_grad:
                             if key not in species_sums:
                                 species_sums[key] = val.detach().clone()
                             else:
                                 species_sums[key] += val.detach()
-                                
 
         for i, current_dict in enumerate(params):
             for key, val in current_dict.items():
@@ -477,20 +464,15 @@ class AdamOptimization:
 
                 if key in pair_sums and val.requires_grad:
                     with torch.no_grad():
-                        val.copy_(pair_sums[key]/len(params))
+                        val.copy_(pair_sums[key] / len(params))
                 if key in species_sums and val.requires_grad:
                     with torch.no_grad():
-                        val.copy_(species_sums[key]/len(params))
-                        
-       # print(params[0]["species_3"][:10])
-       # print(params[1]["species_3"][:10])
+                        val.copy_(species_sums[key] / len(params))
+
+        # print(params[0]["species_3"][:10])
+        # print(params[1]["species_3"][:10])
 
         return params
-
-
-
-
-
 
     """
     def init_individual(self, individual):
@@ -527,8 +509,6 @@ class AdamOptimization:
         return individual
     """
 
-
-
     def create_optimizer(self, model_parameters, lr):
         """
         Creates an Adam optimizer with optional exponential learning rate decay.
@@ -552,8 +532,6 @@ class AdamOptimization:
 
         return optimizer, lr_scheduler
 
-
-
     def gradient_optimization(self, agent):
         """
         Performs gradient-based optimization on the individual using the Adam optimizer.
@@ -570,8 +548,10 @@ class AdamOptimization:
         costs = []
         time_ = []
         # create arrays to save the progress of the system
-        simulation_results = np.zeros((self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
-        init_conditions = np.zeros((self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
+        simulation_results = np.zeros(
+            (self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
+        init_conditions = np.zeros(
+            (self.trainable_compartment, self.epochs, self.target.shape[1], self.target.shape[2]))
 
         self.save_to_h5py(
             dataset_name="target",
@@ -585,38 +565,39 @@ class AdamOptimization:
                                                                                                    compartment_opt=self.compartment_opt,
                                                                                                    trainable_compartment=self.trainable_compartment)
 
-
         # create the needed  optimizers (number of optimizer is equal to the number of patterns in the input pattern-image)
         if len(self.learning_rate) > 1:
-            optimizers = [self.create_optimizer(list(parameters[i].values()), self.learning_rate[i]) for i in range(len(parameters))]
+            optimizers = [self.create_optimizer(list(parameters[i].values()), self.learning_rate[i]) for i in
+                          range(len(parameters))]
         else:
-            optimizers = [self.create_optimizer(list(parameters[i].values()), self.learning_rate[0]) for i in range(len(parameters))]
+            optimizers = [self.create_optimizer(list(parameters[i].values()), self.learning_rate[0]) for i in
+                          range(len(parameters))]
 
         tic_ = time.time()
         tic = time.time()
         for i in range(1, self.epochs + 1):
             cost_ = []
             for j in range(len(parameters)):
-                #optimizer = optimizers[j]
+                # optimizer = optimizers[j]
 
                 # Zero the gradient
-                #optimizers[j][0].zero_grad(set_to_none=True)
+                # optimizers[j][0].zero_grad(set_to_none=True)
                 # Enable gradient tracking on the parameters for the current optimizer
-                #for param in parameters[j].values():
-                    #param.requires_grad = True
+                # for param in parameters[j].values():
+                # param.requires_grad = True
 
                 # Forward pass: simulate the output
-                #print("before sim")
-                #print("__________________________________")
-                #sns.heatmap(agent[0])
-                #plt.show()
+                # print("before sim")
+                # print("__________________________________")
+                # sns.heatmap(agent[0])
+                # plt.show()
                 prediction = self.simulation(agent=agent, parameters=parameters[j], num_species=num_species,
                                              num_pairs=num_pairs, stop=stop, time_step=time_step, max_epoch=max_epoch,
                                              compartment=j, device=self.device)
-                #print("after sim")
-                #print("__________________________________")
-                #sns.heatmap(agent[0])
-                #plt.show()
+                # print("after sim")
+                # print("__________________________________")
+                # sns.heatmap(agent[0])
+                # plt.show()
 
                 # Compute cost
                 cost = self.compute_cost_(
@@ -627,34 +608,34 @@ class AdamOptimization:
                     max_val=self.max_val
                 )
                 # Backward pass: compute gradients
-                cost.backward() # backward pass   retain_graph=True
-                #cost.backward(retain_graph=True)
-                #print(f"\nEpoch {i}, Optimizer {j + 1} - Gradient Inspection")
-                #for name, param in parameters[j].items():
-                    #if param.grad is not None:
-                        #print(f"Gradient for {name}:\n {param.grad}")
-                    #else:
-                        #print(f"No gradient computed for {name}")
-                #if i == 1 and j == 0:  # Optional: visualize on the first iteration
-                    #make_dot(cost, params=dict(list(parameters[j].items()))).render("computation_graph", format="png")
-                #if i == 1 and j == 0:  # Only on the first pass
-                    #make_dot(cost, params=dict(list(parameters[j].items())), max_attr_chars=500).render("computation_graph", format="png")
+                cost.backward()  # backward pass   retain_graph=True
+                # cost.backward(retain_graph=True)
+                # print(f"\nEpoch {i}, Optimizer {j + 1} - Gradient Inspection")
+                # for name, param in parameters[j].items():
+                # if param.grad is not None:
+                # print(f"Gradient for {name}:\n {param.grad}")
+                # else:
+                # print(f"No gradient computed for {name}")
+                # if i == 1 and j == 0:  # Optional: visualize on the first iteration
+                # make_dot(cost, params=dict(list(parameters[j].items()))).render("computation_graph", format="png")
+                # if i == 1 and j == 0:  # Only on the first pass
+                # make_dot(cost, params=dict(list(parameters[j].items())), max_attr_chars=500).render("computation_graph", format="png")
 
-                #if self.accumulation_steps:
-                    #if i % self.accumulation_steps == 0:  # Wait for several backward steps
+                # if self.accumulation_steps:
+                # if i % self.accumulation_steps == 0:  # Wait for several backward steps
                 optimizers[j][0].step()  # Now we can do an optimizer step
                 if optimizers[j][1] is not None:
                     optimizers[j][1].step()  # Update learning rate according to the schedule
 
-                optimizers[j][0].zero_grad(set_to_none=True) # Reset gradients tensors
-                #else:
-                    #optimizers[j][0].step() #gradient descent
-                    # Optionally, step the scheduler once per epoch (or per iteration)
-                    #if optimizers[j][1] is not None:
-                        #optimizers[j][1].step()  # Update learning rate according to the schedule
-                    #optimizers[j][0].zero_grad(set_to_none=True)  # Reset gradients tensors
+                optimizers[j][0].zero_grad(set_to_none=True)  # Reset gradients tensors
+                # else:
+                # optimizers[j][0].step() #gradient descent
+                # Optionally, step the scheduler once per epoch (or per iteration)
+                # if optimizers[j][1] is not None:
+                # optimizers[j][1].step()  # Update learning rate according to the schedule
+                # optimizers[j][0].zero_grad(set_to_none=True)  # Reset gradients tensors
 
-                #print(parameters[j][f"species_{j + 1}"].detach().numpy())
+                # print(parameters[j][f"species_{j + 1}"].detach().numpy())
                 cost_.append(cost.item())
                 simulation_results[j, i - 1, :, :] = prediction.detach()
                 init_conditions[j, i - 1, :, :] = parameters[j][f"compartment_{j + 1}"].detach().numpy()
@@ -669,7 +650,8 @@ class AdamOptimization:
             costs.append(cost_)
 
             if i % self.share_info == 0 and len(optimizers) > 1:
-                parameters = self.share_information(params=parameters, num_species=num_species) # share information among parameters of different optimizers, if there are more than one optimizer
+                parameters = self.share_information(params=parameters,
+                                                    num_species=num_species)  # share information among parameters of different optimizers, if there are more than one optimizer
                 agent = self.update_parameters(agent=agent, parameters=parameters, param_opt=self.param_opt,
                                                trainable_compartment=self.trainable_compartment)  # update individual with optimized parameters
             """
@@ -683,19 +665,17 @@ class AdamOptimization:
                 )  # update individual with optimized parameters
             """
 
+            # print("params after share:")
+            # print("_--------------------------------")
+            # print(parameters)
 
+            # Clip gradients if necessary (you can uncomment if needed)
+            # for param in parameters[j].values():
+            #     if param.grad is not None:
+            #         param.grad = torch.clamp(param.grad, -1.0, 1.0)
 
-            #print("params after share:")
-            #print("_--------------------------------")
-            #print(parameters)
-
-                # Clip gradients if necessary (you can uncomment if needed)
-                # for param in parameters[j].values():
-                #     if param.grad is not None:
-                #         param.grad = torch.clamp(param.grad, -1.0, 1.0)
-
-                # Print gradients
-                #gradients = {key: param.grad for key, param in parameters[j].items() if param.grad is not None}
+            # Print gradients
+            # gradients = {key: param.grad for key, param in parameters[j].items() if param.grad is not None}
 
             if i % self.checkpoint_interval == 0:
                 toc = time.time()

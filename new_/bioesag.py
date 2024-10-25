@@ -1,440 +1,204 @@
 from gabonst import evolutionary_optimization
 from initialization import population_initialization
 from reshape import Resize
-from optimize import AdamOptimization
+from optimization import AdamOptimization
 import numpy as np
-import tensorflow as tf
-import json
 import os
 import h5py
 import time
-
-
-
+import torch
 
 
 
 class BioEsAg:
     def __init__(self,
-                 target, population_size, individual_shape, individual_parameters, simulation_parameters, num_init_species=1, num_init_pairs=0,
-                 store_path=None, optimization_epochs=50, evolution_one_epochs=100, evolution_two_epochs=50,
-                 learning_rate=0.001, sim_mutation_rate=0.05, compartment_mutation_rate=0.8, parameter_mutation_rate=0.05,
-                 insertion_mutation_rate=0.05, deletion_mutation_rate=0.1, crossover_alpha=0.5,
-                 checkpoint_interval=5, lr_decay=False, decay_steps=10000, decay_rate=0.98, trainable_compartment=1,
-                 gradient_optimization=False, parameter_optimization=False, condition_optimization=False,
-                 sim_mutation=True, compartment_mutation=True, param_mutation=False, species_insertion_mutation_one=False,
+                 target, population=None, population_size=None, evolution_one_epochs=None, evolution_two_epochs=None, optimization_epochs=None,
+                 agent_shape=None, agent_parameters=None, simulation_parameters=None, num_init_species=None, num_init_complex=None,
+                 store_path=None, learning_rate=None, sim_mutation_rate=None, initial_condition_mutation_rate=None, accumulation_steps=None,
+                 parameter_mutation_rate=None, insertion_mutation_rate=None, deletion_mutation_rate=None, crossover_alpha=None,
+                 checkpoint_interval=None, lr_decay=False, decay_steps=None, decay_rate=None, trainable_compartment=None,
+                 gradient_optimization=False, parameter_optimization=False, condition_optimization=False, sim_mutation=True,
+                 initial_condition_mutation=True, parameter_mutation=False, species_insertion_mutation_one=False, share_info=None,
                  species_deletion_mutation_one=False, species_insertion_mutation_two=False, species_deletion_mutation_two=False,
-                 compartment_crossover=True, param_crossover=False, sim_crossover=True,
-                 individual_fix_shape=False, cost_alpha=0.6, cost_beta=0.4, cost_max_val=1.0, num_gradient_optimization=1,
-                 num_saved_individuals=10, evolution_two_ratio=0.2, zoom_=False, zoom_in_factor=0.5, zoom_out_factor=2,
-                 zoom_order=1, zoom_mode="constant", zoom_cval=0.0, zoom_grid_mode=False, num_elite_individuals=5,
-                 sim_means=(5.0, 0.5), sim_std_devs=(100.0, 2.0), sim_min_vals=(5.0, 0.1), sim_max_vals=(100.0, 1.0),
-                 compartment_mean=0.0, compartment_std=100.0, compartment_min_val=-1.0, compartment_max_val=1.0,
-                 species_param_means=(0.0, 0.0, 0.0), species_param_stds=(10.0, 5.0, 10.0), species_param_min_vals=(-2.0, -2.0, -1.0),
-                 species_param_max_vals=(1.0, 1.0, 1.0), complex_param_means=(0.0, 0.0, 0.0, 0.0),
-                 complex_param_stds=(100.0, 10.0, 5.0, 10.0), complex_param_min_vals=(-1, -2, -2, -2), complex_param_max_vals=(1, 1, 1, 1),
-                 param_distribution="uniform",  compartment_distribution="uniform", sim_distribution="uniform"
+                 initial_condition_crossover=True, parameter_crossover=False, simulation_crossover=True, fixed_agent_shape=False,
+                 cost_alpha=None, cost_beta=None, cost_constant=None, evolution_two_ratio=None, zoom_=False, zoom_in_factor=None,
+                 zoom_out_factor=None, num_elite_agents=None, simulation_min=None, simulation_max=None, param_type=None,
+                 initial_condition_min=None, initial_condition_max=None, parameter_min=None, parameter_max=None, device=None
                  ):
-        """
-        BioEsAg (Bio-Optimization with Evolutionary Strategies and Adaptive Gradient-based Optimization) is an
-        advanced algorithm designed for optimizing biological systems. It combines evolutionary strategies,
-        gradient-based optimization, and pooling techniques to optimize the initial conditions, parameters, and
-        relationships between species in a biological model.
-
-        The algorithm works through several phases:
-
-            1. Pooling Down-sampling (Optional): This initial step reduces computational costs by down-sampling the target
-                                                 compartments before initializing the population. This phase is optional;
-                                                  the algorithm can proceed without down-sampling if preferred.
-
-            2. Initialization: The algorithm starts by initializing a diverse population of individuals, each representing
-                               different species and parameter settings within the model.
-
-            3. Evolutionary Optimization (Phase 1): In this phase, the algorithm uses evolutionary methods like mutation and
-                                                    crossover to explore and improve the population. This helps in finding
-                                                    optimal solutions through iterative adjustments.
-
-            4. Pooling Up-sampling (If Down-sampling Was Used): If down-sampling was performed, this step up-samples the population
-                                                                back to its original size. This allows for a more detailed and refined
-                                                                search in the next phase.
-
-            5. Evolutionary Optimization (Phase 2): The algorithm then further refines the population, focusing on a subset of individuals
-                                                    from the up-sampled population. This phase includes additional optimization to enhance the results.
-
-            6. Gradient-based Optimization with Adam (Optional): Finally, if needed, the algorithm uses the Adam optimizer to fine-tune
-                                                                 the best-performing individuals from Phase 2. This step is optional and only
-                                                                 used if further refinement is necessary.
-
-        This approach is particularly well-suited for complex biological systems where the interaction between species
-        and environmental factors is highly non-linear and difficult to model using traditional methods.
 
 
-        Initialize the BioEsAg with the given parameters.
-
-        Parameters:
-            - target (np.ndarray): The target matrix to be used for up sampling.
-            - population_size (int): The number of individuals in the population.
-            - individual_shape (tuple of int): The shape of each individual, represented as a 3D array (z, y, x).
-            - individual_parameters (dict): Contains species_parameters and pair_parameters.
-                - species_parameters (tuple): A list of parameter sets for each species in the individual, each with production rate, degradation rate,
-                  and diffusion rate.(e.g., {"species_parameters_1":(.1, .3, .5)}).
-                - pair_parameters (tuple): A list of parameter sets for each complex (index 1) and also species indices which built the complex(index 0)
-                  each with a list of species and corresponding rates.(e.g., {"pair_parameters_1":[(1, 2), (.1, .2, .1, .8)]}).
-            - simulation_parameters (dict): Contains max_simulation_epoch (int), sim_stop_time (int/float), and time_step (float).
-            - store_path (str, optional): The path where data files will be stored. If None, defaults to the user's home directory.
-            - cost_alpha (float): Weighting factor for the primary component of the cost function.
-            - cost_beta (float): Weighting factor for the secondary component of the cost function.
-            - cost_kernel_size (int): The size of the kernel used in the cost computation.
-            - cost_method (str): The method used to compute the cost function (e.g., "MSE", "MAE").
-            - learning_rate (float): The learning rate for gradient optimization.
-            - weight_decay (float): The weight decay rate for gradient optimization.
-            - optimization_epochs (int): The number of epochs for gradient optimization.
-            - gradient_optimization (bool): Flag indicating whether to apply gradient optimization.
-            - parameter_optimization (bool): if True species and pair parameters (rates) will be optimized with gradient optimization method (Adam)
-            - condition_optimization (bool): if True species initial condition will be optimized with gradient optimization method (Adam)
-            - num_gradient_optimization (int): Number of gradient optimization runs.
-            - num_saved_individuals (int): The number of individuals to save from the evolution process.
-            - evolution_one_epochs (int): Number of iterations for the first phase of evolutionary optimization.
-            - evolution_two_epochs (int): Number of iterations for the second phase of evolutionary optimization.
-            - evolution_two_ratio (float): Ratio of the second phase in evolutionary optimization.
-            - zoom_ (bool): Flag indicating whether zoom_ should be applied.
-            - zoom_in_factor (float or tuple): A float applies the same zoom across all axes. A tuple
-                                            allows different zoom factors for each axis.
-            - zoom_out_factor (float or tuple): A float applies the same zoom across all axes. A tuple
-                                            allows different zoom factors for each axis.
-            - zoom_oder (int): The order of spline interpolation. The value must be between 0 and 5.
-                - order 0 (Nearest-Neighbor Interpolation)
-                - order 1 (Bilinear Interpolation)
-                - order 2 (Quadratic Interpolation)
-                - order 3 (Cubic Interpolation, Default)
-                - orders 4 and 5 (Quartic and Quintic Interpolation)
-            - zoom_mode (str): The mode parameter determines how the input array's edges are handled.
-                               Modes can be 'constant', 'nearest', 'reflect', 'mirror', or 'wrap'.
-            - zoom_cval (float): The value used for padding when mode is 'constant'. Default is 0.0.
-            - zoom_grid_mode (bool) If False, pixel centers are zoomed. If True, the full pixel extent is used.
-            - individual_fix_shape (bool): Flag indicating whether to fix the shape of individuals.
-            - sim_mutation (bool): Flag indicating whether to apply simulation parameter mutations.
-            - compartment_mutation (bool): Flag indicating whether to apply compartment parameter mutations.
-            - param_mutation (bool): Flag indicating whether to apply species and complex parameter mutations.
-            - species_insertion_mutation_one (bool): Flag for species insertion mutations in phase one.
-            - species_deletion_mutation_one (bool): Flag for species deletion mutations in phase one.
-            - species_insertion_mutation_two (bool): Flag for species insertion mutations in phase two.
-            - species_deletion_mutation_two (bool): Flag for species deletion mutations in phase two.
-            - crossover_alpha (float): Weighting factor for crossover operations.
-            - sim_crossover (bool): Flag indicating whether to apply crossover to simulation variables.
-            - compartment_crossover (bool): Flag indicating whether to apply crossover to compartment parameters.
-            - param_crossover (bool): Flag indicating whether to apply crossover to species and complex parameters.
-            - num_elite_individuals (int): Number of elite individuals selected for crossover operations.
-            - sim_mutation_rate (float): Mutation rate for simulation parameters.
-            - compartment_mutation_rate (float): Mutation rate for compartment parameters.
-            - parameter_mutation_rate (float): Mutation rate for species and complex parameters.
-            - insertion_mutation_rate (float): Mutation rate for species insertion operations.
-            - deletion_mutation_rate (float): Mutation rate for species deletion operations.
-            - sim_means (tuple of float): Mean values for the simulation parameters.
-            - sim_std_devs (tuple of float): Standard deviation values for the simulation parameters.
-            - sim_min_vals (tuple of float): Minimum values for the simulation parameters.
-            - sim_max_vals (tuple of float): Maximum values for the simulation parameters.
-            - compartment_mean (float): Mean value for compartment parameters.
-            - compartment_std (float): Standard deviation value for compartment parameters.
-            - compartment_min_val (float): Minimum value for compartment parameters.
-            - compartment_max_val (float): Maximum value for compartment parameters.
-            - sim_distribution (str): Distribution type for simulation mutations (e.g., "normal", "uniform").
-            - compartment_distribution (str): Distribution type for compartment mutations (e.g., "normal", "uniform").
-            - species_param_means (tuple of float): Mean values for species parameters.
-            - species_param_stds (tuple of float): Standard deviation values for species parameters.
-            - species_param_min_vals (tuple of float): Minimum values for species parameters.
-            - species_param_max_vals (tuple of float): Maximum values for species parameters.
-            - complex_param_means (tuple of float): Mean values for complex parameters.
-            - complex_param_stds (tuple of float): Standard deviation values for complex parameters.
-            - complex_param_min_vals (tuple of float): Minimum values for complex parameters.
-            - complex_param_max_vals (tuple of float): Maximum values for complex parameters.
-            - param_distribution (str): Distribution type for parameter mutations (e.g., "normal", "uniform").
-        """
         self.target = target
-        self.population_size = population_size
-        self.individual_shape = individual_shape
-        self.individual_parameters = individual_parameters
-        self.simulation_parameters = simulation_parameters
-        self.num_init_species = num_init_species
-        self.num_init_pairs = num_init_pairs
+        self.population = population
+
+        self.population_size = population_size or 50
+        self.evolution_one_epochs = evolution_one_epochs or 50
+        self.evolution_two_epochs = evolution_two_epochs or 50
+        self.optimization_epochs = optimization_epochs or 50
+        self.agent_shape = agent_shape or (3, 50, 50)
+        self.agent_parameters = agent_parameters or {"species_parameters":[np.random.rand(3), np.random.rand(3)], "complex_parameters":[[(0, 2), np.random.rand(4)]]}
+        self.simulation_parameters = simulation_parameters or {"max_simulation_epoch":100, "simulation_stop_time":20, "time_step":0.2}
+        self.num_init_species = num_init_species or 1
+        self.num_init_complex = num_init_complex or 0
         self.store_path = store_path
 
-        # Cost function parameters
-        self.cost_alpha = cost_alpha
-        self.cost_beta = cost_beta
-        self.cost_max_val = cost_max_val
-
-        # Optimization parameters
         self.learning_rate = learning_rate
-        self.optimization_epochs = optimization_epochs
+        self.sim_mutation_rate = sim_mutation_rate or 0.5
+        self.initial_condition_mutation_rate = initial_condition_mutation_rate or 0.1
+        self.parameter_mutation_rate = parameter_mutation_rate or 0.08
+        self.insertion_mutation_rate = insertion_mutation_rate or 0.07
+        self.deletion_mutation_rate = deletion_mutation_rate or 0.09
+        self.crossover_alpha = crossover_alpha or 0.4
+
+        self.checkpoint_interval = checkpoint_interval or 10
+        self.lr_decay = lr_decay
+        self.decay_steps = decay_steps or 100
+        self.decay_rate = decay_rate or 0.96
+        self.trainable_compartment = trainable_compartment or 1
+        self.param_type = param_type or "all"
+        self.share_info = share_info or 2
+        self.accumulation_steps = accumulation_steps
+        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         self.gradient_optimization = gradient_optimization
         self.parameter_optimization = parameter_optimization
         self.condition_optimization = condition_optimization
-        self.num_gradient_optimization = num_gradient_optimization
-        self.num_saved_individuals = num_saved_individuals
-        self.checkpoint_interval = checkpoint_interval,
-        self.lr_decay = lr_decay
-        self.decay_steps = decay_steps
-        self.decay_rate = decay_rate
-        self.trainable_compartment = trainable_compartment
 
-
-        # Evolutionary optimization parameters
-        self.evolution_one_epochs = evolution_one_epochs
-        self.evolution_two_epochs = evolution_two_epochs
-        self.evolution_two_ratio = evolution_two_ratio
-
-        # Zoom parameters
-        self.zoom_ = zoom_
-        self.zoom_in_factor = zoom_in_factor
-        self.zoom_out_factor = zoom_out_factor
-        self.zoom_order = zoom_order
-        self.zoom_mode = zoom_mode
-        self.zoom_cval = zoom_cval
-        self.zoom_grid_mode = zoom_grid_mode
-        self.individual_fix_shape = individual_fix_shape
-
-        # Mutation parameters
         self.sim_mutation = sim_mutation
-        self.compartment_mutation = compartment_mutation
-        self.param_mutation = param_mutation
+        self.initial_condition_mutation = initial_condition_mutation
+        self.parameter_mutation = parameter_mutation
         self.species_insertion_mutation_one = species_insertion_mutation_one
         self.species_deletion_mutation_one = species_deletion_mutation_one
         self.species_insertion_mutation_two = species_insertion_mutation_two
         self.species_deletion_mutation_two = species_deletion_mutation_two
-        self.crossover_alpha = crossover_alpha
-        self.sim_crossover = sim_crossover
-        self.compartment_crossover = compartment_crossover
-        self.param_crossover = param_crossover
-        self.num_elite_individuals = num_elite_individuals
 
-        # Mutation rates
-        self.sim_mutation_rate = sim_mutation_rate
-        self.compartment_mutation_rate = compartment_mutation_rate
-        self.parameter_mutation_rate = parameter_mutation_rate
-        self.insertion_mutation_rate = insertion_mutation_rate
-        self.deletion_mutation_rate = deletion_mutation_rate
+        self.initial_condition_crossover = initial_condition_crossover
+        self.parameter_crossover = parameter_crossover
+        self.simulation_crossover = simulation_crossover
+        self.fixed_agent_shape = fixed_agent_shape
 
-        # Simulation parameters
-        self.sim_means = sim_means
-        self.sim_std_devs = sim_std_devs
-        self.sim_min_vals = sim_min_vals
-        self.sim_max_vals = sim_max_vals
-        self.compartment_mean = compartment_mean
-        self.compartment_std = compartment_std
-        self.compartment_min_val = compartment_min_val
-        self.compartment_max_val = compartment_max_val
-        self.sim_distribution = sim_distribution
-        self.compartment_distribution = compartment_distribution
+        self.cost_alpha = cost_alpha or 1.0
+        self.cost_beta = cost_beta or 1.0
+        self.cost_constant = cost_constant or 1.0
 
-        # Species and complex parameters
-        self.species_param_means = species_param_means
-        self.species_param_stds = species_param_stds
-        self.species_param_min_vals = species_param_min_vals
-        self.species_param_max_vals = species_param_max_vals
-        self.complex_param_means = complex_param_means
-        self.complex_param_stds = complex_param_stds
-        self.complex_param_min_vals = complex_param_min_vals
-        self.complex_param_max_vals = complex_param_max_vals
-        self.param_distribution = param_distribution
+        self.evolution_two_ratio = evolution_two_ratio or 1.0
+        self.zoom_ = zoom_
+        self.zoom_in_factor = zoom_in_factor or 0.5
+        self.zoom_out_factor = zoom_out_factor or 2
+        self.num_elite_agents = num_elite_agents or 10
 
-        # Initialize Zoom_
+        self.simulation_min = simulation_min or (5, 0.05)
+        self.simulation_max = simulation_max or (40, 0.3)
+        self.initial_condition_min = initial_condition_min or 0.0
+        self.initial_condition_max = initial_condition_max or 2.0
+        self.parameter_min = parameter_min or 0.0
+        self.parameter_max = parameter_max or 0.99
+
         self.reshape_ = Resize(
-            order=self.zoom_order,
-            mode=self.zoom_mode,
-            cval=self.zoom_cval,
-            grid_mode=self.zoom_grid_mode
+            order=1,
+            mode="constant",
+            cval=0.0,
+            grid_mode=False
         )
 
-        # Initialize Gradient Optimization
         self.gradient_optimization_ = AdamOptimization(
-            target=tf.convert_to_tensor(self.target),
+            target=torch.from_numpy(self.target),
             path=self.store_path,
-            file_name="adam_result",
-            epochs=20,
-            learning_rate=None,
-            param_opt=False,
-            compartment_opt=True,
+            file_name="gradient_result",
+            epochs=self.optimization_epochs,
+            learning_rate=self.learning_rate,
+            param_opt=self.parameter_optimization,
+            param_type=self.param_type,
+            condition_opt=self.condition_optimization,
             cost_alpha=self.cost_alpha,
             cost_beta=self.cost_beta,
-            max_val=self.cost_max_val,
-            checkpoint_interval=5,
-            lr_decay=False,
-            decay_steps=10000,
-            decay_rate=0.98,
-            trainable_compartment=1
+            max_val=1.0,
+            checkpoint_interval=self.checkpoint_interval,
+            share_info=self.share_info,
+            lr_decay=self.lr_decay,
+            decay_steps=self.decay_steps,
+            decay_rate=self.decay_rate,
+            trainable_compartment=self.trainable_compartment,
+            accumulation_steps=self.accumulation_steps,
+            device=self.device
         )
-
-    # store all input information to a json file to use it later if needed (reproduce)
-    def save_to_json(self):
-        """
-        Save the model's input configuration to a JSON file.
-
-        This method creates a dictionary of all the input parameters used to initialize the model.
-        It then saves this dictionary as a JSON file in the specified `store_path`. If `store_path`
-        is not provided, the file will be saved in the user's home directory.
-
-        The JSON file can later be used to reproduce the exact configuration of the model.
-
-        Parameters:
-        None
-
-        Returns:
-        None
-        """
-        data = {
-            "population_size": self.population_size,
-            "individual_shape": self.individual_shape,
-            "individual_parameters": self.individual_parameters,
-            "simulation_parameters": self.simulation_parameters,
-            "store_path": self.store_path,
-            "cost_alpha": self.cost_alpha,
-            "cost_beta": self.cost_beta,
-            "cost_max_val": self.cost_max_val,
-            "optimization_epochs": self.optimization_epochs,
-            "gradient_optimization": self.gradient_optimization,
-            "parameter_optimization": self.parameter_optimization,
-            "condition_optimization": self.condition_optimization,
-            "num_gradient_optimization": self.num_gradient_optimization,
-            "num_saved_individuals": self.num_saved_individuals,
-            "evolution_one_epochs": self.evolution_one_epochs,
-            "evolution_two_epochs": self.evolution_two_epochs,
-            "evolution_two_ratio": self.evolution_two_ratio,
-            "zoom_": self.zoom_,
-            "zoom_in_factor": self.zoom_in_factor,
-            "zoom_out_factor": self.zoom_out_factor,
-            "zoom_order": self.zoom_order,
-            "zoom_mode": self.zoom_mode,
-            "zoom_cval": self.zoom_cval,
-            "zoom_grid_mode": self.zoom_grid_mode,
-            "individual_fix_shape": self.individual_fix_shape,
-            "sim_mutation": self.sim_mutation,
-            "compartment_mutation": self.compartment_mutation,
-            "param_mutation": self.param_mutation,
-            "species_insertion_mutation_one": self.species_insertion_mutation_one,
-            "species_deletion_mutation_one": self.species_deletion_mutation_one,
-            "species_insertion_mutation_two": self.species_insertion_mutation_two,
-            "species_deletion_mutation_two": self.species_deletion_mutation_two,
-            "crossover_alpha": self.crossover_alpha,
-            "sim_crossover": self.sim_crossover,
-            "compartment_crossover": self.compartment_crossover,
-            "param_crossover": self.param_crossover,
-            "num_elite_individuals": self.num_elite_individuals,
-            "sim_mutation_rate": self.sim_mutation_rate,
-            "compartment_mutation_rate": self.compartment_mutation_rate,
-            "parameter_mutation_rate": self.parameter_mutation_rate,
-            "insertion_mutation_rate": self.insertion_mutation_rate,
-            "deletion_mutation_rate": self.deletion_mutation_rate,
-            "sim_means": self.sim_means,
-            "sim_std_devs": self.sim_std_devs,
-            "sim_min_vals": self.sim_min_vals,
-            "sim_max_vals": self.sim_max_vals,
-            "compartment_mean": self.compartment_mean,
-            "compartment_std": self.compartment_std,
-            "compartment_min_val": self.compartment_min_val,
-            "compartment_max_val": self.compartment_max_val,
-            "sim_distribution": self.sim_distribution,
-            "compartment_distribution": self.compartment_distribution,
-            "species_param_means": self.species_param_means,
-            "species_param_stds": self.species_param_stds,
-            "species_param_min_vals": self.species_param_min_vals,
-            "species_param_max_vals": self.species_param_max_vals,
-            "complex_param_means": self.complex_param_means,
-            "complex_param_stds": self.complex_param_stds,
-            "complex_param_min_vals": self.complex_param_min_vals,
-            "complex_param_max_vals": self.complex_param_max_vals,
-            "param_distribution": self.param_distribution
-        }
-
-        if self.store_path:
-            path = os.path.join(self.store_path, "input_data.json")
-            if not os.path.exists(self.store_path):
-                os.makedirs(self.store_path)
-        else:
-            path = os.path.join(os.path.expanduser("~"), "input_data.json")
-
-        # Save the dictionary to a JSON file
-        with open(path, 'w') as json_file:
-            json.dump(data, json_file, indent=4)
 
 
     def save_to_h5py(self, dataset_name, data_array):
-        """
-        Save a numpy array to an HDF5 file.
-
-        This method appends or writes the provided `data_array` to an HDF5 file under the specified `dataset_name`.
-        If `store_path` is specified, the file will be saved in that directory; otherwise, it will be saved in the
-        user's home directory.
-
-        The method ensures that the directory exists and creates it if necessary.
-
-        Parameters:
-            - dataset_name (str): The name of the dataset in the HDF5 file where the data will be stored.
-            - data_array (np.ndarray): The numpy array containing the data to be saved.
-
-        Returns:
-        None
-        """
 
         if self.store_path:
-            path = os.path.join(self.store_path, "output_data.h5")
+            path = os.path.join(self.store_path, "evolutionary_result")
             if not os.path.exists(self.store_path):
                 os.makedirs(self.store_path)
         else:
-            path = os.path.join(os.path.expanduser("~"), "output_data.h5")
+            path = os.path.join(os.path.expanduser("~"), "evolutionary_result")
 
         with h5py.File(path, 'a') as h5file:
-            h5file[dataset_name] = data_array
+            if dataset_name in h5file:
+                del h5file[dataset_name]
+
+            h5file.create_dataset(dataset_name, data=data_array)
+
 
 
 
     def fit(self):
-        """
-        Execute the multiphase evolutionary algorithm to optimize the population.
 
-        This method orchestrates the entire optimization process, including:
-
-            1. Saving the initial input parameters and target data.
-            2. Performing a first phase of evolutionary optimization with potential pooling to reduce
-               the computational cost by down-sampling the target.
-            3. Re-scaling the population to its original size and performing a second phase of
-               evolutionary optimization.
-            4. Optionally applying gradient-based optimization to further refine the best individuals.
-
-        The results are stored in HDF5 files at various stages for reproducibility and analysis.
-
-        The optimization process is divided into three main phases:
-
-            - Phase 1: Evolutionary optimization with or without pooling to reduce the target size.
-            - Phase 2: Evolutionary optimization on the original target size.
-            - Phase 3: Gradient-based optimization for fine-tuning the best individuals from Phase 2.
-
-        Key Steps:
-
-            1. Save initial inputs and targets.
-            2. Pool the target (zoom in) if enabled and perform the first phase of evolutionary optimization.
-            3. Save the elite individuals and their costs from Phase 1.
-            4. Up sample the population (zoom out) and perform the second phase of evolutionary optimization.
-            5. Optionally, perform gradient-based optimization on the top individuals from Phase 2.
-
-        Returns:
-        None
-        """
         num_patterns, _, _ = self.target.shape
-        run_time = np.zeros(4)
+        run_time = np.zeros(shape=(1, ), dtype=np.float32)
+        best_agents = []
+        final_agent = None
+        tic = time.time()
+        evolutionary_costs = np.zeros(
+            shape=(self.evolution_one_epochs + self.evolution_two_epochs, 2),
+            dtype=np.float32
+        )
 
-        prep_start = time.time()
-        # Save the input configuration and initial target to files
-        self.save_to_json()  # save the input info into a JSON file
         self.save_to_h5py(
             dataset_name="original_target",
             data_array=self.target
-        )  # store the target into an HDF5 file
+        )
 
-        num_species = len(self.individual_parameters["species_parameters"])
-        num_pairs = len(self.individual_parameters["pair_parameters"])
+        num_species = len(self.agent_parameters["species_parameters"])
+        num_complex = len(self.agent_parameters["complex_parameters"])
 
-        # Phase 1:  zoom the Target to reduce the computational cost
+        parameters = (
+            self.agent_parameters["species_parameters"],
+            self.agent_parameters["complex_parameters"],
+            self.simulation_parameters
+        )
+        crossover = (
+            self.crossover_alpha,
+            self.simulation_crossover,
+            self.initial_condition_crossover,
+            self.parameter_crossover
+        )
+        mutation = (
+            self.sim_mutation,
+            self.initial_condition_mutation,
+            self.parameter_mutation,
+            self.species_insertion_mutation_one,
+            self.species_deletion_mutation_one
+        )
+        bounds = (
+            self.simulation_min,
+            self.simulation_max,
+            self.initial_condition_min,
+            self.initial_condition_max,
+            self.parameter_min,
+            self.parameter_max
+        )
+        rates = (
+            self.sim_mutation_rate,
+            self.initial_condition_mutation_rate,
+            self.parameter_mutation_rate,
+            self.insertion_mutation_rate,
+            self.deletion_mutation_rate
+        )
+        cost = (
+            self.cost_alpha,
+            self.cost_beta
+        )
+
         tt = []
         if self.zoom_:
             for i in range(self.target.shape[0]):
@@ -443,7 +207,10 @@ class BioEsAg:
                     zoom_=self.zoom_in_factor
                 )
                 tt.append(t_)
-            target_ = np.zeros((self.target.shape[0], tt[0].shape[0], tt[0].shape[1]))
+            target_ = np.zeros(
+                shape=(self.target.shape[0], tt[0].shape[0], tt[0].shape[1]),
+                dtype=np.float32
+            )
             for j in range(len(tt)):
                 target_[j, :, :] = tt[j]
         else:
@@ -452,105 +219,67 @@ class BioEsAg:
         self.save_to_h5py(
             dataset_name="zoomed_in_target",
             data_array=target_
-        )  # store the zoomed target into the already created HDF5 file
-
-
-        # Initialize the population based on the reduced target shape
-        population = population_initialization(
-            population_size=self.population_size,
-            individual_shape=(self.individual_shape[0], target_.shape[1], target_.shape[2]),
-            species_parameters=self.individual_parameters["species_parameters"],
-            complex_parameters=self.individual_parameters["pair_parameters"],
-            num_species=num_species,
-            num_pairs=num_pairs,
-            max_sim_epochs=self.simulation_parameters["max_simulation_epoch"],
-            sim_stop_time=self.simulation_parameters["simulation_stop_time"],
-            time_step=self.simulation_parameters["time_step"],
-            individual_fix_size=self.individual_fix_shape,
-            init_species=self.num_init_species,
-            init_pairs=self.num_init_pairs
         )
-        prep_stop = time.time()
-        run_time[0] = prep_stop - prep_start
+        if self.population:
+            population = self.population
+        else:
+            population = population_initialization(
+                population_size=self.population_size,
+                agent_shape=(self.agent_shape[0], target_.shape[1], target_.shape[2]),
+                species_parameters=self.agent_parameters["species_parameters"],
+                complex_parameters=self.agent_parameters["complex_parameters"],
+                num_species=num_species,
+                num_complex=num_complex,
+                max_sim_epochs=self.simulation_parameters["max_simulation_epoch"],
+                sim_stop_time=self.simulation_parameters["simulation_stop_time"],
+                time_step=self.simulation_parameters["time_step"],
+                fixed_agent_shape=self.fixed_agent_shape,
+                init_species=self.num_init_species,
+                init_complex=self.num_init_complex
+            )
 
-        evo1_start = time.time()
-        # Phase 1 of Evolutionary Optimization
-        evolution_costs_one = np.zeros(shape=(self.evolution_one_epochs, self.num_saved_individuals+2)) # array to save the cost of elite chromosomes
 
-        print("--------------------------------------------------------")
-        print("                   BioEsAg Algorithm                    ")
-        print("--------------------------------------------------------")
-        print("              Evolutionary Optimization I               ")
+
+        print("___________________________________________________________________________")
+        print("                            BioEsAg Algorithm                              ")
+        print("___________________________________________________________________________")
         print()
 
         for i in range(self.evolution_one_epochs):
 
-            population, cost, mean_cost = evolutionary_optimization(population=population, target=target_,
-                                                                    population_size=self.population_size,
-                                                                    num_patterns=num_patterns,
-                                                                    init_species=self.num_init_species,
-                                                                    init_pairs=self.num_init_pairs,
-                                                                    cost_alpha=self.cost_alpha,
-                                                                    cost_beta=self.cost_beta, max_val=self.cost_max_val,
-                                                                    sim_mutation_rate=self.sim_mutation_rate,
-                                                                    initial_condition_mutation_rate=self.compartment_mutation_rate,
-                                                                    parameter_mutation_rate=self.parameter_mutation_rate,
-                                                                    insertion_mutation_rate=self.insertion_mutation_rate,
-                                                                    deletion_mutation_rate=self.deletion_mutation_rate,
-                                                                    simulation_min=self.sim_min_vals,
-                                                                    simulation_max=self.sim_max_vals,
-                                                                    initial_condition_min=self.compartment_min_val,
-                                                                    initial_condition_max=self.compartment_max_val,
-                                                                    parameter_min=self.species_param_min_vals,
-                                                                    parameter_max=self.species_param_max_vals,
-                                                                    sim_mutation=self.sim_mutation,
-                                                                    initial_condition_mutation=self.compartment_mutation,
-                                                                    parameter_mutation=self.param_mutation,
-                                                                    insertion_mutation=self.species_insertion_mutation_one,
-                                                                    deletion_mutation=self.species_deletion_mutation_one,
-                                                                    crossover_alpha=self.crossover_alpha,
-                                                                    simulation_crossover=self.sim_crossover,
-                                                                    initial_condition_crossover=self.compartment_crossover,
-                                                                    parameter_crossover=self.param_crossover,
-                                                                    elite_agents=self.num_elite_individuals,
-                                                                    agent_shape=self.individual_fix_shape,
-                                                                    species_parameters=self.individual_parameters[
-                                                                        "species_parameters"],
-                                                                    complex_parameters=self.individual_parameters[
-                                                                        "pair_parameters"],
-                                                                    simulation_parameters=self.simulation_parameters)
+            population, costs, mean_cost = evolutionary_optimization(
+                population=population,
+                target=target_,
+                population_size=self.population_size,
+                num_patterns=num_patterns,
+                init_species=self.num_init_species,
+                init_complex=self.num_init_complex,
+                cost=cost,
+                rates=rates,
+                bounds=bounds,
+                mutation=mutation,
+                crossover=crossover,
+                num_elite_agents=self.num_elite_agents,
+                fixed_agent_shape=self.fixed_agent_shape,
+                parameters=parameters,
+                cost_constant=self.cost_constant
+            )
+            min_cost_index = np.argmin(costs)
+            best_agent = population[min_cost_index]
+            best_agents.append(best_agent)
 
-            # save the cost data
-            sorted_cost = np.sort(cost)
-            evolution_costs_one[i, :-2] = sorted_cost[:self.num_saved_individuals] # the best costs
-            evolution_costs_one[i, -2] = mean_cost # the population mean cost
-            evolution_costs_one[i, -1] = sorted_cost[-1] # the highest (worst) cost
+            sorted_costs = np.sort(costs)
+            evolutionary_costs[i, 0] = sorted_costs[0]
+            evolutionary_costs[i, 1] = mean_cost
 
-            print(f"Epoch {i+1}/{self.evolution_one_epochs}, Avg/Min Population Cost: {round(mean_cost, 5)}/{round(float(sorted_cost[0]), 5)}")
+            print(f"Epoch {i+1}/{self.evolution_one_epochs}, Avg/Min Population Cost: {mean_cost}/{sorted_costs[0]}")
 
-            # Shrink the population size based on a ratio (self.evolution_two_ratio) at the end of Phase 1
+
             if i == self.evolution_one_epochs - 1:
                 new_population_size = int(self.population_size * self.evolution_two_ratio)
                 sorted_cost_indices = np.argsort(cost)[:new_population_size]
-
-                elite_individuals = [population[idx] for idx in sorted_cost_indices[:self.num_saved_individuals]]
                 population = [population[idx] for idx in sorted_cost_indices]
 
-                for d, elite in enumerate(elite_individuals):
-                    self.save_to_h5py(
-                        dataset_name=f"elite_individual_{d + 1}_evolution_one",
-                        data_array=elite
-                    )
-
-        self.save_to_h5py(
-            dataset_name="evolution_costs_one",
-            data_array=evolution_costs_one
-        )
-        evo1_stop = time.time()
-        run_time[1] = evo1_stop - evo1_start
-
-        evo2_start = time.time()
-        # Phase 2: zoom out the population (resize it to the original size)
         if self.zoom_:
             population = self.reshape_.zoom_out(
                 population=population,
@@ -559,110 +288,71 @@ class BioEsAg:
                 y_=self.target.shape[2]
             )
 
-
-
-            # Phase 2 of Evolutionary Optimization
-            evolution_costs_two = np.zeros(shape=(self.evolution_two_epochs, self.num_saved_individuals+2))  # array to save the cost of elite chromosomes
-
             print()
-            print("              Evolutionary Optimization II              ")
+            print("___________________________________________________________________________")
             print()
 
             pop_size = len(population)
+            idx = self.evolution_one_epochs - 1
             for j in range(self.evolution_two_epochs):
-                population, cost, mean_cost = evolutionary_optimization(population=population, target=self.target,
-                                                                        population_size=pop_size,
-                                                                        num_patterns=num_patterns,
-                                                                        init_species=self.num_init_species,
-                                                                        init_pairs=self.num_init_pairs,
-                                                                        cost_alpha=self.cost_alpha,
-                                                                        cost_beta=self.cost_beta,
-                                                                        max_val=self.cost_max_val,
-                                                                        sim_mutation_rate=self.sim_mutation_rate,
-                                                                        initial_condition_mutation_rate=self.compartment_mutation_rate,
-                                                                        parameter_mutation_rate=self.parameter_mutation_rate,
-                                                                        insertion_mutation_rate=self.insertion_mutation_rate,
-                                                                        deletion_mutation_rate=self.deletion_mutation_rate,
-                                                                        simulation_min=self.sim_min_vals,
-                                                                        simulation_max=self.sim_max_vals,
-                                                                        initial_condition_min=self.compartment_min_val,
-                                                                        initial_condition_max=self.compartment_max_val,
-                                                                        parameter_min=self.species_param_min_vals,
-                                                                        parameter_max=self.species_param_max_vals,
-                                                                        sim_mutation=self.sim_mutation,
-                                                                        initial_condition_mutation=self.compartment_mutation,
-                                                                        parameter_mutation=self.param_mutation,
-                                                                        insertion_mutation=self.species_insertion_mutation_two,
-                                                                        deletion_mutation=self.species_deletion_mutation_two,
-                                                                        crossover_alpha=self.crossover_alpha,
-                                                                        simulation_crossover=self.sim_crossover,
-                                                                        initial_condition_crossover=self.compartment_crossover,
-                                                                        parameter_crossover=self.param_crossover,
-                                                                        elite_agents=self.num_elite_individuals,
-                                                                        agent_shape=self.individual_fix_shape,
-                                                                        species_parameters=self.individual_parameters[
-                                                                            "species_parameters"],
-                                                                        complex_parameters=self.individual_parameters[
-                                                                            "pair_parameters"],
-                                                                        simulation_parameters=self.simulation_parameters)
-
-                sorted_cost = np.sort(cost)
-                evolution_costs_two[j, :-2] = sorted_cost[:self.num_saved_individuals]
-                evolution_costs_two[j, -2] = mean_cost
-                evolution_costs_two[j, -1] = sorted_cost[-1]
-                print(f"Epoch {j + 1}/{self.evolution_two_epochs}, Avg/Min Population Cost: {round(mean_cost, 5)}/{round(float(sorted_cost[0]), 5)}")
-
-                # Shrink the population size at the end of Phase 2
-                if j == self.evolution_two_epochs - 1:
-                    sorted_cost_indices = np.argsort(cost)
-                    elite_individuals = [population[idx] for idx in sorted_cost_indices[:self.num_saved_individuals]]
-                    population = [population[idx] for idx in sorted_cost_indices]
-                    population = population[:self.num_gradient_optimization]
-
-                    for d, elite in enumerate(elite_individuals):
-                        self.save_to_h5py(
-                            dataset_name=f"elite_individual_{d + 1}_evolution_two",
-                            data_array=elite
-                        )
-
-            self.save_to_h5py(
-                dataset_name="evolution_costs_two",
-                data_array=evolution_costs_two
-            )
-        evo2_stop = time.time()
-        run_time[3] = evo2_stop - evo2_start
-
-        gradient_start = time.time()
-        # Phase 3: Gradient-based optimization using tf.GradientTape and the Adam algorithm
-        if self.gradient_optimization:
-            optimization_costs = np.zeros(shape=(self.optimization_epochs, self.num_gradient_optimization))
-
-            print()
-            print("                   Adam Optimization                 ")
-
-            for k, individual in enumerate(population):
-                print()
-
-                optimized_individual, costs = self.gradient_optimization_.gradient_optimization(
-                    agent=tf.convert_to_tensor(individual))
-
-                population[k] = optimized_individual.numpy()
-                optimization_costs[:, k] = costs
-
-                self.save_to_h5py(
-                    dataset_name=f"elite_individual_{k+1}_gradient_optimization",
-                    data_array=population[k]
+                population, costs, mean_cost = evolutionary_optimization(
+                    population=population,
+                    target=self.target,
+                    population_size=pop_size,
+                    num_patterns=num_patterns,
+                    init_species=self.num_init_species,
+                    init_complex=self.num_init_complex,
+                    cost=cost,
+                    rates=rates,
+                    bounds=bounds,
+                    mutation=mutation,
+                    crossover=crossover,
+                    num_elite_agents=self.num_elite_agents,
+                    fixed_agent_shape=self.fixed_agent_shape,
+                    parameters=parameters,
+                    cost_constant=self.cost_constant
                 )
 
-            self.save_to_h5py(
-                dataset_name="gradient_optimization_costs",
-                data_array=optimization_costs
-            )
+                min_cost_index = np.argmin(costs)
+                best_agent = population[min_cost_index]
+                best_agents.append(best_agent)
 
-        gradient_stop = time.time()
-        run_time[-1] = gradient_stop - gradient_start
+                sorted_costs = np.sort(costs)
+                evolutionary_costs[idx, 0] = sorted_costs[0]
+                evolutionary_costs[idx, 1] = mean_cost
+
+                print(f"Epoch {idx + 1}/{self.evolution_one_epochs + self.evolution_two_epochs}, Avg/Min Population Cost: {mean_cost}/{sorted_costs[0]}")
+                if j == self.evolution_two_epochs - 1:
+                    min_cost_index = np.argmin(costs)
+                    final_agent = population[min_cost_index]
+
+        self.save_to_h5py(
+            dataset_name="evolutionary_costs",
+            data_array=evolutionary_costs
+        )
+        for ag in range(len(best_agents)):
+            self.save_to_h5py(
+                dataset_name=f"agent_{ag}",
+                data_array=best_agents[ag]
+            )
+        toc = time.time()
+        run_time[0] = toc - tic
         self.save_to_h5py(
             dataset_name="run_time",
             data_array=run_time
         )
+
+
+        if self.gradient_optimization:
+            print()
+            print("___________________________________________________________________________")
+            print()
+
+            _, _ = self.gradient_optimization_.gradient_optimization(
+                    agent=torch.from_numpy(final_agent)
+            )
+
+        return population, evolutionary_costs
+
+
 
