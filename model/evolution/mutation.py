@@ -86,18 +86,16 @@ def apply_simulation_parameters_mutation(
     pop = [ag for ag in population if ag.shape[0] == agent.shape[0]]
     if len(pop) >= 3:
         agent1, agent2, agent3 = random.sample(pop, k=3)
-        # if population[0].shape[0] == agent.shape[0]:
-        # agent1 = population[0]
+
         mutation_mask = np.random.rand(2) < mutation_rate
         idx = 3
         for i in range(2):
-            agent[-1, -1, idx] = agent1[-1, -1, idx] + F*(agent2[-1, -1, idx] - agent3[-1, -1, idx]) * mutation_mask[i]
-            agent[-1, -1, idx] = max(min_vals[i], min(max_vals[i], agent[-1, -1, idx]))
+            if mutation_mask[i]:
+                agent[-1, -1, idx] = agent1[-1, -1, idx] + F*(agent2[-1, -1, idx] - agent3[-1, -1, idx])
+                agent[-1, -1, idx] = max(min_vals[i], min(max_vals[i], agent[-1, -1, idx]))
             idx += 1
 
     return agent
-
-
 
 
 def apply_compartment_mutation(
@@ -109,25 +107,22 @@ def apply_compartment_mutation(
         F=0.8
 ):
 
-
     pop = [ag for ag in population if ag.shape[0] == agent.shape[0]]
+
     if len(pop) >= 3:
         agent1, agent2, agent3 = random.sample(pop, k=3)
-        #if population[0].shape[0] == agent.shape[0]:
-            #agent1 = population[0]
-            
         num_species = int(agent[-1, -1, 0])
         z, y, x = agent.shape
 
-
         for i in range(1, num_species * 2, 2):
             mutation_mask = np.random.rand(y, x) < mutation_rate
-            agent[i, :, :] = agent1[i, :, :] + F * (agent2[i, :, :] - agent3[i, :, :]) * mutation_mask
+            mutant_section = agent1[i, :, :] + F * (agent2[i, :, :] - agent3[i, :, :])
+            agent[i, :, :] = np.where(mutation_mask, mutant_section, agent[i, :, :])
+
             agent[i, :, :] = np.maximum(agent[i, :, :], min_val)
             agent[i, :, :] = np.minimum(agent[i, :, :], max_val)
 
     return agent
-
 
 
 
@@ -139,12 +134,12 @@ def apply_parameters_mutation(
         max_val,
         F=0.8
 ):
-    pop = [ag for ag in population if ag.shape[0] == agent.shape[0]]
-    if len(pop) >= 3:
-        agent1, agent2, agent3 = random.sample(pop, k=3)
-        #if population[0].shape[0] == agent.shape[0]:
-            #agent1 = population[0]
 
+    pop = [ag for ag in population if ag.shape[0] == agent.shape[0]]
+
+    if len(pop) >= 3:
+
+        agent1, agent2, agent3 = random.sample(pop, k=3)
         num_species = int(agent[-1, -1, 0])
         num_pairs = int(agent[-1, -1, 1])
         pair_start = num_species * 2
@@ -153,19 +148,21 @@ def apply_parameters_mutation(
         for i in range(0, num_species * 2, 2):
 
             mutation_mask = np.random.rand(3) < mutation_rate
-            agent[-1, i, :3] = agent1[-1, i, :3] + F * (agent2[-1, i, :3] - agent3[-1, i, :3]) * mutation_mask
+            mutated_values = agent1[-1, i, :3] + F * (agent2[-1, i, :3] - agent3[-1, i, :3])
+            agent[-1, i, :3] = np.where(mutation_mask, mutated_values, agent[-1, i, :3])
 
-            agent[-1, i, :3] = np.minimum(agent[-1, i, :3], min_val)
-            agent[-1, i, :3] = np.maximum(agent[-1, i, :3], max_val)
+            agent[-1, i, :3] = np.clip(agent[-1, i, :3], min_val, max_val)
 
         for i in range(pair_start + 1, pair_stop, 2):
 
             mutation_mask = np.random.rand(4) < mutation_rate
-            agent[i, 1, :4] = agent1[i, 1, :4] + F * (agent2[i, 1, :4]- agent3[i, 1, :4]) * mutation_mask
-            agent[i, 1, :4] = np.minimum(agent[i, 1, :4], min_val)
-            agent[i, 1, :4] = np.maximum(agent[i, 1, :4], max_val)
+            mutated_values = agent1[i, 1, :4] + F * (agent2[i, 1, :4] - agent3[i, 1, :4])
+            agent[i, 1, :4] = np.where(mutation_mask, mutated_values, agent[i, 1, :4])
+
+            agent[i, 1, :4] = np.clip(agent[i, 1, :4], min_val, max_val)
 
     return agent
+
 
 
 
