@@ -604,7 +604,7 @@ class AdamOptimization:
                  epochs=100,
                  learning_rate=None,
                  param_opt=False,
-                 compartment_opt=True,
+                 initial_condition_opt=True,
                  cost_alpha=0.6,
                  cost_beta=0.4,
                  max_val=1.0,
@@ -620,7 +620,7 @@ class AdamOptimization:
         self.path = path
         self.file_name = file_name
         self.param_opt = param_opt
-        self.compartment_opt = compartment_opt
+        self.initial_condition_opt = initial_condition_opt
         self.cost_alpha = cost_alpha
         self.cost_beta = cost_beta
         self.max_val = max_val
@@ -653,7 +653,7 @@ class AdamOptimization:
 
 
 
-    def parameter_extraction(self, individual, param_opt, compartment_opt, trainable_compartment):
+    def parameter_extraction(self, individual, param_opt, initial_condition_opt, trainable_compartment):
 
         params = []
         num_species = int(individual[-1, -1, 0])
@@ -713,7 +713,7 @@ class AdamOptimization:
                     )
                     pair += 1
 
-            if compartment_opt:
+            if initial_condition_opt:
                 sp = 1
                 for k in range(1, num_species * 2, 2):
                     if int(sp - 1) == t:
@@ -1004,7 +1004,7 @@ class AdamOptimization:
         parameters, num_species, num_pairs, max_epoch, stop, time_step = self.parameter_extraction(
             individual=individual,
             param_opt=self.param_opt,
-            compartment_opt=self.compartment_opt,
+            initial_condition_opt=self.initial_condition_opt,
             trainable_compartment=self.trainable_compartment
         )
 

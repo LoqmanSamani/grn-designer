@@ -19,7 +19,7 @@ class AdamOptimization:
         - learning_rate (float): The learning rate for the Adam optimizer.
         - target (tf.Tensor): The target tensor representing the desired diffusion pattern.
         - param_opt (bool): if True, the species and complex parameters will be optimized.
-        - compartment_opt (bool): if True, the initial condition of each species will be optimized.
+        - initial_condition_opt (bool): if True, the initial condition of each species will be optimized.
         - cost_alpha (float): Weighting factor for the cost function (currently unused).
         - cost_beta (float): Weighting factor for the cost function (currently unused).
         - cost_kernel_size (int): Size of the kernel used in the cost function (currently unused).
