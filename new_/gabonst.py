@@ -80,11 +80,11 @@ def evolutionary_optimization(
     lowest_indices = sorted_indices[:num_elite_agents]
 
     # Separate individuals and costs into low-cost and high-cost groups
-    low_cost_agents = [population[i] for i in range(len(costs)) if costs[i] < mean_cost]
-    high_cost_agents = [population[i] for i in range(len(costs)) if costs[i] >= mean_cost]
+    low_cost_agents = [population[i] for i in range(len(costs)) if costs[i] <= mean_cost]
+    high_cost_agents = [population[i] for i in range(len(costs)) if costs[i] > mean_cost]
 
-    low_costs = [costs[i] for i in range(len(costs)) if costs[i] < mean_cost]
-    #high_costs = [costs[i] for i in range(len(costs)) if costs[i] >= mean_cost]
+    low_costs = [costs[i] for i in range(len(costs)) if costs[i] <= mean_cost]
+    #high_costs = [costs[i] for i in range(len(costs)) if costs[i] > mean_cost]
 
     sorted_low_costs = np.argsort(np.array(low_costs))
     sorted_low_cost_agents = [low_cost_agents[i] for i in sorted_low_costs]
