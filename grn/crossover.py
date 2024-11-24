@@ -1,7 +1,10 @@
 import random
+import numpy as np
 
 
 def apply_crossover(elite_agents, agent, crossover_alpha, simulation_crossover, initial_condition_crossover, parameter_crossover):
+
+    crossover_beta = np.random.uniform(low=-crossover_alpha, high=1.0+crossover_alpha)
 
     if len(elite_agents) > 0:
         elite_agent = random.choice(elite_agents)
@@ -9,21 +12,21 @@ def apply_crossover(elite_agents, agent, crossover_alpha, simulation_crossover, 
             agent = apply_simulation_variable_crossover(
                 elite_agent=elite_agent,
                 agent=agent,
-                alpha=crossover_alpha
+                beta=crossover_beta
             )
 
         if initial_condition_crossover:
             agent = apply_compartment_crossover(
                 elite_agent=elite_agent,
                 agent=agent,
-                alpha=crossover_alpha
+                bata=crossover_beta
             )
 
         if parameter_crossover:
             agent = apply_parameter_crossover(
                 elite_agent=elite_agent,
                 agent=agent,
-                alpha=crossover_alpha
+                beta=crossover_beta
             )
    
     if agent[-1, -1, 2] / agent[-1, -1, 3] > 200 or agent[-1, -1, 2] / agent[-1, -1, 3] < 70:
@@ -34,35 +37,41 @@ def apply_crossover(elite_agents, agent, crossover_alpha, simulation_crossover, 
 
 
 
-def apply_simulation_variable_crossover(elite_agent, agent, alpha):
+def apply_simulation_variable_crossover(elite_agent, agent, beta):
 
-    agent[-1, -1, 2:4] = (alpha * agent[-1, -1, 2:4]) + ((1 - alpha) * elite_agent[-1, -1, 2:4])
+    agent[-1, -1, 2:4] = (beta * agent[-1, -1, 2:4]) + ((1 - beta) * elite_agent[-1, -1, 2:4])
 
     return agent
 
 
-def apply_compartment_crossover(elite_agent, agent, alpha):
+def apply_compartment_crossover(elite_agent, agent, bata):
 
     num_species = int(agent[-1, -1, 0])
 
     for i in range(1, num_species * 2, 2):
-        agent[i, :, :] = (alpha * agent[i, :, :]) + ((1 - alpha) * elite_agent[i, :, :])
+        agent[i, :, :] = (bata * agent[i, :, :]) + ((1 - bata) * elite_agent[i, :, :])
 
     return agent
 
 
-def apply_parameter_crossover(elite_agent, agent, alpha):
+def apply_parameter_crossover(elite_agent, agent, beta):
 
     num_species = int(agent[-1, -1, 0])
 
     for i in range(0, num_species * 2, 2):
-        num_params = int(elite_agent[-1, i, -1] + 3)
-        agent[-1, i, :num_params] = (alpha * agent[-1, i, :num_params]) + ((1 - alpha) * elite_agent[-1, i, :num_params])
-        agent[-1, i+1, :] = elite_agent[-1, i+1, :]
+        num_params = int(agent[-1, i, -1] + 3)
+
+        new_params = (beta * agent[-1, i, :num_params]) + ((1 - beta) * elite_agent[-1, i, :num_params])
+
+        for j in range(len(new_params)):
+            if new_params[j] <= 0:
+                new_params[j] = np.random.rand()
+
+        new_params = np.clip(new_params, 0, 1)
+
+        agent[-1, i, :num_params] = new_params
 
     return agent
-
-
 
 
 def filter_elite_agents(low_cost_agents, elite_agents, high_cost_agent):
