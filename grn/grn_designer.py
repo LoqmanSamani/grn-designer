@@ -194,14 +194,21 @@ class GRNDesigner:
             self.cost_pattern_proportion
         )
 
-
         if self.zoom_:
             target_ = self.reshape_.zoom_in(
                 target=self.target,
                 zoom_=self.zoom_in_factor
             )
+            agent_ = self.reshape_.zoom_out(
+                population=[self.agent],
+                zoom_=self.zoom_in_factor,
+                x_=target_.shape[0],
+                y_=target_.shape[1]
+            )
+
         else:
             target_ = self.target
+            agent_ = self.agent
             
 
         if self.zoom_:
@@ -229,7 +236,7 @@ class GRNDesigner:
                 sim_stop_time=self.simulation_parameters["simulation_stop_time"],
                 time_step=self.simulation_parameters["time_step"],
                 fixed_shape=self.fixed_agent_shape,
-                low_costs=[self.agent]
+                low_costs=agent_
             )
            
 
