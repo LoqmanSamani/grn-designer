@@ -208,7 +208,7 @@ class GRNDesigner:
 
         else:
             target_ = self.target
-            agent_ = self.agent
+            agent_ = [self.agent]
             
 
         if self.zoom_:
