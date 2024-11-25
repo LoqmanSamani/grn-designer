@@ -207,7 +207,7 @@ def update_right_side_concentration(
     right_cell_in = time_step * left_cell_concentration * diffusion_rate
 
     in_diffusion = upper_cell_in + lower_cell_in + right_cell_in
-    out_diffusion = time_step * cell_concentration.T * diffusion_rate * 3
+    out_diffusion = time_step * cell_concentration * diffusion_rate * 3
 
     updated_concentration = cell_concentration + in_diffusion - out_diffusion
 
