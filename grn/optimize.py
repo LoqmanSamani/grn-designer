@@ -122,11 +122,6 @@ class GradientOptimization:
                 )
                 s += 1
                 
-        for name, param in parameters.items():
-            print(f"Parameter: {name}, Trainable: {param.requires_grad}")
-            print(len(param))
-            
-
         return parameters, num_species, max_epoch, stop, time_step
 
 
