@@ -285,7 +285,7 @@ class GradientOptimization:
 
             with torch.no_grad():
                 for param, val in parameters.items():
-                    val.clamp_(min=0.0, max=0.999)
+                    val.clamp_(min=0.010, max=0.999)
                     
             costs.append(cost.item())
 
