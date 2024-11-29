@@ -67,7 +67,7 @@ def apply_parameter_crossover(elite_agent, agent, beta):
             if new_params[j] <= 0:
                 new_params[j] = np.random.rand()
 
-        new_params = np.clip(a=new_params, a_min=0, a_max=1)
+        new_params = np.clip(a=new_params, a_min=0.010, a_max=0.999)
 
         agent[-1, i, :num_params] = new_params
 
