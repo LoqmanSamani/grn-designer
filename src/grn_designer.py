@@ -50,7 +50,7 @@ class GRNDesigner:
         self.optimization_epochs = optimization_epochs or 0
         self.agent_shape = agent_shape or (3, 100, 100)
         self.agent_parameters = agent_parameters or np.random.rand(3)
-        self.simulation_parameters = simulation_parameters or {"max_simulation_epoch":100, "simulation_stop_time":20, "time_step":0.2}
+        self.simulation_parameters = simulation_parameters or {"max_simulation_epoch":100, "simulation_stop_time":10, "time_step":0.1}
         self.store_path = store_path
 
         self.learning_rate = learning_rate or 0.01
@@ -91,7 +91,7 @@ class GRNDesigner:
         self.cost_beta = cost_beta or 1.0
         self.cost_constant = cost_constant or 1.0
         self.loss_threshold = loss_threshold
-        self.cost_pattern_proportion = cost_pattern_proportion or 1000
+        self.cost_pattern_proportion = cost_pattern_proportion or 100
 
         self.evolution_two_ratio = evolution_two_ratio or 1.0
         self.zoom_ = zoom_
@@ -103,10 +103,10 @@ class GRNDesigner:
         self.simulation_max = simulation_max or (40, 0.3)
         self.initial_condition_min = initial_condition_min or 0.0
         self.initial_condition_max = initial_condition_max or 2.0
-        self.parameter_min = parameter_min or 0.0
-        self.parameter_max = parameter_max or 0.99
+        self.parameter_min = parameter_min or 0.010
+        self.parameter_max = parameter_max or 0.999
         self.interval_save = interval_save or 5
-        self.gradient_optimizer = gradient_optimizer or "SGD"
+        self.gradient_optimizer = gradient_optimizer or "Adam"
         self.reshape_ = Resize(
             order=3,
             mode="constant",
