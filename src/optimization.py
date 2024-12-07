@@ -28,6 +28,7 @@ class GradientOptimization:
                  checkpoint_interval,
                  interval_save,
                  pattern_proportion,
+                 range_map,
                  lr_decay,
                  decay_steps,
                  decay_rate,
@@ -41,10 +42,7 @@ class GradientOptimization:
             self.target = target
         self.path = path
         self.file_name = file_name
-        if optimizer:
-            self.optimizer = optimizer
-        else:
-            self.optimizer = "SGD"
+        self.optimizer = optimizer
         self.param_opt = param_opt
         self.initial_condition_opt = initial_condition_opt
         self.cost_alpha = cost_alpha
@@ -53,17 +51,14 @@ class GradientOptimization:
         self.checkpoint_interval = checkpoint_interval
         self.interval_save = interval_save
         self.pattern_proportion = pattern_proportion
+        self.range_map = range_map
         self.lr_decay = lr_decay
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
-        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.learning_rate = learning_rate or 0.001
-
-
-
+        self.device = device
+        self.learning_rate = learning_rate
 
     def save_to_h5py(self, dataset_name, data_array, store_path, file_name):
-
 
         if store_path:
             path = os.path.join(store_path, file_name)
@@ -78,16 +73,12 @@ class GradientOptimization:
 
             h5file.create_dataset(dataset_name, data=data_array)
 
-
-
-
     def parameter_extraction(self, agent, initial_condition_opt, parameter_opt):
 
         num_species = int(agent[-1, -1, 0])
         max_epoch = int(agent[-1, -1, 1])
         stop = int(agent[-1, -1, 2])
         time_step = agent[-1, -1, 3]
-
 
         parameters = {}
 
@@ -111,7 +102,7 @@ class GradientOptimization:
         if parameter_opt:
             s = 1
             for i in range(0, num_species * 2, 2):
-                num_param = int(agent[-1, i, -1] + 3)
+                num_param = int((agent[-1, i, -1] * 3) + 3)
                 parameters[f"species_{s}"] = torch.tensor(
                     agent[-1, i, :num_param].clone(),
                     requires_grad=True
@@ -121,7 +112,7 @@ class GradientOptimization:
         elif not parameter_opt:
             s = 1
             for i in range(0, num_species * 2, 2):
-                num_param = int(agent[-1, i, -1] + 3)
+                num_param = int((agent[-1, i, -1] * 3) + 3)
                 parameters[f"species_{s}"] = torch.tensor(
                     agent[-1, i, :num_param].clone().detach()
                 )
@@ -129,26 +120,22 @@ class GradientOptimization:
 
         return parameters, num_species, max_epoch, stop, time_step
 
-
-
     def update_parameters(self, agent, parameters):
-        
+
         num_species = int(agent[-1, -1, 0])
 
         j = 0
         for species in range(1, num_species + 1):
-            num_param = int(agent[-1, int((species-1)*2), -1] + 3)
+            num_param = int((agent[-1, int((species - 1) * 2), -1] * 3) + 3)
             agent[-1, j, :num_param] = parameters[f"species_{species}"].detach().clone()
             j += 2
 
         for comp in range(1, num_species + 1):
             idx = int(((comp - 1) * 2) + 1)
-            updates = torch.max(parameters[f"initial_conditions_{comp}"], torch.tensor(0.0))
+            updates = parameters[f"initial_conditions_{comp}"]
             agent[idx, :, :] = updates.detach().clone()
 
         return agent
-    
-
 
     def simulation(self, agent, parameters, num_species, stop, time_step, max_epoch, device):
 
@@ -164,7 +151,6 @@ class GradientOptimization:
 
         return prediction
 
-
     def weighted_prediction(self, prediction):
 
         if prediction.ndimension() == 3:
@@ -179,8 +165,6 @@ class GradientOptimization:
             norm_prediction = prediction
 
         return norm_prediction
-
-
 
     def compute_cost_(self, prediction, target, alpha, beta, ssim_data_range):
 
@@ -209,15 +193,12 @@ class GradientOptimization:
 
         return 1 - ssim_score
 
-
-
     def create_optimizer(self, model_parameters, lr):
 
         if self.optimizer == "GSD":
             optimizer = torch.optim.SGD(params=model_parameters, lr=lr)
         else:
             optimizer = torch.optim.Adam(params=model_parameters, lr=lr)
-
 
         lr_scheduler = None
         if self.lr_decay:
@@ -228,12 +209,12 @@ class GradientOptimization:
 
         return optimizer, lr_scheduler
 
-
-
     def fit(self, agent):
 
         costs = []
         time_ = []
+
+        range_map = self.range_map
 
         self.save_to_h5py(
             dataset_name="target",
@@ -249,11 +230,11 @@ class GradientOptimization:
         )
 
         simulation_results = np.zeros(
-            shape=(int(self.epochs/self.interval_save), self.target.shape[0], self.target.shape[1]),
+            shape=(int(self.epochs / self.interval_save), self.target.shape[0], self.target.shape[1]),
             dtype=np.float32
         )
         init_conditions = np.zeros(
-            shape=(num_species, int(self.epochs/self.interval_save), self.target.shape[0], self.target.shape[1]),
+            shape=(num_species, int(self.epochs / self.interval_save), self.target.shape[0], self.target.shape[1]),
             dtype=np.float32
         )
 
@@ -264,7 +245,7 @@ class GradientOptimization:
 
         tic_ = time.time()
         tic = time.time()
-        
+
         inx = 0
         for i in range(1, self.epochs + 1):
 
@@ -286,11 +267,24 @@ class GradientOptimization:
                 ssim_data_range=self.ssim_data_range
             )
             cost.backward()
+            
+            for param_name, param_tensor in parameters.items():
+                if param_tensor.requires_grad and param_tensor.grad is not None:
+                    nan_mask = torch.isnan(param_tensor.grad)
+                    param_tensor.grad[nan_mask] = 0.0
+                    
+            #torch.nn.utils.clip_grad_norm_(parameters.values(), max_norm=1.0)
+            
             optimizer.step()
 
             with torch.no_grad():
-                for param, val in parameters.items():
-                    val.clamp_(min=0.010, max=0.999)
+                for param_name, param_tensor in parameters.items():
+                    if param_name.startswith("species_"):
+                        param_tensor[:3].clamp_(*range_map["species_"]["first"])
+                        param_tensor[3:].clamp_(*range_map["species_"]["rest"])
+                    else:
+                        param_tensor.clamp_(*range_map["default"])
+
             costs.append(cost.item())
 
             if lr_scheduler is not None:
@@ -299,7 +293,7 @@ class GradientOptimization:
             if i % self.interval_save == 0:
                 simulation_results[inx, :, :] = prediction[0, :, :].detach()
                 for j in range(num_species):
-                    init_conditions[j, inx, :, :] = parameters[f"initial_conditions_{j+1}"].detach().numpy()
+                    init_conditions[j, inx, :, :] = parameters[f"initial_conditions_{j + 1}"].detach().numpy()
                 inx += 1
 
             print(f"Iteration {i}/{self.epochs}, Cost: {cost.item()}")

@@ -16,7 +16,6 @@ def agent_simulation(agent, parameters, num_species, stop, time_step, max_epoch,
         for i in range(num_iters):
             updated_agent = agent.clone()
 
-            # Update species production
             for j in range(0, num_species * 2, 2):
                 h = int(j / 2) + 1
                 updated_agent[j, :, i] = apply_component_production(
@@ -32,7 +31,7 @@ def agent_simulation(agent, parameters, num_species, stop, time_step, max_epoch,
             updated_agent = agent.clone()
             for j in range(0, num_species * 2, 2):
                 num_effects = int(agent[-1, j, -1])
-
+                inx = 3
                 for k in range(num_effects):
                     effect_type = agent[-1, j + 1, -int(k + 1)]
                     effect_index = int(agent[-1, j + 1, k])
@@ -42,7 +41,9 @@ def agent_simulation(agent, parameters, num_species, stop, time_step, max_epoch,
                         updated_agent[effect_index, :, i] = apply_component_inhibition(
                             species_1=agent[effect_index, :, i],
                             species_2=agent[j, :, i],
-                            inhibition_rate=parameters[f"species_{int(j / 2) + 1}"][k + 3],
+                            inhibition_rate=parameters[f"species_{int(j / 2) + 1}"][inx],
+                            hill_coefficient=parameters[f"species_{int(j / 2) + 1}"][inx+1],
+                            dissociation_constant=parameters[f"species_{int(j / 2) + 1}"][inx+2],
                             time_step=time_step
                         )
                     elif effect_type == 1:
@@ -50,10 +51,12 @@ def agent_simulation(agent, parameters, num_species, stop, time_step, max_epoch,
                             species_1=agent[effect_index, :, i],
                             species_2=agent[j, :, i],
                             production_pattern=parameters[f"initial_conditions_{species_num_}"][:, i],
-                            production_rate=parameters[f"species_{species_num_}"][0],
-                            activation_rate=parameters[f"species_{int(j / 2) + 1}"][k + 3],
+                            activation_rate=parameters[f"species_{int(j / 2) + 1}"][inx],
+                            hill_coefficient=parameters[f"species_{int(j / 2) + 1}"][inx+1],
+                            dissociation_constant=parameters[f"species_{int(j / 2) + 1}"][inx+2],
                             time_step=time_step
                         )
+                    inx += 3
 
             agent = updated_agent.clone()
             del updated_agent

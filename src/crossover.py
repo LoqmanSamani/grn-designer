@@ -59,7 +59,7 @@ def apply_parameter_crossover(elite_agent, agent, beta):
     num_species = int(agent[-1, -1, 0])
 
     for i in range(0, num_species * 2, 2):
-        num_params = int(agent[-1, i, -1] + 3)
+        num_params = int((agent[-1, i, -1]*3) + 3)
 
         new_params = (beta * agent[-1, i, :num_params]) + ((1 - beta) * elite_agent[-1, i, :num_params])
 
@@ -67,7 +67,8 @@ def apply_parameter_crossover(elite_agent, agent, beta):
             if new_params[j] <= 0:
                 new_params[j] = np.random.rand()
 
-        new_params = np.clip(a=new_params, a_min=0.010, a_max=0.999)
+        new_params[:3] = np.clip(a=new_params[:3], a_min=0.010, a_max=0.999)
+        new_params[3:] = np.clip(a=new_params[3:], a_min=0.010, a_max=2)
 
         agent[-1, i, :num_params] = new_params
 

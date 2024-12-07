@@ -10,7 +10,6 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
 
     if column_position == 0:
 
-        # Update concentration for the upper-left corner cell
         temporary_concentration[0] = update_upper_left_corner_concentration(
             cell_concentration=current_concentration[0],
             lower_cell_concentration=compartment[1, 0],
@@ -19,7 +18,6 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
             time_step=time_step
         )
 
-        # Update concentration for the lower-left corner cell
         temporary_concentration[-1] = update_lower_left_corner_concentration(
             cell_concentration=current_concentration[-1],
             upper_cell_concentration=compartment[-2, 0],
@@ -28,7 +26,6 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
             time_step=time_step
         )
 
-        # Update concentrations for the left-side cells (excluding corners)
         temporary_concentration[1:-1] = update_left_side_concentration(
             cell_concentration=current_concentration[1:-1],
             upper_cell_concentration=compartment[:-2, 0],
@@ -40,7 +37,6 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
 
     elif column_position == compartment_size - 1:
 
-        # Update concentration for the upper-right corner cell
         temporary_concentration[0] = update_upper_right_corner_concentration(
             cell_concentration=current_concentration[0],
             lower_cell_concentration=compartment[1, -1],
@@ -49,7 +45,6 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
             time_step=time_step
         )
 
-        # Update concentration for the lower-right corner cell
         temporary_concentration[-1] = update_lower_right_corner_concentration(
             cell_concentration=current_concentration[-1],
             upper_cell_concentration=compartment[-2, -1],
@@ -58,7 +53,6 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
             time_step=time_step
         )
 
-        # Update concentrations for the left-side cells (excluding corners)
         temporary_concentration[1:-1] = update_right_side_concentration(
             cell_concentration=current_concentration[1:-1],
             upper_cell_concentration=compartment[0:-2, -1],

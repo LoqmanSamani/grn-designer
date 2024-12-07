@@ -28,7 +28,7 @@ class GRNDesigner:
                  cost_alpha=None, cost_beta=None, cost_constant=None, evolution_two_ratio=None, zoom_=False, zoom_in_factor=None,
                  zoom_out_factor=None, num_elite_agents=None, simulation_min=None, simulation_max=None,
                  initial_condition_min=None, initial_condition_max=None, parameter_min=None, parameter_max=None, device=None,
-                 interval_save=None, gradient_optimizer=None, loss_threshold=None
+                 interval_save=None, gradient_optimizer=None, loss_threshold=None, range_map=None
                  ):
 
 
@@ -103,10 +103,11 @@ class GRNDesigner:
         self.simulation_max = simulation_max or (40, 0.3)
         self.initial_condition_min = initial_condition_min or 0.0
         self.initial_condition_max = initial_condition_max or 2.0
-        self.parameter_min = parameter_min or 0.010
-        self.parameter_max = parameter_max or 0.999
+        self.parameter_min = parameter_min or (0.010, 0.010)
+        self.parameter_max = parameter_max or (0.999, 2)
         self.interval_save = interval_save or 5
         self.gradient_optimizer = gradient_optimizer or "Adam"
+        self.range_map = range_map or {"species_": {"first": (0.010, 0.999), "rest": (0.010, 5.0)}, "default": (0.010, 5.0)}
         self.reshape_ = Resize(
             order=3,
             mode="constant",
@@ -277,7 +278,7 @@ class GRNDesigner:
                 predicted = agent_simulation(
                     agent=population[min_cost_index]
                 )
-                #print(predicted.shape)
+        
                 population[min_cost_index] = reset_agent(agent=population[min_cost_index])
 
                 if self.zoom_:
@@ -462,6 +463,7 @@ class GRNDesigner:
                 checkpoint_interval=self.checkpoint_interval,
                 interval_save=self.interval_save,
                 pattern_proportion=self.cost_pattern_proportion,
+                range_map=self.range_map,
                 lr_decay=self.lr_decay,
                 decay_steps=self.decay_steps,
                 decay_rate=self.decay_rate,

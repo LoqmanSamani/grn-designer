@@ -150,13 +150,15 @@ def apply_parameters_mutation(
         num_species = int(agent[-1, -1, 0])
 
         for i in range(0, num_species * 2, 2):
-            constant_value = np.random.rand() * .2
-            num_param = int(agent[-1, i, -1] + 3)
+            #constant_value = np.random.rand()
+            num_param = int(int(agent[-1, i, -1]*3) + 3)
             mutation_mask = np.random.rand(num_param) < mutation_rate
             mutated_values = agent1[-1, i, :num_param] + F * (agent2[-1, i, :num_param] - agent3[-1, i, :num_param])
-            mutated_values = np.where(mutated_values < .03, constant_value, mutated_values)
-            agent[-1, i, :num_param] = np.where(mutation_mask, mutated_values, agent[-1, i, :num_param])
-            agent[-1, i, :num_param] = np.clip(agent[-1, i, :num_param], min_val, max_val)
+            #mutated_values = np.where(mutated_values < 0.010, constant_value, mutated_values)
+            agent[-1, i, :3] = np.where(mutation_mask[:3], mutated_values[:3], agent[-1, i, :3])
+            agent[-1, i, :3] = np.clip(agent[-1, i, :3], min_val[0], max_val[0])
+            agent[-1, i, 3:num_param] = np.where(mutation_mask[3:], mutated_values[3:], agent[-1, i, 3:num_param])
+            agent[-1, i, 3:num_param] = np.clip(agent[-1, i, 3:num_param], min_val[-1], max_val[-1])
 
     return agent
 
@@ -169,20 +171,19 @@ def apply_species_insertion_mutation(agent, mutation_rate):
 
     if np.random.rand() < mutation_rate:
 
-        new_agent = np.zeros((z+2, y, x), dtype=np.float32)
-        new_species = np.zeros((2, y, x), dtype=np.float32)
+        new_agent = np.zeros(shape=(z+2, y, x), dtype=np.float32)
+        new_species = np.zeros(shape=(2, y, x), dtype=np.float32)
         new_species[1, :, :] = np.random.rand(y, x)
 
         affected = int(np.random.choice(sps_))
         rel_type = int(np.random.choice(con_type))
 
-        nn = np.zeros((y, x), dtype=np.float32)
+        nn = np.zeros(shape=(y, x), dtype=np.float32)
         for i in range(y):
             for j in range(x):
                 nn[i, j] = agent[-1, i, j]
 
-
-        nn[int(num_species * 2), :4] = np.random.rand(4)
+        nn[int(num_species * 2), :6] = np.random.rand(6)
         nn[int(num_species * 2), -1] = 1
         nn[int((num_species * 2) + 1), 0] = int(affected)
         nn[int((num_species * 2) + 1), -1] = int(rel_type)
@@ -220,8 +221,9 @@ def apply_connection_insertion_mutation(agent, mutation_rate):
             k = int(agent[-1, random_sp, -1])
             connections = list(agent[-1, random_sp+1, :k])
             if affected not in connections:
+                hh = int(3 + (agent[-1, random_sp, -1]*3))
                 agent[-1, random_sp, -1] = int(agent[-1, random_sp, -1]+1)
-                agent[-1, random_sp, int(agent[-1, random_sp, -1]+2)] = np.random.rand()
+                agent[-1, random_sp, hh:hh+3] = np.random.rand(3)
                 agent[-1, random_sp+1, int(agent[-1, random_sp, -1]-1)] = affected
                 agent[-1, random_sp+1, -int(agent[-1, random_sp, -1])] = rel_type
 
@@ -241,16 +243,17 @@ def apply_connection_deletion_mutation(agent, mutation_rate):
             species = int(np.random.choice(sps_))
             if agent[-1, species, -1] > 1:
                 agent[-1, species, -1] = int(agent[-1, species, -1] - 1)
-                rates = list(agent[-1, species, 3:3 + int(agent[-1, species, -1] + 1)])
+                rates = list(agent[-1, species, 3:3 + int((agent[-1, species, -1]*3) + 3)])
                 con_ind = list(agent[-1, species + 1, :int(agent[-1, species, -1] + 1)])
                 con_ = list(agent[-1, species + 1, -int(agent[-1, species, -1] + 1):])
                 inx, d = random.choice(list(enumerate(con_ind)))
 
                 del con_[-(inx + 1)]
                 con_.insert(0, 0)
-                del rates[inx]
+                hhh = inx*3
+                del rates[hhh: hhh+3]
 
-                rates.append(0)
+                rates.extend([0.0, 0.0, 0.0])
                 con_ind.remove(d)
                 con_ind.append(0)
                 agent[-1, species + 1, :int(agent[-1, species, -1] + 1)] = con_ind

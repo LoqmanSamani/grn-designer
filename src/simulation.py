@@ -32,26 +32,32 @@ def agent_simulation(agent):
             # update species activation & inhibition
             for j in range(0, num_species*2, 2):
                 num_effects = int(agent[-1, j, -1])
+                inx = 3
                 for k in range(num_effects):
                     effect_type = agent[-1, j+1, -int(k+1)]
                     effect_index = int(agent[-1, j+1, k])
+                    params = agent[-1, j, inx: inx+3]
+
                     if effect_type == 0:
                         agent[effect_index, :, i] = apply_component_inhibition(
                             species_1=agent[effect_index, :, i],
                             species_2=agent[j, :, i],
-                            inhibition_rate=agent[-1, j, k+3],
+                            inhibition_rate=params[0],
+                            hill_coefficient=params[1],
+                            dissociation_constant=params[2],
                             time_step=time_step
                         )
                     elif effect_type == 1:
-                        production_rate = agent[-1, effect_index, 0]
                         agent[effect_index, :, i] = apply_component_activation(
                             species_1=agent[effect_index, :, i],
                             species_2=agent[j, :, i],
                             production_pattern=agent[effect_index+1, :, i],
-                            production_rate=production_rate,
-                            activation_rate=agent[-1, j, k + 3],
+                            activation_rate=params[0],
+                            hill_coefficient=params[1],
+                            dissociation_constant=params[2],
                             time_step=time_step
                         )
+                    inx += 3
 
 
             # Update species degradation
@@ -74,6 +80,7 @@ def agent_simulation(agent):
                 )
 
         epoch += 1
+        
     sp = 0
     for i in range(num_species):
         sim_results[i, :, :] = agent[sp, :, :]
