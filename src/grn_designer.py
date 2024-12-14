@@ -28,7 +28,7 @@ class GRNDesigner:
                  cost_alpha=None, cost_beta=None, cost_constant=None, evolution_two_ratio=None, zoom_=False, zoom_in_factor=None,
                  zoom_out_factor=None, num_elite_agents=None, simulation_min=None, simulation_max=None,
                  initial_condition_min=None, initial_condition_max=None, parameter_min=None, parameter_max=None, device=None,
-                 interval_save=None, gradient_optimizer=None, loss_threshold=None, range_map=None
+                 interval_save=None, gradient_optimizer=None, loss_threshold=None, range_map=None, num_init_genes=None
                  ):
 
 
@@ -108,6 +108,7 @@ class GRNDesigner:
         self.interval_save = interval_save or 5
         self.gradient_optimizer = gradient_optimizer or "Adam"
         self.range_map = range_map or {"species_": {"first": (0.010, 0.999), "rest": (0.010, 5.0)}, "default": (0.010, 5.0)}
+        self.num_init_genes = num_init_genes or 1
         self.reshape_ = Resize(
             order=3,
             mode="constant",
@@ -237,9 +238,14 @@ class GRNDesigner:
                 sim_stop_time=self.simulation_parameters["simulation_stop_time"],
                 time_step=self.simulation_parameters["time_step"],
                 fixed_shape=self.fixed_agent_shape,
-                low_costs=agent_
+                low_costs=agent_,
+                sim_opt=self.sim_mutation,
+                param_opt=self.parameter_mutation,
+                init_opt=self.initial_condition_mutation,
+                num_genes=self.num_init_genes,
+                sim_min=self.simulation_min,
+                sim_max=self.simulation_max
             )
-           
 
         print("___________________________________________________________________________")
         print("                           GRN Designer Algorithm                          ")
@@ -262,7 +268,8 @@ class GRNDesigner:
                 num_elite_agents=self.num_elite_agents,
                 parameters=parameters,
                 cost_constant=self.cost_constant,
-                fixed_agent_shape=self.fixed_agent_shape
+                fixed_agent_shape=self.fixed_agent_shape,
+                num_init_genes=self.num_init_genes
             )
 
             self.cost_constant = mean_cost
@@ -368,7 +375,8 @@ class GRNDesigner:
                 num_elite_agents=self.num_elite_agents,
                 fixed_agent_shape=self.fixed_agent_shape,
                 parameters=parameters,
-                cost_constant=self.cost_constant
+                cost_constant=self.cost_constant,
+                num_init_genes=self.num_init_genes
             )
 
             self.cost_constant = mean_cost

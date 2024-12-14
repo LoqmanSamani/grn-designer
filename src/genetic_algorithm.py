@@ -19,7 +19,8 @@ def evolutionary_optimization(
         num_elite_agents,
         parameters,
         cost_constant,
-        fixed_agent_shape
+        fixed_agent_shape,
+        num_init_genes
 ):
     z, y, x = population[0].shape
     m = len(population)
@@ -238,7 +239,13 @@ def evolutionary_optimization(
             sim_stop_time=simulation_parameters["simulation_stop_time"],
             time_step=simulation_parameters["time_step"],
             fixed_shape=fixed_agent_shape,
-            low_costs=low_cost_agents
+            low_costs=low_cost_agents,
+            sim_opt=sim_mutation,
+            param_opt=parameter_mutation,
+            init_opt=initial_condition_mutation,
+            num_genes=num_init_genes,
+            sim_min=simulation_min,
+            sim_max=simulation_max
         )
 
 
