@@ -31,6 +31,105 @@ class GRNDesigner:
                  interval_save=None, gradient_optimizer=None, loss_threshold=None, range_map=None, num_init_genes=None,
                  shape_init_condition=None, radius_range=(3, 10), conc_range=(1, 2)
                  ):
+        """
+        Executes the GRN-Designer algorithm to optimize Gene Regulatory Networks (GRNs)
+        for replicating predefined spatial patterns using hybrid evolutionary and
+        gradient-based methods.
+
+        The method iteratively applies evolutionary optimization and gradient-based optimization
+        (if enabled) to a population of agents, simulating their behavior and adapting them to
+        minimize the cost associated with deviations from a target spatial pattern.
+
+        Returns:
+            tuple: The final population of agents and the best agent found during optimization.
+
+        Workflow:
+            1. Evolutionary Optimization (Phase 1):
+               - Mutates and evolves agents to optimize performance using defined mutation and
+                 crossover strategies.
+               - Periodically saves the best-performing agents and their simulation results.
+
+            2. Evolutionary Optimization (Phase 2) [optional]:
+               - Continues optimization with a reduced population size, focusing on top-performing agents.
+
+            3. Gradient-Based Optimization [optional]:
+               - Refines the best agent using gradient descent (Adam or SGD), leveraging PyTorch's
+                 computational graph capabilities.
+
+        Key Features:
+            - Supports zoom-in and zoom-out transformations to adapt agent shapes to target patterns.
+            - Enables multiple types of mutations (e.g., gene insertion, interaction modifications).
+            - Periodically saves intermediate results, including simulation outcomes and agent states.
+            - Optionally stops early when a predefined loss threshold is met.
+
+        Raises:
+            RuntimeError: If invalid parameters are provided for optimization or simulation.
+
+        Args:
+            - target (np.ndarray): 2D array representing the target diffusion pattern of a gene product.
+            - agent (np.ndarray): 3D array representing the initial agent configuration used to initialize the population.
+            - population (list): Optional list of agents for starting evolutionary optimization from a checkpoint.
+            - population_size (int): Number of agents in the population pool.
+            - evolution_one_epochs (int): Number of epochs for the first phase of evolutionary optimization.
+            - evolution_two_epochs (int): Number of epochs for the second phase of evolutionary optimization.
+            - optimization_epochs (int): Number of iterations for gradient-based optimization (Adam or SGD).
+            - agent_shape (tuple): Shape of agents used to initialize the population (channels, height, width).
+            - agent_parameters (list): List of tuples defining parameters for initializing the agents.
+            - simulation_parameters (dict): Simulation settings such as `max_simulation_epoch`, `simulation_stop_time`, and `time_step`.
+            - store_path (str): Path for storing outputs like simulation results and best agents.
+            - learning_rate (float): Initial learning rate for the gradient-based optimizer.
+            - sim_mutation_rate (float): Mutation rate for simulation parameters during evolutionary optimization.
+            - initial_condition_mutation_rate (float): Mutation rate for initial conditions during evolutionary optimization.
+            - parameter_mutation_rate (float): Mutation rate for gene and interaction parameters during evolutionary optimization.
+            - species_insertion_mutation_rate (float): Rate of inserting new genes into the GRN during evolutionary optimization.
+            - connection_insertion_mutation_rate (float): Rate of adding new interactions among genes during evolutionary optimization.
+            - connection_deletion_mutation_rate (float): Rate of deleting interactions among genes during evolutionary optimization.
+            - cost_pattern_proportion (float): Proportion factor for connecting GRN branches to construct the computational graph in gradient-based optimization.
+            - crossover_alpha (float): Range factor for crossover (β ∼ U(−α, 1 + α)) during evolutionary optimization.
+            - checkpoint_interval (int): Frequency (in epochs) for saving intermediate results during gradient-based optimization.
+            - lr_decay (bool): Enables learning rate decay for gradient-based optimization.
+            - decay_steps (int): Number of steps before applying learning rate decay.
+            - decay_rate (float): Factor for learning rate decay.
+            - gradient_optimization (bool): Enables gradient-based optimization, making the system fully end-to-end.
+            - parameter_optimization (bool): Enables optimization of rate constants for genes and interactions.
+            - condition_optimization (bool): Enables optimization of initial conditions for agents.
+            - sim_mutation (bool): Enables mutation of simulation parameters during evolutionary optimization.
+            - initial_condition_mutation (bool): Enables mutation of initial conditions during evolutionary optimization.
+            - parameter_mutation (bool): Enables mutation of gene and interaction parameters during evolutionary optimization.
+            - species_insertion_mutation_one (bool): Enables gene insertion mutation during Phase 1 of evolutionary optimization.
+            - connection_insertion_mutation_one (bool): Enables connection addition mutation during Phase 1 of evolutionary optimization.
+            - connection_deletion_mutation_one (bool): Enables connection deletion mutation during Phase 1 of evolutionary optimization.
+            - species_insertion_mutation_two (bool): Enables gene insertion mutation during Phase 2 of evolutionary optimization.
+            - connection_insertion_mutation_two (bool): Enables connection addition mutation during Phase 2 of evolutionary optimization.
+            - connection_deletion_mutation_two (bool): Enables connection deletion mutation during Phase 2 of evolutionary optimization.
+            - initial_condition_crossover (bool): Enables crossover for initial conditions during evolutionary optimization.
+            - parameter_crossover (bool): Enables crossover for gene and interaction parameters during evolutionary optimization.
+            - simulation_crossover (bool): Enables crossover for simulation parameters during evolutionary optimization.
+            - fixed_agent_shape (bool): Fixes the agent shape, preventing changes in gene count during evolutionary optimization.
+            - cost_alpha (float): Weight for the contribution of Mean Squared Error (MSE) loss in total loss calculation.
+            - cost_beta (float): Weight for the contribution of Structural Similarity Index Measure (SSIM) loss in total loss calculation.
+            - cost_constant (float): Value to replace NaN or Inf losses in the initial epoch of evolutionary optimization.
+            - evolution_two_ratio (float): Ratio for reducing the population size in Phase 2 of evolutionary optimization.
+            - zoom_ (bool): Enables zoom transformations for adapting agent and target shapes.
+            - zoom_in_factor (float): Factor for downscaling (zooming in). See: scipy.ndimage.zoom.
+            - zoom_out_factor (float): Factor for upscaling (zooming out). See: scipy.ndimage.zoom.
+            - num_elite_agents (int): Number of elite agents retained for crossover during evolutionary optimization.
+            - simulation_min (tuple): Lower boundary for simulation parameters.
+            - simulation_max (tuple): Upper boundary for simulation parameters.
+            - initial_condition_min (float): Lower boundary for initial condition values.
+            - initial_condition_max (float): Upper boundary for initial condition values.
+            - parameter_min (tuple): Lower boundaries for rate constants of genes and interactions.
+            - parameter_max (tuple): Upper boundaries for rate constants of genes and interactions.
+            - device (str): Device for computation (e.g., "cpu" or "cuda").
+            - interval_save (int): Frequency (in epochs) for saving intermediate results during gradient-based optimization.
+            - gradient_optimizer (str): Type of gradient-based optimizer ("adam" or "sgd").
+            - loss_threshold (float): Threshold for early stopping based on the optimization loss.
+            - range_map (dict): Bounds for initializing parameters and conditions. E.g., {"default": (0.01, 5.0)}.
+            - num_init_genes (int): Number of genes for initializing agents in the population.
+            - shape_init_condition (bool): Enables initialization of initial conditions with a specific shape (e.g., a circle).
+            - radius_range (tuple): Boundaries for the radius of the initial circle used in shape-based initialization.
+            - conc_range (tuple): Boundaries for the concentration range of the initialized circle.
+        """
 
 
         if target.dtype != np.float32:
