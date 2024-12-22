@@ -9,6 +9,7 @@ import gc
 
 def evolutionary_optimization(
         population,
+        agent_,
         target,
         population_size,
         cost,
@@ -20,7 +21,10 @@ def evolutionary_optimization(
         parameters,
         cost_constant,
         fixed_agent_shape,
-        num_init_genes
+        num_init_genes,
+        shape_init_condition,
+        radius_range,
+        conc_range
 ):
     z, y, x = population[0].shape
     m = len(population)
@@ -117,7 +121,10 @@ def evolutionary_optimization(
             parameter_mutation=parameter_mutation,
             species_insertion_mutation=species_insertion_mutation,
             connection_insertion_mutation=connection_insertion_mutation,
-            connection_deletion_mutation=connection_deletion_mutation
+            connection_deletion_mutation=connection_deletion_mutation,
+            shape_init_condition=shape_init_condition,
+            radius_range=radius_range,
+            conc_range=conc_range
         )
 
     for i in range(len(high_cost_agents)):
@@ -191,7 +198,10 @@ def evolutionary_optimization(
                 parameter_mutation=parameter_mutation,
                 species_insertion_mutation=species_insertion_mutation,
                 connection_insertion_mutation=connection_insertion_mutation,
-                connection_deletion_mutation=connection_deletion_mutation
+                connection_deletion_mutation=connection_deletion_mutation,
+                shape_init_condition=shape_init_condition,
+                radius_range=radius_range,
+                conc_range=conc_range
             )
 
     predictions2 = []
@@ -239,13 +249,20 @@ def evolutionary_optimization(
             sim_stop_time=simulation_parameters["simulation_stop_time"],
             time_step=simulation_parameters["time_step"],
             fixed_shape=fixed_agent_shape,
-            low_costs=low_cost_agents,
+            low_costs=agent_,
             sim_opt=sim_mutation,
             param_opt=parameter_mutation,
             init_opt=initial_condition_mutation,
             num_genes=num_init_genes,
             sim_min=simulation_min,
-            sim_max=simulation_max
+            sim_max=simulation_max,
+            param_min=parameter_min,
+            param_max=parameter_max,
+            init_min=initial_condition_min,
+            init_max=initial_condition_max,
+            shape_init_condition=shape_init_condition,
+            radius_range=radius_range,
+            conc_range=conc_range
         )
 
 

@@ -28,7 +28,8 @@ class GRNDesigner:
                  cost_alpha=None, cost_beta=None, cost_constant=None, evolution_two_ratio=None, zoom_=False, zoom_in_factor=None,
                  zoom_out_factor=None, num_elite_agents=None, simulation_min=None, simulation_max=None,
                  initial_condition_min=None, initial_condition_max=None, parameter_min=None, parameter_max=None, device=None,
-                 interval_save=None, gradient_optimizer=None, loss_threshold=None, range_map=None, num_init_genes=None
+                 interval_save=None, gradient_optimizer=None, loss_threshold=None, range_map=None, num_init_genes=None,
+                 shape_init_condition=None, radius_range=(3, 10), conc_range=(1, 2)
                  ):
 
 
@@ -109,6 +110,9 @@ class GRNDesigner:
         self.gradient_optimizer = gradient_optimizer or "Adam"
         self.range_map = range_map or {"species_": {"first": (0.010, 0.999), "rest": (0.010, 5.0)}, "default": (0.010, 5.0)}
         self.num_init_genes = num_init_genes or 1
+        self.shape_init_condition = shape_init_condition
+        self.radius_range = radius_range
+        self.conc_range = conc_range
         self.reshape_ = Resize(
             order=3,
             mode="constant",
@@ -207,10 +211,16 @@ class GRNDesigner:
                 x_=target_.shape[0],
                 y_=target_.shape[1]
             )
+            
+            radius_range_ = [r * self.zoom_in_factor for r in self.radius_range]
+            conc_range_ = [c * self.zoom_in_factor for c in self.conc_range]
 
         else:
             target_ = self.target
             agent_ = [self.agent]
+            
+            radius_range_ = self.radius_range 
+            conc_range_ = self.conc_range
             
 
         if self.zoom_:
@@ -218,6 +228,8 @@ class GRNDesigner:
                 dataset_name="zoomed_in_target",
                 data_array=target_
             )
+            
+            
             
         length = max(2, (self.evolution_one_epochs + self.evolution_two_epochs) // self.interval_save)
 
@@ -244,11 +256,19 @@ class GRNDesigner:
                 init_opt=self.initial_condition_mutation,
                 num_genes=self.num_init_genes,
                 sim_min=self.simulation_min,
-                sim_max=self.simulation_max
+                sim_max=self.simulation_max,
+                param_min=self.parameter_min,
+                param_max=self.parameter_max,
+                init_min=self.initial_condition_min,
+                init_max=self.initial_condition_max,
+                shape_init_condition=self.shape_init_condition,
+                radius_range=radius_range_,
+                conc_range=conc_range_
             )
+            
 
         print("___________________________________________________________________________")
-        print("                           GRN Designer Algorithm                          ")
+        print("                           GRN-Designer Algorithm                          ")
         print("___________________________________________________________________________")
         print()
 
@@ -258,6 +278,7 @@ class GRNDesigner:
 
             population, costs, mean_cost = evolutionary_optimization(
                 population=population,
+                agent_=agent_,
                 target=target_,
                 population_size=self.population_size,
                 cost=cost,
@@ -269,7 +290,10 @@ class GRNDesigner:
                 parameters=parameters,
                 cost_constant=self.cost_constant,
                 fixed_agent_shape=self.fixed_agent_shape,
-                num_init_genes=self.num_init_genes
+                num_init_genes=self.num_init_genes,
+                shape_init_condition=self.shape_init_condition,
+                radius_range=radius_range_,
+                conc_range=conc_range_
             )
 
             self.cost_constant = mean_cost
@@ -354,10 +378,17 @@ class GRNDesigner:
                 x_=self.target.shape[0],
                 y_=self.target.shape[1]
             )
+            agent_ = self.reshape_.zoom_out(
+                population=agent_,
+                zoom_=self.zoom_out_factor,
+                x_=self.target.shape[0],
+                y_=self.target.shape[1]
+            )
+            
 
-        print()
-        print("___________________________________________________________________________")
-        print()
+            print()
+            print("___________________________________________________________________________")
+            print()
 
         pop_size = len(population)
         idx = self.evolution_one_epochs
@@ -365,6 +396,7 @@ class GRNDesigner:
         for j in range(self.evolution_two_epochs):
             population, costs, mean_cost = evolutionary_optimization(
                 population=population,
+                agent_=agent_,
                 target=self.target,
                 population_size=pop_size,
                 cost=cost,
@@ -376,7 +408,10 @@ class GRNDesigner:
                 fixed_agent_shape=self.fixed_agent_shape,
                 parameters=parameters,
                 cost_constant=self.cost_constant,
-                num_init_genes=self.num_init_genes
+                num_init_genes=self.num_init_genes,
+                shape_init_condition=self.shape_init_condition,
+                radius_range=self.radius_range,
+                conc_range=self.conc_range
             )
 
             self.cost_constant = mean_cost
@@ -455,6 +490,10 @@ class GRNDesigner:
 
 
         if self.gradient_optimization:
+
+            print()
+            print("___________________________________________________________________________")
+            print()
 
             model = GradientOptimization(
                 target=torch.from_numpy(self.target),

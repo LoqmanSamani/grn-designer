@@ -22,7 +22,10 @@ def apply_mutation(
         parameter_mutation,
         species_insertion_mutation,
         connection_insertion_mutation,
-        connection_deletion_mutation
+        connection_deletion_mutation,
+        shape_init_condition,
+        radius_range,
+        conc_range
 ):
 
     if simulation_mutation:
@@ -56,7 +59,10 @@ def apply_mutation(
     if species_insertion_mutation:
         agent = apply_species_insertion_mutation(
             agent=agent,
-            mutation_rate=species_insertion_mutation_rate
+            mutation_rate=species_insertion_mutation_rate,
+            shape_init_condition=shape_init_condition,
+            radius_range=radius_range,
+            conc_range=conc_range
         )
 
     if connection_insertion_mutation:
@@ -163,7 +169,8 @@ def apply_parameters_mutation(
     return agent
 
 
-def apply_species_insertion_mutation(agent, mutation_rate):
+def apply_species_insertion_mutation(agent, mutation_rate, shape_init_condition, radius_range, conc_range):
+    
     num_species = int(agent[-1, -1, 0])
     sps_ = np.array([int(i*2) for i in range(num_species)])
     con_type = np.array([0, 1])
@@ -173,7 +180,14 @@ def apply_species_insertion_mutation(agent, mutation_rate):
 
         new_agent = np.zeros(shape=(z+2, y, x), dtype=np.float32)
         new_species = np.zeros(shape=(2, y, x), dtype=np.float32)
-        new_species[1, :, :] = np.random.rand(y, x)
+        if shape_init_condition:
+            new_species[1, :, :] = create_circle(
+                matrix=new_species[1, :, :],
+                value_range=conc_range,
+                radius_range=radius_range
+            )
+        else:
+            new_species[1, :, :] = np.random.rand(y, x)
 
         affected = int(np.random.choice(sps_))
         rel_type = int(np.random.choice(con_type))
@@ -263,5 +277,16 @@ def apply_connection_deletion_mutation(agent, mutation_rate):
     return agent
 
 
+def create_circle(matrix, value_range, radius_range):
 
+    value = np.random.uniform(low=value_range[0], high=value_range[1])
+    radius = np.random.uniform(low=radius_range[0], high=radius_range[1])
+    center = np.random.choice(a=np.arange(matrix.shape[0]), size=2)
+    
+    for i in range(matrix.shape[0]):
+        for j in range(matrix.shape[1]):
+            if (i - center[0])**2 + (j - center[1])**2 <= radius**2:
+                matrix[i, j] = value
+                
+    return matrix
 

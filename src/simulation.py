@@ -30,6 +30,7 @@ def agent_simulation(agent):
                 )
 
             # update species activation & inhibition
+            
             for j in range(0, num_species*2, 2):
                 num_effects = int(agent[-1, j, -1])
                 inx = 3
@@ -58,6 +59,7 @@ def agent_simulation(agent):
                             time_step=time_step
                         )
                     inx += 3
+                
 
 
             # Update species degradation
