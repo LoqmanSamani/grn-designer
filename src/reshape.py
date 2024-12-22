@@ -6,6 +6,23 @@ from scipy.ndimage import zoom
 class Resize:
 
     def __init__(self, order, mode, cval, grid_mode):
+        """
+        A utility class for resizing spatial patterns and agents.
+
+        This class provides methods to apply zoom-in and zoom-out transformations
+        to spatial patterns or populations of agents. The transformations are
+        performed using specified interpolation and mode settings.
+
+        Args:
+            order (int): The interpolation order for resizing. Higher values result
+                         in smoother interpolations. See `scipy.ndimage.zoom` for details.
+            mode (str): The mode parameter for handling boundaries during resizing
+                        (e.g., 'constant', 'nearest'). See `scipy.ndimage.zoom` for details.
+            cval (float): Value to fill past edges when mode is 'constant'.
+            grid_mode (bool): If True, the transformation uses grid mode for resizing.
+                              See `scipy.ndimage.zoom` for details.
+        """
+
         self.order = order
         self.mode = mode
         self.cval = cval
@@ -13,6 +30,19 @@ class Resize:
 
 
     def zoom_in(self, target, zoom_):
+        """
+        Applies a zoom-in transformation to a target spatial pattern.
+
+        This method increases the resolution of the input target pattern by applying
+        a specified zoom factor.
+
+        Args:
+            target (np.ndarray): The 2D array representing the target spatial pattern.
+            zoom_ (float): The zoom factor for increasing resolution. Values >1 zoom in.
+
+        Returns:
+            np.ndarray: The zoomed-in target pattern.
+        """
 
         zoomed = zoom(
             input=target,
@@ -26,6 +56,21 @@ class Resize:
         return zoomed
 
     def zoom_out(self, population, zoom_, x_, y_):
+        """
+        Applies a zoom-out transformation to a population of agents.
+
+        This method reduces the resolution of the agents' spatial components while
+        preserving other properties, such as parameters and metadata.
+
+        Args:
+            population (list): A list of agents, where each agent is a 3D array.
+            zoom_ (float): The zoom factor for reducing resolution. Values <1 zoom out.
+            x_ (int): The target width for the resized agents.
+            y_ (int): The target height for the resized agents.
+
+        Returns:
+            list: A list of agents with spatial components resized to the target resolution.
+        """
 
         up_population = []
 

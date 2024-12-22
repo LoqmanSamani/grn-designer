@@ -3,6 +3,30 @@ import numpy as np
 
 
 def apply_crossover(elite_agents, agent, crossover_alpha, simulation_crossover, initial_condition_crossover, parameter_crossover):
+    """
+    Applies crossover operations to an agent using a randomly chosen elite agent.
+
+    This function performs crossover on various components of the agent, including
+    simulation parameters, initial conditions, and gene interaction parameters.
+    The crossover operation combines values from the input agent and a selected elite agent
+    based on a weighted factor `beta`.
+
+    Args:
+        elite_agents (list): List of elite agents available for crossover.
+        agent (np.ndarray): The agent to which crossover is applied.
+        crossover_alpha (float): Factor controlling the range of the crossover weight `beta`.
+                                 The value of `beta` is drawn from `[-crossover_alpha, 1 + crossover_alpha]`.
+        simulation_crossover (bool): If True, applies crossover to simulation parameters.
+        initial_condition_crossover (bool): If True, applies crossover to initial conditions.
+        parameter_crossover (bool): If True, applies crossover to gene interaction parameters.
+
+    Returns:
+        np.ndarray: The agent after crossover operations.
+
+    Notes:
+        - Ensures simulation duration to time-step ratio remains within a valid range.
+        - Defaults simulation parameters to predefined values if the ratio is out of bounds.
+    """
 
     crossover_beta = np.random.uniform(low=-crossover_alpha, high=1.0+crossover_alpha)
 
@@ -38,6 +62,20 @@ def apply_crossover(elite_agents, agent, crossover_alpha, simulation_crossover, 
 
 
 def apply_simulation_variable_crossover(elite_agent, agent, beta):
+    """
+    Applies crossover to simulation parameters of an agent.
+
+    This function blends the simulation duration and time-step parameters of the input
+    agent with those of an elite agent using a weighted factor `beta`.
+
+    Args:
+        elite_agent (np.ndarray): The elite agent used for crossover.
+        agent (np.ndarray): The agent to which crossover is applied.
+        beta (float): Weight factor for blending parameters.
+
+    Returns:
+        np.ndarray: The agent with updated simulation parameters.
+    """
 
     agent[-1, -1, 2:4] = (beta * agent[-1, -1, 2:4]) + ((1 - beta) * elite_agent[-1, -1, 2:4])
 
@@ -45,6 +83,20 @@ def apply_simulation_variable_crossover(elite_agent, agent, beta):
 
 
 def apply_compartment_crossover(elite_agent, agent, bata):
+    """
+    Applies crossover to the initial conditions of an agent's compartments.
+
+    This function combines the compartment values of the input agent with those of
+    an elite agent using a weighted factor `bata`.
+
+    Args:
+        elite_agent (np.ndarray): The elite agent used for crossover.
+        agent (np.ndarray): The agent to which crossover is applied.
+        bata (float): Weight factor for blending compartment values.
+
+    Returns:
+        np.ndarray: The agent with updated compartment initial conditions.
+    """
 
     num_species = int(agent[-1, -1, 0])
 
@@ -55,6 +107,25 @@ def apply_compartment_crossover(elite_agent, agent, bata):
 
 
 def apply_parameter_crossover(elite_agent, agent, beta):
+    """
+    Applies crossover to the gene and interaction parameters of an agent.
+
+    This function combines the parameter values of the input agent with those of an elite
+    agent using a weighted factor `beta`. It ensures parameter values are within valid
+    bounds and replaces invalid values with random values.
+
+    Args:
+        elite_agent (np.ndarray): The elite agent used for crossover.
+        agent (np.ndarray): The agent to which crossover is applied.
+        beta (float): Weight factor for blending parameter values.
+
+    Returns:
+        np.ndarray: The agent with updated gene and interaction parameters.
+
+    Notes:
+        - Ensures the resulting parameter values are clipped to valid ranges.
+        - Replaces negative or invalid parameter values with randomly generated values.
+    """
 
     num_species = int(agent[-1, -1, 0])
 
@@ -76,6 +147,21 @@ def apply_parameter_crossover(elite_agent, agent, beta):
 
 
 def filter_elite_agents(low_cost_agents, elite_agents, high_cost_agent):
+    """
+    Filters elite agents based on compatibility with a high-cost agent.
+
+    This function identifies elite agents whose structures match the high-cost agent.
+    If no compatible elite agents are found, low-cost agents are used as substitutes,
+    limited to the number of elite agents.
+
+    Args:
+        low_cost_agents (list): List of low-cost agents available as substitutes.
+        elite_agents (list): List of elite agents to filter.
+        high_cost_agent (np.ndarray): The high-cost agent used for compatibility checks.
+
+    Returns:
+        list: A filtered list of elite agents compatible with the high-cost agent.
+    """
 
     filtered_elite_agents = [ag for ag in elite_agents if ag.shape[0] == high_cost_agent.shape[0]]
     if len(filtered_elite_agents) == 0:

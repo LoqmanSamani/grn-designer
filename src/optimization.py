@@ -14,26 +14,77 @@ import gc
 class GradientOptimization:
 
     def __init__(self,
-                 target,
-                 path,
-                 file_name,
-                 epochs,
-                 optimizer,
-                 param_opt,
-                 initial_condition_opt,
-                 learning_rate,
-                 cost_alpha,
-                 cost_beta,
-                 ssim_data_range,
-                 checkpoint_interval,
-                 interval_save,
-                 pattern_proportion,
-                 range_map,
-                 lr_decay,
-                 decay_steps,
-                 decay_rate,
-                 device
+                 target, path, file_name, epochs, optimizer, param_opt, initial_condition_opt,
+                learning_rate, cost_alpha, cost_beta, ssim_data_range, checkpoint_interval, interval_save,
+                 pattern_proportion, range_map, lr_decay, decay_steps, decay_rate, device
                  ):
+
+        """
+        Executes the gradient-based optimization phase of the GRN-Designer algorithm.
+
+        This phase refines the best-performing agent from the evolutionary phase by
+        leveraging gradient-based optimization techniques. Using backpropagation, it adjusts
+        parameters and initial conditions to minimize a loss function composed of Mean Squared
+        Error (MSE) and Structural Similarity Index Measure (SSIM).
+
+        Workflow:
+            1. Parameter Extraction:
+               - Extracts and initializes trainable parameters (e.g., species parameters and initial conditions)
+                 from the input agent.
+
+            2. Simulation and Cost Computation:
+               - Simulates the agent's behavior and computes the cost based on the deviation
+                 from the target pattern using a weighted combination of MSE and SSIM.
+
+            3. Gradient-Based Optimization:
+               - Updates trainable parameters using a gradient descent optimizer (Adam or SGD).
+               - Applies clamping to enforce parameter constraints during optimization.
+
+            4. Intermediate Results:
+               - Periodically saves intermediate agents, costs, simulation results, and initial
+                 conditions at defined intervals.
+
+            5. Convergence:
+               - Iteratively refines parameters for a fixed number of epochs, or until convergence
+                 is reached, as indicated by the cost.
+
+        Args:
+            target (torch.Tensor): 2D tensor representing the target spatial pattern for optimization.
+            path (str): Directory path for saving intermediate and final results.
+            file_name (str): Name of the file for storing optimization outputs.
+            epochs (int): Number of optimization iterations.
+            optimizer (str): Optimization algorithm to use ("adam" or "sgd").
+            param_opt (bool): Enables optimization of gene and interaction parameters.
+            initial_condition_opt (bool): Enables optimization of initial conditions.
+            learning_rate (float): Learning rate for the optimizer.
+            cost_alpha (float): Weight for the contribution of MSE loss to the total loss.
+            cost_beta (float): Weight for the contribution of SSIM loss to the total loss.
+            ssim_data_range (float): Data range for SSIM loss calculation.
+            checkpoint_interval (int): Frequency of saving intermediate results during optimization.
+            interval_save (int): Frequency of saving simulation results and initial conditions.
+            pattern_proportion (float): Weight for emphasizing certain regions of the target pattern.
+            range_map (dict): Constraints for parameter values during optimization.
+                              E.g., {"species_": {"first": (0.01, 1.0), "rest": (0.01, 5.0)}, "default": (0.01, 10.0)}.
+            lr_decay (bool): Enables learning rate decay.
+            decay_steps (int): Number of steps before applying learning rate decay.
+            decay_rate (float): Factor for exponential learning rate decay.
+            device (str): Computation device ("cpu" or "cuda").
+
+        Returns:
+            tuple:
+                - agent (torch.Tensor): The optimized agent after the gradient-based phase.
+                - costs (list): List of costs recorded during the optimization.
+
+        Key Features:
+            - Refines both parameters and initial conditions using gradient-based methods.
+            - Incorporates SSIM loss to measure structural similarity alongside MSE loss.
+            - Applies clamping to enforce parameter constraints and maintain stability.
+            - Supports saving intermediate results for reproducibility and debugging.
+            - Includes optional learning rate decay for enhanced convergence.
+
+        Raises:
+            RuntimeError: If any invalid configuration for parameter ranges or optimization settings is encountered.
+        """
 
         self.epochs = epochs
         if target.dtype != torch.float32:

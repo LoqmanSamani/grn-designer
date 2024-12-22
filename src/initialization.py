@@ -8,6 +8,41 @@ def population_initialization(population_size, agent_shape, species_parameters,
                               low_costs, sim_opt, param_opt, init_opt, num_genes, sim_min,
                               sim_max, param_min, param_max, init_min, init_max,
                               shape_init_condition, radius_range, conc_range):
+    """
+    Initializes a population of agents for evolutionary optimization.
+
+    This function generates a list of agents, each represented as a 3D matrix, where
+    the structure and parameters of the agents are defined based on the input settings.
+    Agents can either be initialized with fixed shapes derived from a low-cost benchmark
+    agent or created dynamically with randomized configurations.
+
+    Args:
+        population_size (int): Number of agents in the population.
+        agent_shape (tuple): Shape of the agent (channels, height, width).
+        species_parameters (list): List of species-specific parameters.
+        max_sim_epochs (int): Maximum simulation epochs for agents.
+        sim_stop_time (float): Default stopping time for simulations.
+        time_step (float): Default time step for simulations.
+        fixed_shape (bool): If True, agents are initialized with a fixed structure
+                            derived from the low-cost benchmark.
+        low_costs (list): List of low-cost agents used for benchmarking and initialization.
+        sim_opt (bool): If True, simulation parameters (duration and time step) are randomized.
+        param_opt (bool): If True, gene and interaction parameters are randomized.
+        init_opt (bool): If True, initial conditions are randomized.
+        num_genes (int): Number of genes for initializing agents.
+        sim_min (tuple): Minimum values for simulation duration and time step.
+        sim_max (tuple): Maximum values for simulation duration and time step.
+        param_min (tuple): Minimum values for gene and interaction parameters.
+        param_max (tuple): Maximum values for gene and interaction parameters.
+        init_min (float): Minimum value for initializing agent conditions.
+        init_max (float): Maximum value for initializing agent conditions.
+        shape_init_condition (bool): If True, initial conditions are set with specific shapes (e.g., circles).
+        radius_range (tuple): Range of radii for circle-based initial conditions.
+        conc_range (tuple): Range of concentration values for circle-based initial conditions.
+
+    Returns:
+        list: A list of initialized agents, where each agent is a 3D numpy array.
+    """
 
     if fixed_shape:
 
@@ -101,6 +136,21 @@ def population_initialization(population_size, agent_shape, species_parameters,
 
 
 def create_circle(matrix, value_range, radius_range):
+    """
+    Creates a circular region in a matrix with a specified value and radius.
+
+    This function modifies a matrix by setting values within a circular region
+    to a randomly chosen value from a specified range. The circle's radius and
+    center are also randomly chosen within defined bounds.
+
+    Args:
+        matrix (np.ndarray): The 2D array to modify.
+        value_range (tuple): Range (min, max) of values to assign within the circle.
+        radius_range (tuple): Range (min, max) of circle radii.
+
+    Returns:
+        np.ndarray: The modified matrix with a circular region filled with the specified value.
+    """
 
     value = np.random.uniform(low=value_range[0], high=value_range[1])
     radius = np.random.uniform(low=radius_range[0], high=radius_range[1])
@@ -116,6 +166,18 @@ def create_circle(matrix, value_range, radius_range):
 
 
 def reset_agent(agent):
+    """
+    Resets an agent by clearing the interaction matrix for all species.
+
+    This function zeroes out the interaction values for all species within an agent,
+    effectively resetting it to a baseline state while preserving its structure.
+
+    Args:
+        agent (np.ndarray): The agent to reset, represented as a 3D matrix.
+
+    Returns:
+        np.ndarray: The reset agent with cleared interaction matrices.
+    """
 
     num_species = int(agent[-1, -1, 0])
 

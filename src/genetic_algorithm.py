@@ -8,24 +8,84 @@ import gc
 
 
 def evolutionary_optimization(
-        population,
-        agent_,
-        target,
-        population_size,
-        cost,
-        rates,
-        bounds,
-        mutation,
-        crossover,
-        num_elite_agents,
-        parameters,
-        cost_constant,
-        fixed_agent_shape,
-        num_init_genes,
-        shape_init_condition,
-        radius_range,
+        population, agent_, target, population_size, cost, rates, bounds,
+        mutation, crossover, num_elite_agents, parameters, cost_constant,
+        fixed_agent_shape, num_init_genes, shape_init_condition, radius_range,
         conc_range
 ):
+    """
+    Executes the evolutionary optimization phase of the GRN-Designer algorithm.
+
+    This function applies evolutionary principles, including mutation and crossover,
+    to iteratively refine a population of agents toward minimizing the cost associated
+    with deviations from a predefined target pattern. It incorporates selective pressure
+    to retain elite agents and generates a next-generation population.
+
+    Workflow:
+        1. Simulation and Cost Calculation:
+           - Simulates the behavior of each agent in the population.
+           - Calculates the associated cost based on the target pattern and defined metrics.
+
+        2. Selection:
+           - Retains elite agents based on their costs.
+           - Splits the population into low-cost and high-cost agents for tailored processing.
+
+        3. Mutation and Crossover:
+           - Applies mutation to low-cost agents, introducing genetic diversity.
+           - Applies crossover to high-cost agents using filtered elite agents to generate new solutions.
+
+        4. Re-Evaluation:
+           - Simulates modified high-cost agents and integrates those meeting improvement criteria
+             into the low-cost agent pool.
+
+        5. Population Regeneration:
+           - Replenishes the population by initializing new agents if the size of low-cost agents
+             is insufficient to meet the required population size.
+
+    Args:
+        population (list): List of agents representing the current population.
+        agent_ (np.ndarray): A representative agent used for population initialization and as a low-cost benchmark.
+        target (np.ndarray): 2D array representing the target spatial pattern.
+        population_size (int): Total desired size of the population after regeneration.
+        cost (tuple): Weights and proportions for cost calculation, defined as (alpha, beta, pattern_proportion).
+        rates (tuple): Mutation rates for different aspects of the agent, defined as:
+                       (simulation, initial_condition, parameter, species_insertion,
+                       connection_insertion, connection_deletion).
+        bounds (tuple): Lower and upper bounds for simulation parameters, initial conditions,
+                        and parameters, defined as:
+                        (simulation_min, simulation_max, initial_condition_min,
+                        initial_condition_max, parameter_min, parameter_max).
+        mutation (tuple): Flags indicating mutation types to be applied, defined as:
+                          (simulation, initial_condition, parameter, species_insertion,
+                          connection_insertion, connection_deletion).
+        crossover (tuple): Parameters controlling crossover behavior, defined as:
+                           (crossover_alpha, simulation_crossover, initial_condition_crossover, parameter_crossover).
+        num_elite_agents (int): Number of top-performing agents retained for crossover.
+        parameters (tuple): Parameters for initializing new agents, defined as:
+                            (species_parameters, simulation_parameters).
+        cost_constant (float): Replacement value for NaN or Inf costs during computation.
+        fixed_agent_shape (bool): Whether the agent shape is fixed, preventing changes in gene count.
+        num_init_genes (int): Number of genes to initialize for newly generated agents.
+        shape_init_condition (bool): Enables initialization of new agents with specific shapes (e.g., a circle).
+        radius_range (tuple): Range of radii for shape-based initialization.
+        conc_range (tuple): Range of concentrations for shape-based initialization.
+
+    Returns:
+        tuple:
+            - next_generation (list): The next generation of agents after evolutionary optimization.
+            - costs (np.ndarray): Array of computed costs for the current generation.
+            - mean_cost (float): Average cost of the current generation.
+
+    Key Features:
+        - Supports dynamic mutation and crossover strategies to balance exploration and exploitation.
+        - Retains elite agents to ensure continuity of the best-performing solutions.
+        - Adapts to constraints through customizable mutation rates, bounds, and initialization parameters.
+        - Efficiently handles NaN or Inf values in cost computation to maintain stability.
+
+    Raises:
+        RuntimeError: If any invalid configuration for mutation, crossover, or bounds is encountered.
+    """
+
     z, y, x = population[0].shape
     m = len(population)
 

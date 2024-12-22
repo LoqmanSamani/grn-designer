@@ -4,6 +4,56 @@ from tensor_diffusion import *
 
 
 def agent_simulation(agent, parameters, num_species, stop, time_step, max_epoch, device):
+    """
+    Simulates the dynamics of an agent over time based on given parameters.
+
+    This function models the behavior of an agent's components (e.g., species concentrations)
+    through production, inhibition, activation, degradation, and diffusion processes.
+    The simulation runs for a defined number of epochs or until a specified stopping time.
+
+    Args:
+        agent (torch.Tensor): The agent to simulate, represented as a 3D tensor
+                              (components × height × width).
+        parameters (dict): Dictionary containing parameter tensors for each species, including:
+                           - `initial_conditions_{i}`: Initial conditions for species `i`.
+                           - `species_{i}`: Parameters such as production rate, degradation rate,
+                                            diffusion rate, and interaction rates for species `i`.
+        num_species (int): Number of species in the agent.
+        stop (float): Simulation stopping time.
+        time_step (float): Time step size for the simulation.
+        max_epoch (int): Maximum number of simulation epochs.
+        device (str): The computation device (e.g., "cpu" or "cuda").
+
+    Returns:
+        torch.Tensor: The simulated agent's components over time, including:
+                      - Updated species concentrations for each time step.
+                      - Simulated patterns for the specified species.
+
+    Workflow:
+        1. **Initialization**:
+           - Set up simulation parameters, including the number of iterations and epochs.
+
+        2. **Component Update**:
+           - **Production**: Update species concentrations based on production rates and patterns.
+           - **Inhibition and Activation**: Apply interaction effects between species.
+           - **Degradation**: Reduce species concentrations based on degradation rates.
+           - **Diffusion**: Apply diffusion effects across spatial dimensions.
+
+        3. **Iteration**:
+           - Repeat the component updates for each time step in the simulation.
+
+        4. **Output**:
+           - Extract and return the simulated patterns for the specified species.
+
+    Notes:
+        - The simulation is constrained by both the maximum epoch and the stopping time.
+        - Interaction effects (inhibition or activation) depend on species-specific parameters.
+
+    Raises:
+        RuntimeError: If invalid parameters or tensor dimensions are provided.
+
+    """
+
     agent = agent.to(device)
 
     z, y, x = agent.shape
