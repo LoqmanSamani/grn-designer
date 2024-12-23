@@ -30,28 +30,24 @@ def agent_simulation(agent, parameters, num_species, stop, time_step, max_epoch,
                       - Simulated patterns for the specified species.
 
     Workflow:
-        1. **Initialization**:
+        1. Initialization:
            - Set up simulation parameters, including the number of iterations and epochs.
 
-        2. **Component Update**:
-           - **Production**: Update species concentrations based on production rates and patterns.
-           - **Inhibition and Activation**: Apply interaction effects between species.
-           - **Degradation**: Reduce species concentrations based on degradation rates.
-           - **Diffusion**: Apply diffusion effects across spatial dimensions.
+        2. Component Update:
+           - Production: Update species concentrations based on production rates and patterns.
+           - Inhibition and Activation: Apply interaction effects between species.
+           - Degradation: Reduce species concentrations based on degradation rates.
+           - Diffusion: Apply diffusion effects across spatial dimensions.
 
-        3. **Iteration**:
+        3. Iteration:
            - Repeat the component updates for each time step in the simulation.
 
-        4. **Output**:
+        4. Output:
            - Extract and return the simulated patterns for the specified species.
 
     Notes:
         - The simulation is constrained by both the maximum epoch and the stopping time.
         - Interaction effects (inhibition or activation) depend on species-specific parameters.
-
-    Raises:
-        RuntimeError: If invalid parameters or tensor dimensions are provided.
-
     """
 
     agent = agent.to(device)
