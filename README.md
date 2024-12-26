@@ -47,7 +47,7 @@ pip install numpy numba torch h5py ignite
          agent="agent" # a 3d matrix as an example agent used for initialization. see 'grn_designer.py' to find out more about it.
          ... # the hyperparameters of the model are set by default but should be adjust based on the model. see 'grn_designer.py' to find out more about them. 
      ) 
-     model.fit() # run the process
+     results = model.fit() # run the process
 ```
 
      
