@@ -20,18 +20,16 @@
 
 ---
 
+
 ## Requirements
 
-Install the following Python libraries before running the code:
-- `numpy`
-- `numba`
-- `pytorch`
-- `h5py`
-- `ignite`
+To install the required dependencies for the project, you can use the `requirements.txt` file. 
+
+
 
 Install these libraries using `pip`:
 ```bash
-pip install numpy numba torch h5py ignite
+pip install -r requirements.txt
 ```
 
 ---
@@ -39,7 +37,7 @@ pip install numpy numba torch h5py ignite
 ## How to Use the Code
 
 1. **Prepare the Code**:
-   - Download all `.py` files from the `src` directory and place them in the same folder as your script.
+   - Download all `.py` files from the `src` directory and place them in the same folder as your script. For a full guideline on how to use the GRN-Designer: [guide.ipynb](src/guide.ipynb)
  ```python
      from grn_designer import GRNDesigner as grnd
      model = grnd(
