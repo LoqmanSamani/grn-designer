@@ -3,11 +3,17 @@ from tensor_diffusion import *
 
 
 
-def agent_simulation(agent, parameters, num_species, stop, time_step, max_epoch, device):
+def agent_simulation(agent, parameters, device, num_species=None, stop=None, time_step=None, max_epoch=None):
 
+    # agent = agent.to(dtype=torch.float64)
     agent = agent.to(device)
     z, y, x = agent.shape
     num_iters = int(x)
+    if not num_species:
+        num_species = int(agent[-1, -1, 0])
+        max_epoch = int(agent[-1, -1, 1])
+        stop = int(agent[-1, -1, 2])
+        time_step = agent[-1, -1, 3]
     num_epochs = int(stop / time_step)
     patterns = [i for i in range(0, num_species*2, 2)]
 

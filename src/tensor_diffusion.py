@@ -15,8 +15,8 @@ def apply_diffusion(current_concentration, init_conditions, column_position, dif
             time_step=time_step
         )
 
-        temporary_concentration[init_condition_size - 1] = update_lower_left_corner_concentration(
-            cell_concentration=current_concentration[init_condition_size - 1],
+        temporary_concentration[-1] = update_lower_left_corner_concentration(
+            cell_concentration=current_concentration[-1],
             upper_cell_concentration=init_conditions[-2, 0],
             right_cell_concentration=init_conditions[-1, 1],
             diffusion_rate=diffusion_rate,
@@ -41,7 +41,7 @@ def apply_diffusion(current_concentration, init_conditions, column_position, dif
             time_step=time_step
         )
 
-        temporary_concentration[init_condition_size - 1] = update_lower_right_corner_concentration(
+        temporary_concentration[-1] = update_lower_right_corner_concentration(
             cell_concentration=current_concentration[-1],
             upper_cell_concentration=init_conditions[-2, -1],
             left_cell_concentration=init_conditions[-1, -2],
@@ -68,8 +68,8 @@ def apply_diffusion(current_concentration, init_conditions, column_position, dif
             time_step=time_step
         )
 
-        temporary_concentration[init_condition_size - 1] = update_central_concentration_lower(
-            cell_concentration=current_concentration[init_condition_size - 1],
+        temporary_concentration[-1] = update_central_concentration_lower(
+            cell_concentration=current_concentration[-1],
             upper_cell_concentration=init_conditions[-2, column_position],
             right_cell_concentration=init_conditions[-1, column_position + 1],
             left_cell_concentration=init_conditions[-1, column_position - 1],
@@ -77,8 +77,8 @@ def apply_diffusion(current_concentration, init_conditions, column_position, dif
             time_step=time_step
         )
 
-        temporary_concentration[1:init_condition_size - 1] = update_central_concentration_middle(
-            cell_concentration=current_concentration[1:init_condition_size - 1],
+        temporary_concentration[1:-1] = update_central_concentration_middle(
+            cell_concentration=current_concentration[1:-1],
             upper_cell_concentration=init_conditions[:-2, column_position],
             lower_cell_concentration=init_conditions[2:, column_position],
             right_cell_concentration=init_conditions[1:-1, column_position + 1],
@@ -104,7 +104,7 @@ def update_lower_left_corner_concentration(
     out_diffusion = time_step * cell_concentration * diffusion_rate * 2
 
     updated_concentration = cell_concentration + in_diffusion - out_diffusion
-    return updated_concentration.unsqueeze(0)
+    return updated_concentration
 
 
 def update_lower_right_corner_concentration(
@@ -119,7 +119,7 @@ def update_lower_right_corner_concentration(
     out_diffusion = time_step * cell_concentration * diffusion_rate * 2
 
     updated_concentration = cell_concentration + in_diffusion - out_diffusion
-    return updated_concentration.unsqueeze(0)
+    return updated_concentration
 
 
 def update_upper_left_corner_concentration(
@@ -134,7 +134,7 @@ def update_upper_left_corner_concentration(
     out_diffusion = time_step * cell_concentration * diffusion_rate * 2
 
     updated_concentration = cell_concentration + in_diffusion - out_diffusion
-    return updated_concentration.unsqueeze(0)
+    return updated_concentration
 
 
 def update_upper_right_corner_concentration(
@@ -149,7 +149,7 @@ def update_upper_right_corner_concentration(
     out_diffusion = time_step * cell_concentration * diffusion_rate * 2
 
     updated_concentration = cell_concentration + in_diffusion - out_diffusion
-    return updated_concentration.unsqueeze(0)
+    return updated_concentration
 
 
 def update_left_side_concentration(
@@ -252,6 +252,4 @@ def update_central_concentration_lower(
     updated_concentration = cell_concentration + in_diffusion - out_diffusion
 
     return updated_concentration
-
-
 
