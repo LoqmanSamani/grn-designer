@@ -1,6 +1,6 @@
 # Automated Design and Analysis of Gene Regulatory Networks (GRNs)
 
-![Model Structure](data/grn-designer.png)
+![Model Structure](data/grn.png)
 
 **GRN Designer** is a computational framework for constructing and optimizing gene regulatory networks (GRNs) to simulate complex 2D spatial patterns. It combines evolutionary algorithms and gradient-based optimization to design GRNs by tuning genes, their initial conditions, and interaction parameters.
 
