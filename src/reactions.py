@@ -6,19 +6,19 @@ from numba import jit
 @jit(nopython=True)
 def apply_component_production(agent, num_species, time_step, column, species_index):
 
-    initial_concentration = agent[species_index, :, column].astype(np.float64)
-    production_pattern = agent[species_index+1, :, column].astype(np.float64)
-    production_rate = float(agent[-1, species_index, 0])
+    initial_concentration = agent[species_index, :, column] # .astype(np.float64)
+    production_pattern = agent[species_index+1, :, column] # .astype(np.float64)
+    production_rate = agent[-1, species_index, 0]
     basal_expression = (production_rate * time_step * production_pattern) + initial_concentration
 
     s = 1
     for k in range(0, num_species * 2, 2):
-        t = agent[-1, k + 1, :int(agent[-1, k, -1])].astype(np.float64)
+        t = agent[-1, k + 1, :int(agent[-1, k, -1])] # .astype(np.float64)
         if species_index in t:
             idx = np.where(t == species_index)[0][0]
             effect_type = int(agent[-1, k + 1, -int(idx + 1)])
-            species_effect = agent[k, :, column].astype(np.float64)
-            params = agent[-1, species_index, 3 + idx * 3: 6 + idx * 3].astype(np.float64)
+            species_effect = agent[k, :, column] # .astype(np.float64)
+            params = agent[-1, species_index, 3 + idx * 3: 6 + idx * 3] # .astype(np.float64)
 
             basal_expression = apply_hill_effect(
                 species_1=basal_expression,
@@ -39,12 +39,12 @@ def apply_component_production(agent, num_species, time_step, column, species_in
 @jit(nopython=True)
 def apply_hill_effect(species_1, species_2, rate, hill_coefficient, dissociation_constant, time_step, effect_type):
 
-    species_1 = np.asarray(species_1, dtype=np.float64)
-    species_2 = np.asarray(species_2, dtype=np.float64)
-    rate = float(rate)
-    hill_coefficient = float(hill_coefficient)
-    dissociation_constant = float(dissociation_constant)
-    time_step = float(time_step)
+    #species_1 = np.asarray(species_1, dtype=np.float64)
+    #species_2 = np.asarray(species_2, dtype=np.float64)
+    #rate = float(rate)
+    #hill_coefficient = float(hill_coefficient)
+    #dissociation_constant = float(dissociation_constant)
+    #time_step = float(time_step)
 
     hill_term = (species_2 ** hill_coefficient)
     denominator = dissociation_constant ** hill_coefficient + hill_term + 1e-8

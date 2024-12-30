@@ -152,11 +152,11 @@ class GradientOptimization:
         prediction = agent_simulation(
             agent=agent,
             parameters=parameters,
+            device=device,
             num_species=num_species,
             stop=stop,
             time_step=time_step,
-            max_epoch=max_epoch,
-            device=device
+            max_epoch=max_epoch
         )
 
         return prediction

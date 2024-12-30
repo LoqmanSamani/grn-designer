@@ -71,7 +71,8 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
             right_cell_concentration=compartment[0, column_position + 1],
             left_cell_concentration=compartment[0, column_position - 1],
             diffusion_rate=diffusion_rate,
-            time_step=time_step)
+            time_step=time_step
+        )
 
         temporary_concentration[-1] = update_central_concentration_lower(
             cell_concentration=current_concentration[-1],
@@ -79,7 +80,8 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
             right_cell_concentration=compartment[-1, column_position + 1],
             left_cell_concentration=compartment[-1, column_position - 1],
             diffusion_rate=diffusion_rate,
-            time_step=time_step)
+            time_step=time_step
+        )
 
         temporary_concentration[1:-1] = update_central_concentration_middle(
             cell_concentration=current_concentration[1:-1],
@@ -91,7 +93,7 @@ def apply_diffusion(current_concentration, compartment, column_position, diffusi
             time_step=time_step
         )
 
-    updated_concentration = np.maximum(temporary_concentration, 0)
+    updated_concentration = np.maximum(temporary_concentration, 0.0)
 
     return updated_concentration
 

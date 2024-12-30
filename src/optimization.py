@@ -85,7 +85,6 @@ class GradientOptimization:
         Raises:
             RuntimeError: If any invalid configuration for parameter ranges or optimization settings is encountered.
         """
-
         self.epochs = epochs
         if target.dtype != torch.float32:
             self.target = target.to(torch.float32)
@@ -193,11 +192,11 @@ class GradientOptimization:
         prediction = agent_simulation(
             agent=agent,
             parameters=parameters,
+            device=device,
             num_species=num_species,
             stop=stop,
             time_step=time_step,
-            max_epoch=max_epoch,
-            device=device
+            max_epoch=max_epoch
         )
 
         return prediction
