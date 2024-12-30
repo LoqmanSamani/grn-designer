@@ -4,7 +4,7 @@
 
 **GRN Designer** is a computational framework for constructing and optimizing gene regulatory networks (GRNs) to simulate complex 2D spatial patterns. It combines evolutionary algorithms and gradient-based optimization to design GRNs by tuning genes, their initial conditions, and interaction parameters.
 
----
+
 
 ## Key Features
 
@@ -18,7 +18,7 @@
 3. **Scalable Complexity**:
    - Simulates various patterns and GRN architectures by adjusting model parameters.
 
----
+
 
 
 ## Requirements
@@ -32,12 +32,12 @@ Install these libraries using `pip`:
 pip install -r requirements.txt
 ```
 
----
+
 
 ## How to Use the Code
 
 1. **Prepare the Code**:
-   - Download all `.py` files from the `src` directory and place them in the same folder as your script. For a full guideline on how to use the GRN-Designer: [guide.ipynb](src/guide.ipynb)
+   - Download all `.py` files from the `src` directory and place them in the same folder as your script. 
  ```python
      from grn_designer import GRNDesigner as grnd
      model = grnd(
@@ -47,6 +47,8 @@ pip install -r requirements.txt
      ) 
      results = model.fit() # run the process
 ```
+
+For a full guideline on how to use it: [guide.ipynb](src/guide.ipynb)
 
      
      
