@@ -2,7 +2,7 @@
 
 ![Model Structure](data/grn.png)
 
-**Abstract**
+## Abstract
 
 Gene Regulatory Networks (GRNs) are essential frameworks for understanding
 complex gene interactions and regulatory mechanisms in biological systems. Traditional GRN modeling approaches often rely on deterministic or probabilistic
