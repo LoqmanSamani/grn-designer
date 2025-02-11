@@ -92,7 +92,7 @@ For a full guideline on how to use it: [guide.ipynb](src/guide.ipynb)
     author    = {Samani, Loghman},
     title     = {Automated Design and Analysis of Gene Regulatory Networks for Simulating Complex Spatial Patterns},
     school    = {University of Stuttgart},
-    year      = {2024},
+    year      = {2025},
     type      = {Master's Thesis},
 }
 ```
